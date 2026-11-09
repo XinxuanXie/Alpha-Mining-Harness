@@ -3,8 +3,10 @@
 # 模型只填量、经济逻辑、机制类别三项；假设句由程序按固定句式拼装。
 # 本文件不计算数字；去重由程序按拼装后的假设句文本完全相同执行。
 
+import html as html_lib
 import json
 import os
+import re
 import time
 import urllib.error
 import urllib.parse
@@ -87,7 +89,86 @@ def _extract_json_array(text):
     return json.loads(text[start:end + 1])
 
 # ============================================================
+# 检索：提假设前程序先搜一圈学术研究（现象类查询，不带经典因子名），
+# 取论文标题与摘要编号注入提示词，作新假设的原料。
+# 数据源依次尝试 OpenAlex、Semantic Scholar、arXiv（均免 key）；
+# 某源失败或无结果则换下一源，全无结果则跳过，不阻断提假设。
+# 通用网页搜索（Bing）实测只返回门户首页，不作数据源。
+# ============================================================
+SEARCH_QUERIES = [
+    "intraday return patterns stocks empirical evidence",
+    "trading volume and stock returns empirical study",
+    "stock return volatility cross-section empirical findings",
+    "overnight returns stocks empirical evidence",
+    "stock price jumps and future returns research",
+]
+ARXIV_QUERIES = [
+    'all:"intraday" AND all:"stock returns"',
+    'all:"trading volume" AND all:"stock returns"',
+    'all:"volatility" AND all:"return predictability"',
+    'all:"overnight returns" AND all:"stocks"',
+    'all:"price jumps" AND all:"stock returns"',
+]
+# 检索结果须含金融词才收（程序侧粗筛，滤掉字面误匹配）
+_FIN_WORDS = ("stock", "equity", "return", "market", "trading", "investor", "portfolio", "share", "volatility")
+
+def _get_json(url):
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    return json.loads(urllib.request.urlopen(req, timeout=25).read().decode("utf-8"))
+
+def _from_openalex(query, n):
+    url = "https://api.openalex.org/works?" + urllib.parse.urlencode({"search": query, "per-page": n})
+    out = []
+    for w in _get_json(url).get("results", []):
+        venue = ((w.get("primary_location") or {}).get("source") or {}).get("display_name") or ""
+        out.append((w.get("title") or "", f"{venue} {w.get('publication_year') or ''}".strip()))
+    return out
+
+def _from_s2(query, n):
+    url = "https://api.semanticscholar.org/graph/v1/paper/search?" + urllib.parse.urlencode(
+        {"query": query, "limit": n, "fields": "title,abstract,year"})
+    out = []
+    for p in _get_json(url).get("data", []):
+        out.append((p.get("title") or "", (p.get("abstract") or "")[:180]))
+    return out
+
+def _from_arxiv(query, n):
+    url = ("http://export.arxiv.org/api/query?search_query=" + urllib.parse.quote(query)
+           + f"&start=0&max_results={n}&sortBy=relevance")
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    xml = urllib.request.urlopen(req, timeout=25).read().decode("utf-8", "ignore")
+    out = []
+    for entry in re.findall(r"<entry>(.*?)</entry>", xml, re.S):
+        t = re.search(r"<title>(.*?)</title>", entry, re.S)
+        s = re.search(r"<summary>(.*?)</summary>", entry, re.S)
+        if t:
+            clean = lambda x: html_lib.unescape(re.sub(r"\s+", " ", x)).strip()
+            out.append((clean(t.group(1)), clean(s.group(1))[:180] if s else ""))
+    return out
+
+def search_notes(per_query=2):
+    notes = []
+    for i, q in enumerate(SEARCH_QUERIES):
+        got = []
+        for fetch, arg in ((_from_openalex, q), (_from_s2, q), (_from_arxiv, ARXIV_QUERIES[i])):
+            try:
+                got = fetch(arg, per_query)
+            except Exception:
+                got = []
+            if got:
+                break
+        for title, extra in got:
+            if not title or not any(w in (title + " " + extra).lower() for w in _FIN_WORDS):
+                continue
+            note = f"[S{len(notes) + 1}] {title}"
+            if extra:
+                note += f" — {extra}"
+            notes.append(note)
+    return notes
+
+# ============================================================
 # 提出：一批假设，模型填量、经济逻辑、机制类别，程序拼装假设句
+# 两步：先出两倍候选，再由模型对照已试死法与机制分布选定批量数
 # ============================================================
 SYSTEM = """你是一名因子研究员，任务是成批提出可用历史数据检验的因子假设。
 只输出一个 JSON 数组，不要任何其他文字。数组每条含三项：
@@ -95,38 +176,24 @@ SYSTEM = """你是一名因子研究员，任务是成批提出可用历史数�
 mechanism 只能取给定清单中的一个。
 quantity 是已定向的名词短语，带回望窗口（如“过去 20 日累计收益”）：它必须让“该量越大的股票，未来收益越高”成立；方向写进量本身，如反转类写“过去 20 日累计收益的相反数”。quantity 只写量本身，不写未来期限、分组或检验方式——那些由程序统一决定。"""
 
-def propose(tried, batch=8, format_retries=2):
-    """tried 为已试假设内容列表。返回假设字典列表（已去重、已校验）。
-    模型输出格式重试达上限仍不合要求时抛 RuntimeError（本轮应停止）。"""
-    tried_text = "\n".join(f"- {t}" for t in tried) if tried else "（无）"
-    user = f"""{DATA_DOC}
-
-机制类别清单：{'、'.join(MECHANISMS)}
-
-已占满的经典机制（只有机制，没有公式；这张地图只用来划界——不要提与这些机制的标准构造相近的量，去地图之外构造：换信息来源、换参照对象、换组合方式）：
-{MECHANISM_NOTES}
-
-已试假设清单（括号内为每条的结局；不得重复提出，也不要重蹈已淘汰的死法）：
-{tried_text}
-
-请提出 {batch} 条新假设。"""
-    messages = [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}]
+def _ask_items(messages, format_retries=2):
+    """向模型请求一个 JSON 数组；格式不合要求时在同一对话里纠正重试。
+    返回 (原始条目列表, 扩展后的对话, 模型最后的原文)。"""
     last_err = None
     for _ in range(format_retries + 1):
         text = call_model(messages)
         try:
-            items = _extract_json_array(text)
-            break
+            return _extract_json_array(text), messages, text
         except (ValueError, json.JSONDecodeError) as e:
             last_err = e
             messages = messages + [
                 {"role": "assistant", "content": text},
                 {"role": "user", "content": f"上次输出不是合法的 JSON 数组（{e}）。请只输出一个 JSON 数组，不要任何其他文字。"},
             ]
-    else:
-        raise RuntimeError(f"模型输出格式重试达上限：{last_err}")
+    raise RuntimeError(f"模型输出格式重试达上限：{last_err}")
 
-    seen = {t.split(" 〔")[0] for t in tried}  # tried 条目带结局标注，去重只比对标注前的假设句
+def _validate(items, seen):
+    """程序侧校验：三项非空、机制类别合法、与已试清单及本批不重复（按拼装句比对）。"""
     out = []
     for it in items:
         if not isinstance(it, dict):
@@ -144,6 +211,47 @@ def propose(tried, batch=8, format_retries=2):
         seen.add(hyp)
         out.append({"hypothesis": hyp, "quantity": qty.strip(), "logic": logic, "mechanism": mech})
     return out
+
+def propose(tried, batch=8):
+    """tried 为已试假设列表（条目带结局标注）。返回假设字典列表（已去重、已校验）。
+    两步生成：第一步出 batch*2 条候选，第二步模型从候选中选定 batch 条；
+    候选不足 batch*2 时以实际候选为准，候选不超过 batch 时跳过选定步。"""
+    tried_text = "\n".join(f"- {t}" for t in tried) if tried else "（无）"
+    notes = search_notes()
+    notes_block = ""
+    if notes:
+        notes_block = ("\n公开研究摘录（程序检索所得，编号可引用；可参考，也可不用）：\n"
+                       + "\n".join(notes) + "\n")
+    user = f"""{DATA_DOC}
+
+机制类别清单：{'、'.join(MECHANISMS)}
+
+已占满的经典机制（只有机制，没有公式；这张地图只用来划界——不要提与这些机制的标准构造相近的量，去地图之外构造：换信息来源、换参照对象、换组合方式）：
+{MECHANISM_NOTES}
+{notes_block}
+已试假设清单（括号内为每条的结局；不得重复提出，也不要重蹈已淘汰的死法）：
+{tried_text}
+
+请先提出 {batch * 2} 条候选假设，彼此尽量不同。"""
+    messages = [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}]
+    items, messages, raw = _ask_items(messages)
+    seen = {t.split(" 〔")[0] for t in tried}  # tried 条目带结局标注，去重只比对标注前的假设句
+    candidates = _validate(items, set(seen))
+    if len(candidates) <= batch:
+        return candidates
+    cand_text = "\n".join(
+        f"{i + 1}. [{c['mechanism']}] {c['quantity']}（{c['logic']}）"
+        for i, c in enumerate(candidates))
+    select_msg = {
+        "role": "user",
+        "content": f"""候选共 {len(candidates)} 条：
+{cand_text}
+
+从中选出 {batch} 条作为本轮正式假设。取舍标准：与已试清单中已淘汰的死法距离远、机制类别分散、经济逻辑站得住。可以微调入选条目中量的表述。按同样的 JSON 数组格式只输出入选的 {batch} 条。""",
+    }
+    items2, _, _ = _ask_items(messages + [{"role": "assistant", "content": raw}, select_msg])
+    selected = _validate(items2, set(seen))
+    return selected[:batch] if selected else candidates[:batch]
 
 # ============================================================
 # 自检（块三验收）：直接运行本文件时执行
