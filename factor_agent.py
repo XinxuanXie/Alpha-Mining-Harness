@@ -10,6 +10,7 @@ import urllib.parse
 import urllib.request
 
 import calc
+import trace  # 过程轨迹落盘（只写不读，供事后研究；不进入任何提示）
 
 # ============================================================
 # 材料：数据说明与算子清单（与 spec 一致，是给模型的输入）
@@ -148,7 +149,10 @@ def build_factor(hypothesis, wide, max_rewrite=3, feedback=None, prev_formula=No
     for attempt in range(max_rewrite + 1):
         out = _ask(messages)
         if out.get("buildable") is False:
-            return None, str(out.get("reason", "模型判定无法表达"))
+            reason = str(out.get("reason", "模型判定无法表达"))
+            trace.add({"事件": "写公式结果", "假设": hypothesis["hypothesis"],
+                       "反馈修改": bool(feedback), "结果": "无法表达", "原因": reason})
+            return None, reason
         formula = out.get("formula")
         if not isinstance(formula, str) or not formula.strip():
             last_err = "输出缺少 formula 字段"
@@ -159,9 +163,15 @@ def build_factor(hypothesis, wide, max_rewrite=3, feedback=None, prev_formula=No
                     raise ValueError("公式算出的因子值全部为空")
             except ValueError as e:
                 last_err = str(e)
+                trace.add({"事件": "试算失败", "假设": hypothesis["hypothesis"],
+                           "公式": formula, "错误": last_err})
             else:
                 aligned, problem = check_alignment(hypothesis, formula)
+                trace.add({"事件": "核对", "假设": hypothesis["hypothesis"], "公式": formula,
+                           "一致": aligned, "问题": problem})
                 if aligned:
+                    trace.add({"事件": "写公式结果", "假设": hypothesis["hypothesis"],
+                               "反馈修改": bool(feedback), "结果": "成功", "公式": formula})
                     return formula, None
                 last_err = f"公式实际计算的量与假设不一致：{problem}"
                 print(f"   核对未通过（第 {attempt + 1} 版）：{problem}")
@@ -170,6 +180,8 @@ def build_factor(hypothesis, wide, max_rewrite=3, feedback=None, prev_formula=No
                 {"role": "assistant", "content": json.dumps(out, ensure_ascii=False)},
                 {"role": "user", "content": f"这条公式无法使用：{last_err}。请修正后重新输出 JSON 对象，只改公式的表达方式，不得改变假设的核心信号。"},
             ]
+    trace.add({"事件": "写公式结果", "假设": hypothesis["hypothesis"],
+               "反馈修改": bool(feedback), "结果": "重写达上限", "原因": last_err})
     return None, f"重写达上限：{last_err}"
 
 # ============================================================

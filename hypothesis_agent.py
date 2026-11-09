@@ -12,6 +12,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+import trace  # 过程轨迹落盘（只写不读，供事后研究；不进入任何提示）
+
 # ============================================================
 # 材料：数据说明与机制类别（与 spec 一致，是给模型的输入）
 # ============================================================
@@ -314,20 +316,28 @@ def propose(tried, batch=8):
     items, _, _ = _ask_items(messages)
     seen = {t.split(" 〔")[0] for t in tried}  # tried 条目带结局标注，去重只比对标注前的假设句
     candidates = _validate(items, set(seen))
+    trace.add({"事件": "出题候选", "候选": [
+        {"量": c["quantity"], "逻辑": c["logic"], "机制": c["mechanism"]} for c in candidates]})
     if len(candidates) <= batch:
         return candidates
     picked = _review(candidates, tried_text, batch)
-    if not picked:
+    fallback = not picked
+    if fallback:
         picked = [{"index": i + 1, "problem": "", "query": ""} for i in range(batch)]
+    trace.add({"事件": "审核", "兜底": fallback, "入选": [
+        {"序号": p["index"], "问题": p["problem"], "检索词": p["query"]} for p in picked]})
     out = []
     for p in picked:
         cand = candidates[p["index"] - 1]
         item = {"quantity": cand["quantity"], "logic": cand["logic"], "mechanism": cand["mechanism"]}
         if p["problem"] or p["query"]:
             notes = search_for(p["query"]) if p["query"] else []
+            trace.add({"事件": "检索", "假设量": cand["quantity"], "检索词": p["query"], "结果": notes})
             refined = _refine(cand, p["problem"], notes)
             if refined is not None:
                 item = refined
+            trace.add({"事件": "打磨", "打磨前": cand["quantity"],
+                       "打磨后": item.get("quantity"), "采用打磨": refined is not None})
         out.extend(_validate([item], seen))
     return out
 

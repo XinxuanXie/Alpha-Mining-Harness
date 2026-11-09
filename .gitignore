@@ -6,4 +6,6 @@ params_log.jsonl
 records-*.jsonl
 params_log-*.jsonl
 records_selftest.jsonl
+# 过程轨迹：事后研究用，本地产物
+trace.jsonl
 __pycache__/

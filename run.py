@@ -9,6 +9,7 @@ import os
 import calc
 import factor_agent
 import hypothesis_agent
+import trace  # 过程轨迹落盘（只写不读，供事后研究；不进入任何提示）
 
 # ============================================================
 # 参数（出自 spec 参数表）
@@ -96,6 +97,8 @@ def main():
                 if rev == FEEDBACK_MAX:
                     break
                 diag = calc.diagnose(metrics, THRESHOLD, ICIR_THRESHOLD, CORR_THRESHOLD)
+                trace.add({"事件": "诊断", "轮次": rnd, "假设": hyp["hypothesis"],
+                           "公式": attempt, "诊断": diag})
                 feedback = diag + "\n\n上一版的全部关键指标：\n" + calc.metrics_brief(metrics)
                 try:
                     new_formula, _ = factor_agent.build_factor(
