@@ -1,5 +1,5 @@
 # measure_classics.py — 经典因子统一测算（一次性脚本，不属于主循环）
-# 用途：在与主循环完全相同的口径下测算灵感清单 16 条经典因子，
+# 用途：在与主循环完全相同的口径下测算 17 条经典因子，
 #       得到参照数字与两两相关，防生成因子与经典因子无声重复。
 # 口径：判定期限 20 日、训练段、成分口径、双门槛（Rank IC ≥ 0.02 且 ICIR ≥ 0.2），与 run.py 一致。
 # 产物：classic_results.jsonl（逐条指标组）、data/classic_values.parquet（因子值表）、classic_corr.csv（两两日截面 Spearman 相关，
