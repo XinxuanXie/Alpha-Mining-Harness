@@ -384,6 +384,24 @@ def tried_hypotheses(records, ic_threshold=0.02, icir_threshold=0.2, corr_thresh
         by_hyp[hyp] = f"{hyp} 〔{tag}〕"
     return list(by_hyp.values())
 
+def metrics_brief(m):
+    """关键指标简表：判定反馈修改时随诊断一并给因子 Agent，每项一行。
+    诊断负责指出最突出的问题，简表给出全局，避免只对着一个数字改。"""
+    f = lambda v, n=3: "缺失" if v is None else str(round(v, n))
+    by_year = m.get("分年IC") or {}
+    pos = sum(1 for v in by_year.values() if v is not None and v > 0)
+    cap = m.get("分市值组IC") or {}
+    quint = m.get("五分组收益") or []
+    return "\n".join([
+        f"Rank IC 均值 {f(m.get('IC均值'))}，ICIR {f(m.get('ICIR'), 2)}，t 值 {f(m.get('t值'), 1)}",
+        "各持有期 IC：" + " ".join(f"{k}日 {f(v)}" for k, v in (m.get("各持有期IC") or {}).items()),
+        f"分年 IC：{pos}/{len(by_year)} 年为正",
+        "分市值组 IC：" + " ".join(f"{k} {f(v)}" for k, v in cap.items()),
+        "五分组收益：" + " ".join(f(v, 4) for v in quint) + f"，多空收益 {f(m.get('多空收益'), 4)}",
+        f"覆盖率 {f(m.get('覆盖率'), 2)}，换手 {f(m.get('换手'))}，"
+        f"与经典因子最大相关 {f(m.get('与经典因子最大相关'), 2)}，与已通过因子最大相关 {f(m.get('与已通过因子最大相关'), 2)}",
+    ])
+
 def diagnose(m, ic_threshold=0.02, icir_threshold=0.2, corr_threshold=0.8):
     """诊断：程序从判定数字中按固定顺序判定最突出的问题，译成一句修改要求给因子 Agent。
     只给这一句与关键数字，原始指标明细不整包给模型（口径见《回测与判定设计说明》定案）。"""

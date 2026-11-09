@@ -96,9 +96,10 @@ def main():
                 if rev == FEEDBACK_MAX:
                     break
                 diag = calc.diagnose(metrics, THRESHOLD, ICIR_THRESHOLD, CORR_THRESHOLD)
+                feedback = diag + "\n\n上一版的全部关键指标：\n" + calc.metrics_brief(metrics)
                 try:
                     new_formula, _ = factor_agent.build_factor(
-                        hyp, wide, max_rewrite=MAX_REWRITE, feedback=diag, prev_formula=attempt)
+                        hyp, wide, max_rewrite=MAX_REWRITE, feedback=feedback, prev_formula=attempt)
                 except RuntimeError as e:
                     print(f"第 {rnd} 轮停止（已落盘的记录不受影响）：{e}")
                     return
