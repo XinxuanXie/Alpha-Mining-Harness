@@ -89,26 +89,12 @@ def _extract_json_array(text):
     return json.loads(text[start:end + 1])
 
 # ============================================================
-# 检索：提假设前程序先搜一圈学术研究（现象类查询，不带经典因子名），
-# 取论文标题与摘要编号注入提示词，作新假设的原料。
+# 检索：假设提出之后，程序按每条入选想法定向检索学术研究，
+# 取论文标题与摘要供该条的打磨使用。模型不联网，检索一律由程序执行。
 # 数据源依次尝试 OpenAlex、Semantic Scholar、arXiv（均免 key）；
-# 某源失败或无结果则换下一源，全无结果则跳过，不阻断提假设。
+# 某源失败或无结果则换下一源，全无结果则返回空，不阻断流程。
 # 通用网页搜索（Bing）实测只返回门户首页，不作数据源。
 # ============================================================
-SEARCH_QUERIES = [
-    "intraday return patterns stocks empirical evidence",
-    "trading volume and stock returns empirical study",
-    "stock return volatility cross-section empirical findings",
-    "overnight returns stocks empirical evidence",
-    "stock price jumps and future returns research",
-]
-ARXIV_QUERIES = [
-    'all:"intraday" AND all:"stock returns"',
-    'all:"trading volume" AND all:"stock returns"',
-    'all:"volatility" AND all:"return predictability"',
-    'all:"overnight returns" AND all:"stocks"',
-    'all:"price jumps" AND all:"stock returns"',
-]
 # 检索结果须含金融词才收（程序侧粗筛，滤掉字面误匹配）
 _FIN_WORDS = ("stock", "equity", "return", "market", "trading", "investor", "portfolio", "share", "volatility")
 
@@ -146,29 +132,30 @@ def _from_arxiv(query, n):
             out.append((clean(t.group(1)), clean(s.group(1))[:180] if s else ""))
     return out
 
-def search_notes(per_query=2):
+def _arxiv_query(english_query):
+    words = [w for w in re.findall(r"[A-Za-z]+", english_query.lower())
+             if w not in ("the", "of", "and", "in", "on", "a", "an", "to", "for", "with", "by")][:4]
+    return " AND ".join(f"all:{w}" for w in words) or "all:stock"
+
+def search_for(query, n=2):
+    """按一条想法定向检索：依次问三个学术源，取前 n 条（标题 + 摘要或出处）。"""
     notes = []
-    for i, q in enumerate(SEARCH_QUERIES):
-        got = []
-        for fetch, arg in ((_from_openalex, q), (_from_s2, q), (_from_arxiv, ARXIV_QUERIES[i])):
-            try:
-                got = fetch(arg, per_query)
-            except Exception:
-                got = []
-            if got:
-                break
+    for fetch, arg in ((_from_openalex, query), (_from_s2, query), (_from_arxiv, _arxiv_query(query))):
+        try:
+            got = fetch(arg, n)
+        except Exception:
+            got = []
         for title, extra in got:
             if not title or not any(w in (title + " " + extra).lower() for w in _FIN_WORDS):
                 continue
-            note = f"[S{len(notes) + 1}] {title}"
-            if extra:
-                note += f" — {extra}"
-            notes.append(note)
+            notes.append(title if not extra else f"{title} — {extra}")
+        if notes:
+            break
     return notes
 
 # ============================================================
 # 提出：一批假设，模型填量、经济逻辑、机制类别，程序拼装假设句
-# 两步：先出两倍候选，再由模型对照已试死法与机制分布选定批量数
+# 漏斗顺序：出题（两倍候选，不预喂论文）→ 审核砍半 → 按条定向检索 → 逐条打磨 → 定稿
 # ============================================================
 SYSTEM = """你是一名因子研究员，任务是成批提出可用历史数据检验的因子假设。
 只输出一个 JSON 数组，不要任何其他文字。数组每条含三项：
@@ -212,46 +199,124 @@ def _validate(items, seen):
         out.append({"hypothesis": hyp, "quantity": qty.strip(), "logic": logic, "mechanism": mech})
     return out
 
+# ============================================================
+# 审核：独立调用，只挑毛病与取舍，不提出新假设
+# 与出题分开调用、角色相反，避免自己肯定自己；每条入选者附一个最主要的问题
+# 与一个英文检索查询，供程序按该条定向检索
+# ============================================================
+REVIEW_SYSTEM = """你是一名审核员，负责审查一批候选因子假设。你不提出新假设，只做三件事：
+1. 从候选中挑出值得继续的若干条，标准：与已试清单中已淘汰的死法距离远、机制类别分散、经济逻辑站得住、不是经典机制的标准构造换皮。
+2. 给每条入选者指出一个最主要的问题：一句话，具体，不说空话。
+3. 给每条入选者写一个英文检索查询，用于查这条想法的相关学术证据，短语式，如 "intraday momentum reversal stock evidence"。
+只输出一个 JSON 数组，不要任何其他文字。每条含三项：
+{"index": 候选序号, "problem": "最主要的问题", "query": "英文检索查询"}
+按你的取舍从优到劣排序。"""
+
+def _review(candidates, tried_text, batch):
+    """返回 [{'index': 候选下标+1, 'problem': str, 'query': str}]；失败返回空列表（上层走兜底）。"""
+    cand_text = "\n".join(
+        f"{i + 1}. [{c['mechanism']}] {c['quantity']}（{c['logic']}）"
+        for i, c in enumerate(candidates))
+    user = f"""候选共 {len(candidates)} 条：
+{cand_text}
+
+已试假设清单（括号内为每条的结局；与这些相同或死法相同的不选）：
+{tried_text}
+
+已占满的经典机制（与这些机制的标准构造相近的不选）：
+{MECHANISM_NOTES}
+
+请挑出 {batch} 条。"""
+    messages = [{"role": "system", "content": REVIEW_SYSTEM}, {"role": "user", "content": user}]
+    try:
+        items, _, _ = _ask_items(messages)
+    except RuntimeError:
+        return []
+    picked = []
+    for it in items:
+        if not isinstance(it, dict):
+            continue
+        idx = it.get("index")
+        if not isinstance(idx, int) or not (1 <= idx <= len(candidates)):
+            continue
+        if any(p["index"] == idx for p in picked):
+            continue
+        picked.append({"index": idx, "problem": str(it.get("problem", "") or ""),
+                       "query": str(it.get("query", "") or "")})
+        if len(picked) == batch:
+            break
+    return picked
+
+# ============================================================
+# 打磨：逐条进行；输入候选、审核员的问题、按该条检索到的学术摘录，
+# 输出打磨后的一条（可微调、可改量、必要时改向）；失败则保留候选原样
+# ============================================================
+REFINE_SYSTEM = """你是一名因子研究员，负责把一条候选假设打磨成正式假设。
+只输出一个 JSON 数组，数组只有一条，格式与提假设时相同：
+{"quantity": "量", "logic": "经济逻辑", "mechanism": "机制类别"}
+mechanism 只能取给定清单中的一个；quantity 的规则与提假设时相同（已定向、带回望窗口、方向写进量本身）。"""
+
+def _refine(cand, problem, notes):
+    """返回打磨后的原始条目 dict；失败返回 None。"""
+    notes_text = "\n".join(f"- {n}" for n in notes) if notes else "（无）"
+    user = f"""候选假设：量＝{cand['quantity']}；经济逻辑＝{cand['logic']}；机制类别＝{cand['mechanism']}
+
+审核员指出的问题：{problem or '（无）'}
+
+与这条想法相关的学术摘录（程序按该想法定向检索所得）：
+{notes_text}
+
+机制类别清单：{'、'.join(MECHANISMS)}
+
+请打磨这条假设：针对审核员的问题修正；摘录若给出更明确的机制、方向或构造线索，据此加强；若摘录显示这个方向已有成熟研究且构造雷同，换参照对象或组合方式避开。可以微调，也可以改量本身，但机制类别须与改后的量一致。"""
+    messages = [{"role": "system", "content": REFINE_SYSTEM}, {"role": "user", "content": user}]
+    try:
+        items, _, _ = _ask_items(messages)
+    except RuntimeError:
+        return None
+    for it in items:
+        if isinstance(it, dict) and it.get("quantity"):
+            return it
+    return None
+
 def propose(tried, batch=8):
     """tried 为已试假设列表（条目带结局标注）。返回假设字典列表（已去重、已校验）。
-    两步生成：第一步出 batch*2 条候选，第二步模型从候选中选定 batch 条；
-    候选不足 batch*2 时以实际候选为准，候选不超过 batch 时跳过选定步。"""
+    漏斗顺序：出题（batch*2 条候选，不预喂论文）→ 审核（独立调用砍到 batch 条，
+    每条附问题与检索查询；审核失败则按原顺序取前 batch 条）→ 程序按条定向检索 →
+    逐条打磨（回应问题与摘录；失败保留原样）→ 程序校验去重定稿。
+    候选不超过 batch 时跳过审核与打磨，直接返回。"""
     tried_text = "\n".join(f"- {t}" for t in tried) if tried else "（无）"
-    notes = search_notes()
-    notes_block = ""
-    if notes:
-        notes_block = ("\n公开研究摘录（程序检索所得，编号可引用；可参考，也可不用）：\n"
-                       + "\n".join(notes) + "\n")
     user = f"""{DATA_DOC}
 
 机制类别清单：{'、'.join(MECHANISMS)}
 
 已占满的经典机制（只有机制，没有公式；这张地图只用来划界——不要提与这些机制的标准构造相近的量，去地图之外构造：换信息来源、换参照对象、换组合方式）：
 {MECHANISM_NOTES}
-{notes_block}
+
 已试假设清单（括号内为每条的结局；不得重复提出，也不要重蹈已淘汰的死法）：
 {tried_text}
 
 请先提出 {batch * 2} 条候选假设，彼此尽量不同。"""
     messages = [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}]
-    items, messages, raw = _ask_items(messages)
+    items, _, _ = _ask_items(messages)
     seen = {t.split(" 〔")[0] for t in tried}  # tried 条目带结局标注，去重只比对标注前的假设句
     candidates = _validate(items, set(seen))
     if len(candidates) <= batch:
         return candidates
-    cand_text = "\n".join(
-        f"{i + 1}. [{c['mechanism']}] {c['quantity']}（{c['logic']}）"
-        for i, c in enumerate(candidates))
-    select_msg = {
-        "role": "user",
-        "content": f"""候选共 {len(candidates)} 条：
-{cand_text}
-
-从中选出 {batch} 条作为本轮正式假设。取舍标准：与已试清单中已淘汰的死法距离远、机制类别分散、经济逻辑站得住。可以微调入选条目中量的表述。按同样的 JSON 数组格式只输出入选的 {batch} 条。""",
-    }
-    items2, _, _ = _ask_items(messages + [{"role": "assistant", "content": raw}, select_msg])
-    selected = _validate(items2, set(seen))
-    return selected[:batch] if selected else candidates[:batch]
+    picked = _review(candidates, tried_text, batch)
+    if not picked:
+        picked = [{"index": i + 1, "problem": "", "query": ""} for i in range(batch)]
+    out = []
+    for p in picked:
+        cand = candidates[p["index"] - 1]
+        item = {"quantity": cand["quantity"], "logic": cand["logic"], "mechanism": cand["mechanism"]}
+        if p["problem"] or p["query"]:
+            notes = search_for(p["query"]) if p["query"] else []
+            refined = _refine(cand, p["problem"], notes)
+            if refined is not None:
+                item = refined
+        out.extend(_validate([item], seen))
+    return out
 
 # ============================================================
 # 自检（块三验收）：直接运行本文件时执行
