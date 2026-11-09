@@ -112,12 +112,25 @@ def _rank_sector(x):
         out[cols] = _rank_cs(x[cols])
     return out
 
+def _sector_mean(x):
+    # 当日同行业平均值：组内每只股票都取所属行业当日均值（缺失不计入）；无行业分类的股票输出缺失
+    if not SECTOR_OF:
+        raise ValueError("行业数据不可用，无法使用 sector_mean")
+    out = pd.DataFrame(np.nan, index=x.index, columns=x.columns)
+    names = {SECTOR_OF.get(int(c)) for c in x.columns} - {None}
+    for name in names:
+        cols = [c for c in x.columns if SECTOR_OF.get(int(c)) == name]
+        m = x[cols].mean(axis=1).to_numpy()
+        out[cols] = np.repeat(m[:, None], len(cols), axis=1)
+    return out
+
 OPS = {
     "neg": lambda a: -a,
     "abs": lambda a: a.abs() if hasattr(a, "abs") else abs(a),
     "log": lambda a: np.log(a.where(a > 0) if hasattr(a, "where") else a),
     "rank": _rank_cs,
     "rank_sector": _rank_sector,
+    "sector_mean": _sector_mean,
     "gt": _gt,
     "delay": lambda a, d: a.shift(d),
     "delta": lambda a, d: a - a.shift(d),
@@ -163,7 +176,7 @@ def _eval(node, wide):
         if not isinstance(node.func, ast.Name) or node.func.id not in OPS:
             raise ValueError(f"不允许的算子：{ast.dump(node.func)[:40]}")
         name = node.func.id
-        arity = {"neg": 1, "abs": 1, "log": 1, "rank": 1, "rank_sector": 1, "ts_corr": 3}.get(name, 2)
+        arity = {"neg": 1, "abs": 1, "log": 1, "rank": 1, "rank_sector": 1, "sector_mean": 1, "ts_corr": 3}.get(name, 2)
         if len(node.args) != arity:
             raise ValueError(f"算子 {name} 需要 {arity} 个参数，给了 {len(node.args)} 个")
         args = [_eval(a, wide) for a in node.args]
@@ -288,7 +301,7 @@ def judge(ic_mean, threshold, icir=None, icir_threshold=None, classic_corr=None,
     return True
 
 # ============================================================
-# 经典因子值表：16 条经典因子的因子值存成一张长表（date、permno、C01…C16），
+# 经典因子值表：17 条经典因子的因子值存成一张长表（date、permno、C01…C17），
 # 供相关性判定反复读取，不必每次运行重新计算
 # 公式只存于程序一侧（相关性参照），不喂给假设 Agent——喂公式会被照抄（2026-11-09 验收跑实测）
 # ============================================================
@@ -309,6 +322,7 @@ CLASSIC_FORMULAS = [
     "neg(ts_sum(close / open - 1, 20))",
     "neg(log(mktcap))",
     "delay(close, 232) / delay(close, 252) - 1",
+    "ts_sum(sector_mean(close / delay(close, 1) - 1), 126)",
 ]
 def save_classics(frames):
     """把经典因子宽表列表存成长表一张（float32，只存至少一条非缺失的行）。"""
