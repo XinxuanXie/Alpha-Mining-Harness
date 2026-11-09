@@ -106,7 +106,7 @@ def propose(tried, batch=8, format_retries=2):
 已占满的经典机制（只有机制，没有公式；这张地图只用来划界——不要提与这些机制的标准构造相近的量，去地图之外构造：换信息来源、换参照对象、换组合方式）：
 {MECHANISM_NOTES}
 
-已试假设清单（不得重复提出）：
+已试假设清单（括号内为每条的结局；不得重复提出，也不要重蹈已淘汰的死法）：
 {tried_text}
 
 请提出 {batch} 条新假设。"""
@@ -126,7 +126,7 @@ def propose(tried, batch=8, format_retries=2):
     else:
         raise RuntimeError(f"模型输出格式重试达上限：{last_err}")
 
-    seen = set(tried)
+    seen = {t.split(" 〔")[0] for t in tried}  # tried 条目带结局标注，去重只比对标注前的假设句
     out = []
     for it in items:
         if not isinstance(it, dict):

@@ -55,7 +55,9 @@ def main():
                                  "门槛": THRESHOLD, "ICIR门槛": ICIR_THRESHOLD, "相关门槛": CORR_THRESHOLD,
                                  "重写上限": MAX_REWRITE}, ensure_ascii=False) + "\n")
         try:
-            hyps = hypothesis_agent.propose(calc.tried_hypotheses(records), batch=args.batch)
+            hyps = hypothesis_agent.propose(
+                calc.tried_hypotheses(records, THRESHOLD, ICIR_THRESHOLD, CORR_THRESHOLD),
+                batch=args.batch)
         except RuntimeError as e:
             print(f"第 {rnd} 轮停止：{e}")
             break

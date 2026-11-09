@@ -359,9 +359,29 @@ def read_records(path):
                 out.append(json.loads(line))
     return out
 
-def tried_hypotheses(records):
-    """已试假设清单：记录中全部假设内容，供下一轮去重与避让。"""
-    return [r["假设"] for r in records]
+def tried_hypotheses(records, ic_threshold=0.02, icir_threshold=0.2, corr_threshold=0.8):
+    """已试假设清单：每条假设附结局标注（死因由程序按判定数字判定，只列未过的门与实际值），
+    供下一轮去重与避让死法。标注以「 〔…〕」结尾，去重时按标注前的假设句比对。"""
+    out = []
+    for r in records:
+        hyp = r["假设"]
+        if r["结论"] == "通过":
+            tag = "已通过"
+        elif r["结论"] == "无法表达":
+            tag = "无法表达"
+        else:
+            m = r["判定数字"] or {}
+            fails = []
+            ic, icir, corr = m.get("IC均值"), m.get("ICIR"), m.get("与经典因子最大相关")
+            if ic is None or ic < ic_threshold:
+                fails.append(f"IC {'缺失' if ic is None else round(ic, 3)} 未过 {ic_threshold}")
+            if icir is None or icir < icir_threshold:
+                fails.append(f"ICIR {'缺失' if icir is None else round(icir, 2)} 未过 {icir_threshold}")
+            if corr is not None and corr >= corr_threshold:
+                fails.append(f"与经典相关 {round(corr, 2)} 超 {corr_threshold}")
+            tag = "淘汰：" + "；".join(fails) if fails else "未通过"
+        out.append(f"{hyp} 〔{tag}〕")
+    return out
 
 # ============================================================
 # 自检（块一验收）：直接运行本文件时执行
