@@ -361,8 +361,9 @@ def read_records(path):
 
 def tried_hypotheses(records, ic_threshold=0.02, icir_threshold=0.2, corr_threshold=0.8):
     """已试假设清单：每条假设附结局标注（死因由程序按判定数字判定，只列未过的门与实际值），
-    供下一轮去重与避让死法。标注以「 〔…〕」结尾，去重时按标注前的假设句比对。"""
-    out = []
+    供下一轮去重与避让死法。标注以「 〔…〕」结尾，去重时按标注前的假设句比对。
+    同一假设有多行记录（判定反馈修改的各版本）时，只取最后一行的结局。"""
+    by_hyp = {}
     for r in records:
         hyp = r["假设"]
         if r["结论"] == "通过":
@@ -380,8 +381,41 @@ def tried_hypotheses(records, ic_threshold=0.02, icir_threshold=0.2, corr_thresh
             if corr is not None and corr >= corr_threshold:
                 fails.append(f"与经典相关 {round(corr, 2)} 超 {corr_threshold}")
             tag = "淘汰：" + "；".join(fails) if fails else "未通过"
-        out.append(f"{hyp} 〔{tag}〕")
-    return out
+        by_hyp[hyp] = f"{hyp} 〔{tag}〕"
+    return list(by_hyp.values())
+
+def diagnose(m, ic_threshold=0.02, icir_threshold=0.2, corr_threshold=0.8):
+    """诊断：程序从判定数字中按固定顺序判定最突出的问题，译成一句修改要求给因子 Agent。
+    只给这一句与关键数字，原始指标明细不整包给模型（口径见《回测与判定设计说明》定案）。"""
+    cov = m.get("覆盖率")
+    if cov is not None and cov < 0.5:
+        return (f"覆盖率只有 {cov:.0%}：因子值在多数股票日上算不出。"
+                "缩短回望窗口，或改用对缺失不敏感的构造。")
+    corr = m.get("与经典因子最大相关")
+    if corr is not None and corr >= corr_threshold:
+        return (f"与经典因子最大相关 {corr:.2f}：构造与经典因子过于接近。"
+                "换参照对象或组合方式，不要只改窗口与参数。")
+    by_year = m.get("分年IC") or {}
+    if by_year:
+        pos = sum(1 for v in by_year.values() if v is not None and v > 0)
+        if pos <= len(by_year) // 3:
+            return (f"分年 IC 只有 {pos}/{len(by_year)} 年为正：效果集中在少数年份。"
+                    "检查构造是否只贴合了个别时期的行情特征。")
+    by_cap = {k: v for k, v in (m.get("分市值组IC") or {}).items() if v is not None}
+    if len(by_cap) == 3 and max(by_cap.values()) - min(by_cap.values()) > 0.02 and min(by_cap.values()) < 0:
+        worst = min(by_cap, key=by_cap.get)
+        return (f"分市值组 IC 差异大且{worst}市值组为负（{by_cap[worst]:.3f}）：信号只在部分市值段成立。"
+                "改用截面排名类构造，或换参照对象。")
+    quint = m.get("五分组收益") or []
+    if len(quint) == 5 and all(v is not None for v in quint) and max(quint) != quint[4]:
+        return (f"五分组收益不单调，最高的是第 {quint.index(max(quint)) + 1} 组而不是第 5 组："
+                "量的高低与收益不是单调关系。考虑对量取绝对值或换构造。")
+    ic, icir = m.get("IC均值"), m.get("ICIR")
+    if ic is not None and ic >= 0.01 and (icir is None or icir < icir_threshold):
+        return (f"IC 均值 {ic:.3f} 已接近门槛，但 ICIR 只有 {icir if icir is None else round(icir, 2)}：日 IC 波动过大。"
+                "用更长窗口的均值平滑构造，提高稳定性。")
+    return (f"IC 均值 {ic if ic is None else round(ic, 3)}，离门槛 {ic_threshold} 较远："
+            "信号本身弱，需要换构造思路，而不是微调参数。")
 
 # ============================================================
 # 自检（块一验收）：直接运行本文件时执行

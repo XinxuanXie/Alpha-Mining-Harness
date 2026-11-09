@@ -126,8 +126,10 @@ SYSTEM = """你是一名因子研究员，任务是把给定的假设忠实地�
 确实无法用给定字段与算子表达时：{"buildable": false, "reason": "原因"}
 公式的核心信号必须来自假设本身，不得用其他信号替代。"""
 
-def build_factor(hypothesis, wide, max_rewrite=3):
-    """返回 (公式, None) 或 (None, 无法表达的原因)。"""
+def build_factor(hypothesis, wide, max_rewrite=3, feedback=None, prev_formula=None):
+    """返回 (公式, None) 或 (None, 无法表达的原因)。
+    feedback 为程序按回测指标给出的修改要求（判定反馈修改）：连同上一版公式一并给出，
+    模型针对该问题改构造，但假设所指的量不变，改后仍走试算与核对。"""
     user = f"""假设内容：{hypothesis['hypothesis']}
 经济逻辑：{hypothesis['logic']}
 机制类别：{hypothesis['mechanism']}
@@ -135,6 +137,12 @@ def build_factor(hypothesis, wide, max_rewrite=3):
 {DATA_DOC}
 
 {OPS_DOC}"""
+    if feedback and prev_formula:
+        user += f"""
+
+上一版公式：{prev_formula}
+上一版公式在训练段回测后未通过判定，程序诊断出最突出的问题：{feedback}
+请针对该问题修改公式后重新输出。不得改变假设所指的量，只改构造方式。"""
     messages = [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}]
     last_err = None
     for attempt in range(max_rewrite + 1):
