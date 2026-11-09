@@ -1,0 +1,9 @@
+# 数据文件（含经典因子值表）：本地生成/本地存放，不进仓库
+data/*.parquet
+# 运行账本：各机器本地产物
+records.jsonl
+params_log.jsonl
+records-*.jsonl
+params_log-*.jsonl
+records_selftest.jsonl
+__pycache__/
