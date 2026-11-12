@@ -105,15 +105,17 @@ SYMMETRIC_CATEGORIES = {"过度反应", "反应不足"}  # 词表中标为对称
 # ============================================================
 # 调用一：展开假设
 # 输入：线索（方向、现象、收益来源）+ 经验条目 + 同类别已否决方向清单
-# 输出：假设列表，每条为登记格式的字典
+#       + 方向第 2 次及以后尝试的结构化反馈包（上次回执与数据地形，run.py 组装）
+# 输出：假设列表，每条为登记格式的字典；有反馈包时每条须带 feedback_response
 # ============================================================
 EXPAND_SYSTEM = """你是一名量化研究员。你的任务是把一条研究线索展开成少量可检验的假设。
 每条假设必须有明确的机制与收益来源，并给出可被数据证伪的条件预测。
 只输出 JSON，不要输出其他文字。"""
 
-def expand_hypotheses(clue, exp_entries, rejected_same_category, sectors=None):
+def expand_hypotheses(clue, exp_entries, rejected_same_category, sectors=None, feedback=None):
     payload = {"clue": clue, "exp_entries": exp_entries,
-               "rejected_same_category": rejected_same_category}
+               "rejected_same_category": rejected_same_category,
+               "feedback": feedback}
     exp_text = "\n".join(
         f"[经验{e['编号']}] 类别 {e['机制类别']}，状态 {e['状态']}：{e['讲评']['findings']} 避开：{e['讲评']['avoid']}"
         for e in exp_entries) or "（该类别暂无经验条目）"
@@ -121,6 +123,39 @@ def expand_hypotheses(clue, exp_entries, rejected_same_category, sectors=None):
         f"- 方向「{r['方向']}」：{r['假设摘要']}（结局：{r['结局']}）"
         + (f"；对抗意见：{r['对抗摘要']}" if r.get("对抗摘要") else "")
         for r in rejected_same_category) or "（无）"
+    fb_text = ""
+    if feedback:
+        lines = []
+        last = feedback.get("上次尝试") or {}
+        head = (f"上次尝试：假设「{last.get('假设', '')}」→ 结论 {last.get('结论', '')}，"
+                f"失效层 {last.get('失效层', '')}")
+        if last.get("无法表达原因"):
+            head += f"，无法表达原因：{last['无法表达原因']}"
+        lines.append(head)
+        for p in feedback.get("预测核对") or []:
+            lines.append(
+                f"- 预测（{p['dim']}，{'关键' if p.get('key') else '一般'}）：{p['a']} 高于 {p['b']}"
+                f"——实际 {p['a']} 组 IC {p.get('a值')} vs {p['b']} 组 IC {p.get('b值')}，"
+                f"{'兑现' if p['兑现'] else '未兑现'}")
+        memo = feedback.get("检验侧备忘录") or {}
+        if memo.get("失效解释"):
+            lines.append(f"检验侧失效备忘录：{memo['失效解释']}"
+                         + (f"；未覆盖的失效方式：{memo['未覆盖的失效方式']}"
+                            if memo.get("未覆盖的失效方式") else ""))
+        ga = feedback.get("生成侧对抗") or {}
+        ga_bits = [f"{k}：{ga[k]}" for k in ("换皮判断", "预测问题", "机制问题", "引用问题")
+                   if ga.get(k) and ga[k] != "无"]
+        if ga_bits:
+            lines.append("生成侧对抗意见：" + "；".join(ga_bits))
+        terr = feedback.get("数据地形") or []
+        if terr:
+            lines.append("数据地形（程序在训练段扫描所得、已过噪声标尺的条件规律，可作机制假设的入料）：")
+            lines += [f"- {t}" for t in terr]
+        fb_text = ("\n\n本方向上一次尝试的结构化反馈（本轮为该方向第 2 次及以后尝试）：\n"
+                   + "\n".join(lines)
+                   + "\n每条假设必须输出 feedback_response：逐条回应上次未兑现的预测"
+                     "——本条假设改了什么、为什么；至少须点名一个未兑现预测的维度"
+                     "（市值组 / 持有期 / 行业）。未写或未点名维度，登记会被程序拒登。")
     user = f"""线索：
 方向：{clue['direction']}
 现象：{clue['phenomenon']}
@@ -133,6 +168,7 @@ def expand_hypotheses(clue, exp_entries, rejected_same_category, sectors=None):
 
 同类别已被否决或关键预测未兑现的方向（新假设须在 diff_from_rejected 中写明与它们的区别，并回应其中的对抗意见；没有区别的不要提出）：
 {rej_text}
+{fb_text}
 
 方向约定：假设与基准公式的方向须使因子值越大、预期收益越高；与收益呈反向关系的量，先取负再写。
 基准公式须保留原始量纲与符号，不要套 rank 等截面变换（否则按符号分组的检验无法执行）。
@@ -151,6 +187,7 @@ predictions（至少两条，每条 {{"dim": "市值组|持有期|行业", "a": 
 行业的 a 只能取自下面的行业名清单、b 固定为 "整体"（a 写"整体"会被程序拒登）；恰有一条 key 为 true，即与机制直接对应的关键预测）、
 行业名清单（行业预测的 a 只能取自）：{', '.join(sorted(sectors)) if sectors else '（未提供）'}
 falsify（否定条件）、exp_refs（引用的经验编号列表）、diff_from_rejected（与上述已否决方向的区别，无则空字符串）、
+feedback_response（给出上次尝试反馈时必填：逐条回应上次未兑现预测的修改与理由，至少点名一个未兑现维度；未给反馈时省略）、
 search_queries（1 至 2 条英文检索式，用于为这条假设检索学术资料，须具体到机制与现象，如 "short-term return reversal liquidity provision"）。
 展开 1 至 3 条假设，宁缺毋滥。"""
     out = _dispatch("expand", payload, EXPAND_SYSTEM, user)

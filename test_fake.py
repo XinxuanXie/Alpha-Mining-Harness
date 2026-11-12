@@ -42,10 +42,14 @@ HYP = {
 
 state = {"formula_calls": 0, "review_calls": 0, "review_mode": "先错后对", "propose_calls": 0,
          "refine_mode": "采纳", "attack_reg_payload": None,
-         "refine_calls": 0, "refine_payload": None, "pick_payload": None}
+         "refine_calls": 0, "refine_payload": None, "pick_payload": None,
+         "expand_payload": None, "expand_hyps": None}
 
 def fake(role, payload):
     if role == "expand":
+        state["expand_payload"] = payload
+        if state["expand_hyps"] is not None:
+            return {"hypotheses": state["expand_hyps"]}
         return {"hypotheses": [HYP]}
     if role == "formula":
         state["formula_calls"] += 1
@@ -71,6 +75,18 @@ def fake(role, payload):
                     "mechanism": HYP["mechanism"],
                     "predictions": [{"dim": "市值组", "a": "小", "b": "大", "key": True}],
                     "falsify": "x", "lit_refs": [], "changes": "删减预测"}
+        if state["refine_mode"] == "空转":
+            # 零引用零修改（changes 为空）却改了登记内容：假优化，应被硬校验判失败
+            return {"measure": HYP["measure"], "baseline_formula": HYP["baseline_formula"],
+                    "mechanism": HYP["mechanism"], "predictions": HYP["predictions"],
+                    "falsify": "（优化）" + HYP["falsify"],
+                    "lit_refs": [], "changes": ""}
+        if state["refine_mode"] == "空转无修改":
+            # 零引用、changes 只写“无修改”却改了登记内容：同样是假优化，应判失败
+            return {"measure": HYP["measure"], "baseline_formula": HYP["baseline_formula"],
+                    "mechanism": HYP["mechanism"], "predictions": HYP["predictions"],
+                    "falsify": "（优化）" + HYP["falsify"],
+                    "lit_refs": [], "changes": "无修改"}
         return {"measure": HYP["measure"], "baseline_formula": HYP["baseline_formula"],
                 "mechanism": HYP["mechanism"] + "（据 L1 补充流动性条件）",
                 "predictions": HYP["predictions"],
@@ -411,5 +427,74 @@ search.search("q-stale")
 assert _box["calls"] > _calls_before, "只有标题的旧缓存不应沿用，应重新检索"
 search._attempt, search.CACHE_PATH = _saved_attempt, _saved_cache_path
 print("验收 12 通过：提示硬化、实现层预算口径、带摘要才缓存、网络重试、预计算字段")
+
+# ---- 验收 13：搜索做实——refine 零引用零修改判假优化失败，正常 refine 照常采纳 ----
+_saved_search13 = search.search
+search.search = lambda query, limit=5: [
+    {"标题": "Short-Term Reversal and Liquidity", "年份": 2010, "来源": "替身",
+     "摘要": "reversal profits are related to liquidity provision", "全文链接": None}]
+hyp13 = dict(HYP)
+hyp13["search_queries"] = ["short-term reversal liquidity"]
+for _mode13 in ("空转", "空转无修改"):
+    state["refine_mode"] = _mode13
+    _refine_before13 = state["refine_calls"]
+    rec13, _, _, _ = run.process_hypothesis(dict(hyp13), wide, classics, cap)
+    assert state["refine_calls"] == _refine_before13 + 1, "空转场景应确有调用优化"
+    assert rec13["登记"]["否定条件"] == HYP["falsify"], \
+        f"模式 {_mode13}：零引用零修改应判优化失败、保留初稿，实际登记 {rec13['登记']['否定条件']}"
+    assert rec13["登记"]["优化说明"] == "检索后优化失败，用初稿", \
+        f"模式 {_mode13}：登记应沿用失败标注，实际 {rec13['登记']['优化说明']}"
+    assert rec13["登记"]["文献引用"] == [], "判失败时不应记录文献引用"
+tr13 = run.read_jsonl(run.TRACE_PATH)
+assert any(e["事件"] == "假设优化失败" and e.get("原因") == "无引用无修改" for e in tr13), \
+    "轨迹应记假设优化失败事件并注明原因“无引用无修改”"
+state["refine_mode"] = "采纳"
+rec13c, _, _, _ = run.process_hypothesis(dict(hyp13), wide, classics, cap)
+assert rec13c["登记"]["否定条件"] == "（优化）" + HYP["falsify"], "含引用与修改的正常优化应照常采纳"
+assert rec13c["登记"]["文献引用"] == ["L1"], "正常采纳时应记录文献引用"
+search.search = _saved_search13
+print("验收 13 通过：零引用零修改判优化失败用初稿并留痕，正常优化照常采纳")
+
+# ---- 验收 14：反馈做实——第二次尝试带反馈包，无回应拒登、合格回应登记成功 ----
+prior14 = {"方向": "反馈测试方向", "机制类别": "过度反应", "假设": "第一版假设",
+           "结论": "否决", "失效层": "想法层", "工具版本": calc.TOOLING_VERSION,
+           "预测核对": [{"dim": "市值组", "a": "小", "b": "大", "key": True,
+                         "a值": 0.001, "b值": 0.012, "兑现": False},
+                        {"dim": "持有期", "a": "20", "b": "5", "key": False,
+                         "a值": 0.010, "b值": 0.002, "兑现": True}],
+           "生成侧对抗": {"换皮判断": "与经典反转同源", "预测问题": "无",
+                          "机制问题": "无", "引用问题": "无"},
+           "检验侧对抗": {"失效解释": "小市值组并无更强反转", "未覆盖的失效方式": "未按波动分组",
+                          "备注": ""}}
+run.append_jsonl(run.RECORDS_PATH, prior14)
+cand_base = dict(HYP)
+cand_base.update({"direction": "反馈测试方向", "exp_refs": ["E001"],
+                  "diff_from_rejected": "限定触发条件，与已否决方向不同",
+                  "search_queries": []})
+cand_no_resp = dict(cand_base)
+cand_resp = dict(cand_base)
+cand_resp["feedback_response"] = ("上次市值组关键预测未兑现（小市值组 IC 反低于大市值组）："
+                                  "本版改以行业内相对跌幅触发，回应市值组维度")
+state["expand_hyps"] = [cand_no_resp, cand_resp]
+stats14 = {"done": run.MAX_TOTAL_ATTEMPTS - 1, "passed": 0, "pred_total": 0,
+           "pred_hit": 0, "candidates": 0, "rejected": 0, "backtested": 0,
+           "inexpressible": 0}
+clue14 = {"direction": "反馈测试方向", "phenomenon": "某种现象",
+          "source": "某种收益来源", "category": "过度反应"}
+run.run_direction(clue14, wide, classics, cap, set(calc.SECTOR_OF.values()), stats14)
+state["expand_hyps"] = None
+fb14 = state["expand_payload"]["feedback"]
+assert fb14 is not None, "第二次尝试展开应收到反馈包"
+assert fb14["上次尝试"]["失效层"] == "想法层", "反馈包应含上次失效层"
+assert fb14["未兑现维度"] == ["市值组"], f"反馈包应列未兑现维度：{fb14['未兑现维度']}"
+assert fb14["检验侧备忘录"]["失效解释"] == "小市值组并无更强反转", "反馈包应含检验侧失效备忘录"
+assert fb14["数据地形"] and fb14["数据地形"][0].startswith("C11"), \
+    f"反馈包应含数据地形清单（首条为扫描过关格子）：{fb14['数据地形'][:1]}"
+tr14 = run.read_jsonl(run.TRACE_PATH)
+assert any(e["事件"] == "拒登" and any("feedback_response" in x for x in e.get("原因", []))
+           for e in tr14), "无 feedback_response 的候选应被拒登并注明原因"
+recs14 = [r for r in run.read_jsonl(run.RECORDS_PATH) if r["方向"] == "反馈测试方向"]
+assert len(recs14) == 2, f"合格回应应登记成功并完成第二次尝试：{len(recs14)} 条记录"
+print("验收 14 通过：反馈包送达展开、无回应拒登、合格回应登记成功")
 
 print("\n全部替身验收通过")

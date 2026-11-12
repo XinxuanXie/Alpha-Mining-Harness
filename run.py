@@ -3,6 +3,7 @@
 #       → 讲评归档 → 经验回流与预算再发放。本文件是唯一有权写账本与经验库的程序。
 # 依据：《因子挖掘系统新计划》与《第一期实现规格》。判定一律由程序按规则执行，模型不参与判定。
 
+import csv
 import json
 import os
 import sys
@@ -83,7 +84,7 @@ def trace(event, **fields):
 # ============================================================
 # 登记校验（规格 2.4）：程序逐项检查，任一不过即拒登
 # ============================================================
-def validate_registration(hyp, exp_entries, rejected_keys, sectors=None):
+def validate_registration(hyp, exp_entries, rejected_keys, sectors=None, feedback_dims=None):
     errs = []
     if hyp.get("category") not in agents.CATEGORIES:
         errs.append(f"机制类别不在词表内：{hyp.get('category')}")
@@ -116,6 +117,14 @@ def validate_registration(hyp, exp_entries, rejected_keys, sectors=None):
         errs.append("未引用任何经验条目")
     if rejected_keys and not (hyp.get("diff_from_rejected") or "").strip():
         errs.append("同类别有已否决或关键预测未兑现的方向，未写明区别")
+    if feedback_dims is not None:
+        # 有上次尝试的反馈包：必须逐条回应未兑现预测，且至少点名一个未兑现维度，
+        # 否则反馈没有落到修改上，拒登。
+        resp = (hyp.get("feedback_response") or "").strip()
+        if not resp:
+            errs.append("有上次尝试反馈包，未写 feedback_response（须逐条回应未兑现预测）")
+        elif feedback_dims and not any(DIM_KEYWORD.get(d, d) in resp for d in feedback_dims):
+            errs.append("feedback_response 未提及任何未兑现预测的维度（市值组/持有期/行业）")
     return errs
 
 def validate_clue(clue, existing_directions):
@@ -314,6 +323,15 @@ def process_hypothesis(hyp, wide, classics, cap_complexity):
                 hyp["优化说明"] = "检索后优化失败，用初稿"
                 trace("假设优化失败", 方向=hyp["direction"], 假设=hyp["hypothesis"],
                       错误=str(e))
+            if refined:
+                # 假优化硬校验：无引用且无修改（空或仅写“无修改”），等于没有用上任何
+                # 检索材料，判优化失败、用初稿，不许以“采纳”名义空转。
+                chg = (refined.get("changes") or "").strip()
+                if not refined.get("lit_refs") and chg in ("", "无修改"):
+                    hyp["优化说明"] = "检索后优化失败，用初稿"
+                    trace("假设优化失败", 方向=hyp["direction"], 假设=hyp["hypothesis"],
+                          原因="无引用无修改")
+                    refined = None
             if refined:
                 merged = dict(hyp)
                 for k in ("measure", "baseline_formula", "mechanism", "predictions", "falsify"):
@@ -517,6 +535,55 @@ def rejected_summaries(category, records):
                         "对抗摘要": "；".join(bits)})
     return out
 
+# ============================================================
+# 反馈包（方向第 2 次及以后尝试）：把上次尝试的完整回执结构化喂回展开，
+# 让修改有据可依：改了什么、为什么，由展开在 feedback_response 中逐条回应，
+# 登记校验把关（见 validate_registration）。训练段数字按既定口径可喂生成侧；
+# 修改只能以新尝试出现，同一次尝试内仍不按回测或对抗改登记。
+# ============================================================
+TERRAIN_PATH = os.path.join(BASE, "..", "hidden_files", "scan_results.csv")
+DIM_KEYWORD = {"市值组": "市值", "持有期": "持有期", "行业": "行业"}
+
+def load_terrain():
+    """数据地形：扫描探针中已过噪声标尺的条件规律（pass 为真），格式化为短清单。
+    行格式：信号编号 + 方案 + 格子 + IC + 三子时段 IC。文件缺失或无过关格子时返回空。"""
+    if not os.path.exists(TERRAIN_PATH):
+        return []
+    out = []
+    with open(TERRAIN_PATH, encoding="utf-8") as fh:
+        for row in csv.DictReader(fh):
+            if (row.get("pass") or "").strip().lower() != "true":
+                continue
+            out.append(
+                f"{row['signal']} {row['scheme']} {row['cell']} IC {float(row['ic_full']):.3f}"
+                f"（三子时段 {float(row['ic_2000_2005']):.3f}/{float(row['ic_2006_2010']):.3f}"
+                f"/{float(row['ic_2011_2016']):.3f}）")
+    return out
+
+def build_feedback(records, direction, terrain):
+    """组装一个方向的结构化反馈包；该方向尚无任何尝试记录时返回 None。
+    内容：上次尝试的结论与失效层、最近一次有预测核对的逐条核对（实际分组 IC）、
+    生成侧与检验侧对抗意见、该方向全部未兑现预测的维度、数据地形清单。"""
+    mine = [r for r in records if r["方向"] == direction]
+    if not mine:
+        return None
+    last = mine[-1]
+    with_preds = [r for r in mine if r.get("预测核对")]
+    pred_src = with_preds[-1] if with_preds else None
+    unfulfilled = sorted({p["dim"] for r in mine for p in (r.get("预测核对") or [])
+                          if not p["兑现"]})
+    return {
+        "上次尝试": {"假设": last["假设"], "结论": last["结论"],
+                     "失效层": last.get("失效层"),
+                     "无法表达原因": last.get("无法表达原因", "")},
+        "预测核对": (pred_src or {}).get("预测核对"),
+        "预测核对来源": (pred_src or {}).get("假设"),
+        "未兑现维度": unfulfilled,
+        "检验侧备忘录": (pred_src or {}).get("检验侧对抗") or last.get("检验侧对抗"),
+        "生成侧对抗": last.get("生成侧对抗") or (pred_src or {}).get("生成侧对抗"),
+        "数据地形": terrain,
+    }
+
 def run_direction(clue, wide, classics, cap_complexity, sectors, stats):
     """跑完一个方向：逐次申请预算、展开、处理，直到停止发放、无合格登记或达总上限。"""
     direction = clue["direction"]
@@ -530,9 +597,15 @@ def run_direction(clue, wide, classics, cap_complexity, sectors, stats):
         entries = read_jsonl(EXP_PATH)
         exp_in = retrieve_exp(clue.get("category"), entries) if clue.get("category") else entries[:EXP_LIMIT]
         rej = rejected_summaries(clue.get("category"), records) if clue.get("category") else []
+        # 第 2 次及以后尝试：组装结构化反馈包一并喂给展开，修改须在 feedback_response 中回应。
+        feedback = build_feedback(records, direction, load_terrain())
+        if feedback:
+            trace("反馈包", 方向=direction, 未兑现维度=feedback["未兑现维度"],
+                  地形条数=len(feedback["数据地形"]))
         t_attempt = time.time()
         snap_attempt = agents.usage_snapshot()
-        hyps = agents.expand_hypotheses(clue, exp_in, rej, sectors=sectors)
+        hyps = agents.expand_hypotheses(clue, exp_in, rej, sectors=sectors,
+                                        feedback=feedback)
         trace("展开候选", 方向=direction, 候选=hyps, 引用经验=[e["编号"] for e in exp_in])
         stats["candidates"] += len(hyps)
         chosen = None
@@ -540,7 +613,8 @@ def run_direction(clue, wide, classics, cap_complexity, sectors, stats):
             errs = validate_registration(
                 hyp, exp_in,
                 [r for r in rej] if clue.get("category") else [],
-                sectors=sectors)
+                sectors=sectors,
+                feedback_dims=(feedback["未兑现维度"] if feedback else None))
             if not errs:
                 hyp["direction"] = direction
                 chosen = hyp
