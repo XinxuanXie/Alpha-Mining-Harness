@@ -117,15 +117,22 @@ def adversarial(hyp, factor, baseline_values, metrics, wide, classics):
         pos = baseline_values > 0
         neg = baseline_values < 0
         if pos.any().any() and neg.any().any():
-            adv["对称检验"] = "已执行"
             label = calc._label(wide["close"], calc.JUDGE_H)
+            groups = []
             for name, m in (("正组", pos), ("负组", neg)):
                 daily = calc._ic_series(factor.where(m), label)
-                ic_g, t_g = calc._mean_or_none(daily), calc._t_of(daily)
-                if (ic_g is not None and t_g is not None
-                        and (ic_g > 0) != (full_ic > 0) and abs(t_g) >= SUBPERIOD_T):
-                    adv["对称检验"] = f"{name}方向反转"
-                    adv["反例"] = True
+                groups.append((name, calc._mean_or_none(daily), calc._t_of(daily)))
+            flipped = [n for n, ic_g, t_g in groups
+                       if ic_g is not None and t_g is not None
+                       and (ic_g > 0) != (full_ic > 0) and abs(t_g) >= SUBPERIOD_T]
+            if flipped:
+                adv["对称检验"] = f"{flipped[0]}方向反转"
+                adv["反例"] = True
+            elif any(ic_g is None or ic_g == 0 or (ic_g > 0) != (full_ic > 0)
+                     for _, ic_g, _ in groups):
+                adv["对称检验"] = "对称性弱"
+            else:
+                adv["对称检验"] = "已执行（两端同向）"
         else:
             adv["对称检验"] = "不适用（基准值无符号变化）"
     return adv
@@ -142,12 +149,9 @@ def failure_layer(record_kind, metrics, base_ok, pred_results, adv):
         return "检验层"   # 基础判定已过，倒在预测核对或对抗检验
     return "想法层"
 
-def exp_status(verdict, base_ok):
-    if verdict == "通过":
-        return "已通过"
-    if base_ok:
-        return "条件成立"
-    return "已否决"
+def exp_status(verdict):
+    """经验状态与账本结论同名对齐：通过→已通过，条件成立→条件成立，否决→已否决。"""
+    return {"通过": "已通过", "条件成立": "条件成立", "否决": "已否决"}[verdict]
 
 # ============================================================
 # 预算（规格第三节）：每方向最多 3 次，逐次按命中率动态发放
@@ -237,6 +241,8 @@ def process_hypothesis(hyp, wide, classics, cap_complexity):
 
     if base_ok and not adv["反例"] and key_ok and general_majority:
         verdict = "通过"
+    elif base_ok and not adv["反例"] and key_ok:
+        verdict = "条件成立"   # 基础判定过、无反例、关键预测兑现，仅一般预测未过半
     else:
         verdict = "否决"
     rec["结论"] = verdict
@@ -257,7 +263,7 @@ def process_hypothesis(hyp, wide, classics, cap_complexity):
         if review_ok:
             break
     rec["讲评核对"] = "通过" if review_ok else "核对失败"
-    return rec, review, exp_status(verdict, base_ok), baseline_values
+    return rec, review, exp_status(verdict), baseline_values
 
 def save_experience(rec, review, status):
     entries = read_jsonl(EXP_PATH)
@@ -265,6 +271,8 @@ def save_experience(rec, review, status):
     layer = rec["失效层"] or "无"
     key_dim = next((p["dim"] for p in (rec["预测核对"] or []) if p["key"] and not p["兑现"]), None)
     fail_tag = "" if status == "已通过" else f"{layer}" + (f"-关键预测未兑现（{key_dim}）" if key_dim else "")
+    if status != "已通过" and (rec.get("对抗检验") or {}).get("对称检验") == "对称性弱":
+        fail_tag += "-对称性弱"
     entry = {"编号": no, "机制类别": rec["机制类别"], "线索主题": rec["方向"], "状态": status,
              "失败模式标签": fail_tag, "适用条件": (review or {}).get("borrow", "") if review else "",
              "适用时段": "训练段 2000-2016",

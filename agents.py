@@ -88,6 +88,8 @@ def expand_hypotheses(clue, exp_entries, rejected_same_category):
 同类别已被否决或关键预测未兑现的方向（新假设须在 diff_from_rejected 中写明与它们的区别，没有区别的不要提出）：
 {rej_text}
 
+方向约定：假设与基准公式的方向须使因子值越大、预期收益越高；与收益呈反向关系的量，先取负再写。
+
 可表达范围（计算方式与基准公式必须能在此范围内实现）：
 {EXPRESS_DOC}
 
@@ -116,6 +118,7 @@ def write_formula(hyp, error=None):
     user = f"""假设的计算方式：{hyp['measure']}
 机制：{hyp['mechanism']}
 登记的基准公式（供理解要算的量，不要直接照抄，写出你自己的实现）：{hyp['baseline_formula']}
+方向约定：公式须使因子值越大、预期收益越高；与收益呈反向关系的量先取负。
 
 可表达范围：
 {EXPRESS_DOC}
