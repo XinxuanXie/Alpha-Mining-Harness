@@ -287,11 +287,16 @@ assert "重试成功" in search.last_report()[0]["结果"], "来源报告应记 
 _captured = {}
 _orig_get = search._get_json
 search._get_json = lambda url: (_captured.setdefault("url", url),
-                                {"message": {"items": [{"title": ["X"], "published": {"date-parts": [[2021]]}}]}})[1]
+                                {"message": {"items": [{"title": ["X"], "published": {"date-parts": [[2021]]},
+                                                         "abstract": "<jats:p>Some &amp; finding</jats:p>"}]}})[1]
 _out = search._crossref("q", 3)
 search._get_json = _orig_get
 assert "select=" not in _captured["url"], "Crossref 请求不应带 select 参数（无效字段会被整单拒绝）"
 assert _out[0]["标题"] == "X" and _out[0]["年份"] == 2021, "Crossref 返回应能解析标题与年份"
+assert _out[0]["摘要"] == "Some & finding", f"Crossref 摘要应去标签解实体：{_out[0]['摘要']}"
+_terms = search._arxiv_term_sets("idiosyncratic volatility change reversal noise trader arbitrage limits")
+assert _terms[0] == ["idiosyncratic", "volatility", "arbitrage"] and len(_terms[1]) == 2, \
+    f"arXiv 词组应为核心 3 词与降级 2 词：{_terms}"
 search.SOURCES, search.CACHE_PATH = _saved_sources, _saved_cache_path
 if os.path.exists(os.path.join(BASE, "lit_cache_test.json")):
     os.remove(os.path.join(BASE, "lit_cache_test.json"))

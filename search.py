@@ -1,6 +1,7 @@
 # search.py — 文献检索
 # 职责：按英文检索式查学术资料，返回材料列表（标题、年份、来源、摘要、全文链接）。
-# 来源按序尝试：Semantic Scholar（有摘要）→ OpenAlex（有摘要）→ arXiv（有摘要）→ Crossref（仅标题级）。
+# 来源按序尝试：Semantic Scholar → OpenAlex → arXiv → Crossref。前三者带摘要；
+# Crossref 的 abstract 字段须解析（部分记录有），全文链接取其 link 字段中的非 PDF 地址。
 # 来源遇 429 限流时等待后重试一次；每源的成败与错误记入 LAST_REPORT，供调度程序写入轨迹，
 # 不再静默吞掉。全部失败返回空列表，不中断主流程。
 # 另提供 fetch_fulltext：抓取开放获取的 HTML 全文并提取正文，供筛选后深读；抓不到返回空。
@@ -62,12 +63,34 @@ def _openalex(query, limit):
                         "来源": "OpenAlex", "摘要": abstract, "全文链接": oa})
     return out
 
+_ARXIV_STOP = {"the", "a", "an", "of", "in", "on", "and", "or", "to", "with",
+               "from", "by", "for", "after", "under", "over", "evidence", "stock",
+               "returns", "return", "predicts", "predict"}
+
+def _arxiv_term_sets(query):
+    """把检索式收成核心词组：去虚词后取最长的 3 个实词作 AND，零结果时再降到 2 个。
+    全词 AND 实测几乎必然零结果，核心 3 词才有命中。"""
+    words = [w.strip(".,;:()\"'").lower() for w in query.split()]
+    content = [w for w in words if w and w not in _ARXIV_STOP]
+    content.sort(key=len, reverse=True)
+    sets = []
+    for n in (3, 2):
+        if len(content) >= n:
+            sets.append(content[:n])
+    return sets or [words[:2]]
+
 def _arxiv(query, limit):
-    # arXiv 的 all:"整句" 是精确短语匹配，几乎必然零结果；逐词 AND 才有命中（实测）。
-    q = urllib.parse.quote(" AND ".join(f"all:{w}" for w in query.split()))
-    url = (f"http://export.arxiv.org/api/query?search_query={q}"
-           f"&start=0&max_results={limit}&sortBy=relevance")
-    root = ET.fromstring(_get_text(url))
+    for terms in _arxiv_term_sets(query):
+        q = urllib.parse.quote(" AND ".join(f"all:{w}" for w in terms))
+        url = (f"http://export.arxiv.org/api/query?search_query={q}"
+               f"&start=0&max_results={limit}&sortBy=relevance")
+        items = _arxiv_parse(_get_text(url))
+        if items:
+            return items
+    return []
+
+def _arxiv_parse(xml_text):
+    root = ET.fromstring(xml_text)
     ns = {"a": "http://www.w3.org/2005/Atom"}
     out = []
     for e in root.findall("a:entry", ns):
@@ -83,6 +106,14 @@ def _arxiv(query, limit):
                     "全文链接": f"https://arxiv.org/html/{arxiv_id}" if arxiv_id else None})
     return out
 
+def _clean_abstract(raw):
+    """Crossref 的 abstract 是带 JATS 标签的文本，去标签、解实体、压空白后截断。"""
+    if not raw:
+        return None
+    text = re.sub(r"<[^>]+>", " ", raw)
+    text = " ".join(html.unescape(text).split())
+    return text[:800] or None
+
 def _crossref(query, limit):
     q = urllib.parse.quote(query)
     # 不带 select 参数：字段清单写错一个（如 year）Crossref 会整单拒绝（400），不过滤最稳。
@@ -97,8 +128,14 @@ def _crossref(query, limit):
         parts = ((it.get("published") or {}).get("date-parts") or [[None]])
         if parts and parts[0]:
             year = parts[0][0]
-        out.append({"标题": title, "年份": year, "来源": "Crossref", "摘要": None,
-                    "全文链接": None})
+        full = None
+        for lk in it.get("link") or []:
+            u = lk.get("URL") or ""
+            if u and not u.lower().endswith(".pdf"):
+                full = u
+                break
+        out.append({"标题": title, "年份": year, "来源": "Crossref",
+                    "摘要": _clean_abstract(it.get("abstract")), "全文链接": full})
     return out
 
 SOURCES = (_s2, _openalex, _arxiv, _crossref)
