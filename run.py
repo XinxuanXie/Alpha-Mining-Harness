@@ -6,6 +6,7 @@
 import json
 import os
 import sys
+import time
 from datetime import datetime
 
 import calc
@@ -33,6 +34,21 @@ MAX_ATTEMPTS = 3           # 每个方向的尝试次数上限
 FORMULA_REWRITE_MAX = 3    # 公式重写上限（一致性或可算性未过时，不计入尝试次数）
 REVIEW_REWRITE_MAX = 2     # 讲评数字核对未过时的重写上限
 MAX_TOTAL_ATTEMPTS = int(os.environ.get("FACTOR_MAX_TOTAL_ATTEMPTS", "9"))  # 循环运行的停止条件：本进程总尝试数上限（防无限消耗调用）；可用环境变量 FACTOR_MAX_TOTAL_ATTEMPTS 调整
+PRICE_IN_PER_M_USD = 0.27   # DeepSeek Chat 牌价：输入每百万 token 美元数（估算成本用，以官方价格为准）
+PRICE_OUT_PER_M_USD = 1.10  # DeepSeek Chat 牌价：输出每百万 token 美元数
+
+def est_cost(in_tokens, out_tokens):
+    """按牌价估算成本（美元）。"""
+    return round(in_tokens * PRICE_IN_PER_M_USD / 1e6
+                 + out_tokens * PRICE_OUT_PER_M_USD / 1e6, 5)
+
+def stamp_cost(rec, snap, t0):
+    """把一条尝试的成本与用时写入账本记录：自快照以来的模型用量增量 + 墙钟用时。"""
+    u = agents.usage_since(snap)
+    rec["成本"] = {"模型调用": u["calls"], "输入token": u["in"], "输出token": u["out"],
+                   "估算成本USD": est_cost(u["in"], u["out"]),
+                   "用时秒": round(time.time() - t0, 1)}
+    return rec["成本"]
 
 # ============================================================
 # 读写：账本与经验库（JSON Lines，一行一条）
@@ -468,6 +484,8 @@ def run_direction(clue, wide, classics, cap_complexity, sectors, stats):
         entries = read_jsonl(EXP_PATH)
         exp_in = retrieve_exp(clue.get("category"), entries) if clue.get("category") else entries[:EXP_LIMIT]
         rej = rejected_summaries(clue.get("category"), records) if clue.get("category") else []
+        t_attempt = time.time()
+        snap_attempt = agents.usage_snapshot()
         hyps = agents.expand_hypotheses(clue, exp_in, rej, sectors=sectors)
         trace("展开候选", 方向=direction, 候选=hyps, 引用经验=[e["编号"] for e in exp_in])
         chosen = None
@@ -491,6 +509,8 @@ def run_direction(clue, wide, classics, cap_complexity, sectors, stats):
             rec, review, status, _ = result
         else:
             rec, review, status = result, None, "已否决"
+        cost = stamp_cost(rec, snap_attempt, t_attempt)
+        trace("成本", 方向=direction, 假设=rec["假设"], **cost)
         append_jsonl(RECORDS_PATH, rec)
         save_experience(rec, review, status)
         stats["done"] += 1
@@ -503,6 +523,8 @@ def run_direction(clue, wide, classics, cap_complexity, sectors, stats):
               + (f"（失效层 {rec['失效层']}）" if rec["失效层"] else ""))
 
 def main():
+    t_start = time.time()
+    snap0 = agents.usage_snapshot()
     wide = calc.load_wide()
     classics = calc.load_classics(wide)
     cap_complexity = calc.classic_complexity_cap()
@@ -510,7 +532,6 @@ def main():
     print(f"复杂度上限 {cap_complexity}；已加载训练段数据")
     trace("实验开始", 初始线索数=len(read_jsonl(CLUES_PATH)), 复杂度上限=cap_complexity,
           总尝试上限=MAX_TOTAL_ATTEMPTS)
-    calls0 = agents.CALL_COUNT
     stats = {"done": 0, "passed": 0, "pred_total": 0, "pred_hit": 0}
     processed = set()
     stop_reason = f"总尝试数达上限 {MAX_TOTAL_ATTEMPTS}"
@@ -545,10 +566,16 @@ def main():
         run_direction(clue, wide, classics, cap_complexity, sectors, stats)
         processed.add(clue["direction"])
 
-    calls = agents.CALL_COUNT - calls0
+    tot = agents.usage_since(snap0)
+    calls = tot["calls"]
+    elapsed = round(time.time() - t_start, 1)
+    total_cost = est_cost(tot["in"], tot["out"])
     done, passed = stats["done"], stats["passed"]
-    trace("实验结束", 完成尝试=done, 通过=passed, 模型调用=calls, 停止原因=stop_reason)
-    print(f"\n本轮完成尝试 {done} 条，通过 {passed} 条；模型调用 {calls} 次；停止原因：{stop_reason}")
+    trace("实验结束", 完成尝试=done, 通过=passed, 模型调用=calls, 输入token=tot["in"],
+          输出token=tot["out"], 估算成本USD=total_cost, 总用时秒=elapsed, 停止原因=stop_reason)
+    print(f"\n本轮完成尝试 {done} 条，通过 {passed} 条；模型调用 {calls} 次；"
+          f"用时 {elapsed:.0f} 秒；估算成本 ${total_cost:.3f}"
+          f"（输入 {tot['in']} / 输出 {tot['out']} token，牌价估算）；停止原因：{stop_reason}")
     if done:
         print(f"首版存活率 {passed / done:.2f}；预测命中率 "
               f"{(stats['pred_hit'] / stats['pred_total']) if stats['pred_total'] else 0:.2f}；"

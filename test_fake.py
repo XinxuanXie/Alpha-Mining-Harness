@@ -235,4 +235,19 @@ assert any(e["事件"] == "假设优化" and e["采纳"] for e in tr8), "轨迹�
 assert any(e["事件"] == "假设优化" and not e["采纳"] for e in tr8), "轨迹应记录优化未采纳"
 print("验收 8 通过：检索后优化定稿、校验把关、不合格保留初稿")
 
+# ---- 验收 9：成本与用时记录（用量增量与牌价估算，纯程序不依赖数据） ----
+snap9 = agents.usage_snapshot()
+agents.USAGE["输入token"] += 2000
+agents.USAGE["输出token"] += 500
+agents.CALL_COUNT += 3
+d9 = agents.usage_since(snap9)
+assert d9 == {"calls": 3, "in": 2000, "out": 500}, f"用量增量应准确：{d9}"
+assert abs(run.est_cost(1_000_000, 1_000_000) - 1.37) < 1e-6, "牌价估算应为输入输出牌价之和"
+rec9 = {}
+c9 = run.stamp_cost(rec9, snap9, __import__("time").time())
+assert rec9["成本"]["模型调用"] == 3 and rec9["成本"]["输入token"] == 2000, "成本应写入记录"
+assert rec9["成本"]["估算成本USD"] == run.est_cost(2000, 500), "记录成本应与估算函数一致"
+assert rec9["成本"]["用时秒"] >= 0, "用时应非负"
+print("验收 9 通过：成本与用时可记录、估算口径一致")
+
 print("\n全部替身验收通过")

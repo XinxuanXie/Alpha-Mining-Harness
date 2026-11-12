@@ -11,7 +11,18 @@ import urllib.request
 API_URL = "https://api.deepseek.com/chat/completions"
 MODEL = "deepseek-chat"
 CALL_COUNT = 0          # 本进程的模型调用次数（供 run.py 算单位算力产出）
+USAGE = {"输入token": 0, "输出token": 0}   # 本进程累计 token 用量（取自 API 返回的 usage）
 _fake = None            # 替身函数：fake(role, payload) -> dict；测试时注入
+
+def usage_snapshot():
+    """当前累计用量快照：调用次数与输入/输出 token。"""
+    return {"calls": CALL_COUNT, "in": USAGE["输入token"], "out": USAGE["输出token"]}
+
+def usage_since(snap):
+    """自快照以来的增量用量。"""
+    return {"calls": CALL_COUNT - snap["calls"],
+            "in": USAGE["输入token"] - snap["in"],
+            "out": USAGE["输出token"] - snap["out"]}
 
 def set_fake(fn):
     global _fake
@@ -38,6 +49,9 @@ def call_model(role, system, user):
                                           "Content-Type": "application/json"})
     with urllib.request.urlopen(req, timeout=300) as resp:
         data = json.loads(resp.read().decode("utf-8"))
+    u = data.get("usage") or {}
+    USAGE["输入token"] += u.get("prompt_tokens") or 0
+    USAGE["输出token"] += u.get("completion_tokens") or 0
     return json.loads(data["choices"][0]["message"]["content"])
 
 def _dispatch(role, payload, system, user):
