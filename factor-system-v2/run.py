@@ -1,0 +1,361 @@
+# run.py — 调度程序
+# 职责：按七步串联全流程——登记线索 → 展开假设 → 实现与程序检查 → 回测 → 对抗检验
+#       → 讲评归档 → 经验回流与预算再发放。本文件是唯一有权写账本与经验库的程序。
+# 依据：《因子挖掘系统新计划》与《第一期实现规格》。判定一律由程序按规则执行，模型不参与判定。
+
+import json
+import os
+import sys
+
+import calc
+import agents
+
+# ============================================================
+# 参数（规格第五节的待定数值，第一期初始值）
+# ============================================================
+BASE = os.path.dirname(os.path.abspath(__file__))
+RECORDS_PATH = os.path.join(BASE, "records.jsonl")
+EXP_PATH = os.path.join(BASE, "experience.jsonl")
+CLUES_PATH = os.path.join(BASE, "clues.jsonl")
+IC_THRESHOLD = 0.02        # 基础判定：Rank IC 门槛
+ICIR_THRESHOLD = 0.2       # 基础判定：ICIR 门槛
+CORR_THRESHOLD = 0.8       # 基础判定：与经典因子最大相关上限
+CONSISTENCY_MIN = 0.99     # 一致性检查：截面相关下限
+HIT_LINE = 0.5             # 预算发放：方向预测命中率线
+PRED_GAP = 0.005           # 预测兑现：两组 IC 差值线
+SUBPERIOD_T = 2.0          # 对抗检验：子时段反例的 |t| 线
+COVERAGE_MIN = 0.5         # 覆盖率异常线（低于此值记数据层）
+EXP_LIMIT = 10             # 经验读入上限（条）
+MAX_ATTEMPTS = 3           # 每个方向的尝试次数上限
+FORMULA_REWRITE_MAX = 3    # 公式重写上限（一致性或可算性未过时，不计入尝试次数）
+REVIEW_REWRITE_MAX = 2     # 讲评数字核对未过时的重写上限
+
+# ============================================================
+# 读写：账本与经验库（JSON Lines，一行一条）
+# ============================================================
+def read_jsonl(path):
+    if not os.path.exists(path):
+        return []
+    out = []
+    with open(path, encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if line:
+                out.append(json.loads(line))
+    return out
+
+def append_jsonl(path, obj):
+    with open(path, "a", encoding="utf-8") as fh:
+        fh.write(json.dumps(obj, ensure_ascii=False) + "\n")
+
+# ============================================================
+# 登记校验（规格 2.4）：程序逐项检查，任一不过即拒登
+# ============================================================
+def validate_registration(hyp, exp_entries, rejected_keys):
+    errs = []
+    if hyp.get("category") not in agents.CATEGORIES:
+        errs.append(f"机制类别不在词表内：{hyp.get('category')}")
+    bf = hyp.get("baseline_formula")
+    if not bf:
+        errs.append("基准公式为空")
+    else:
+        ok, bad = calc.check_whitelist(bf)
+        if not ok:
+            errs.append(f"基准公式含清单外算子或字段：{bad}")
+    preds = hyp.get("predictions") or []
+    if len(preds) < 2:
+        errs.append("条件预测少于两条")
+    if sum(1 for p in preds if p.get("key")) != 1:
+        errs.append("关键预测必须恰有一条")
+    for p in preds:
+        if p.get("dim") not in ("市值组", "持有期", "行业"):
+            errs.append(f"预测维度第一期不开放：{p.get('dim')}")
+    if exp_entries and not hyp.get("exp_refs"):
+        errs.append("未引用任何经验条目")
+    if rejected_keys and not (hyp.get("diff_from_rejected") or "").strip():
+        errs.append("同类别有已否决或关键预测未兑现的方向，未写明区别")
+    return errs
+
+# ============================================================
+# 预测核对（规格 2.3）：方向一致且两组 IC 差值 ≥ 0.005 记兑现
+# 预测格式：{dim, a, b, key}，含义为 a 组的 IC 高于 b 组
+# ============================================================
+def check_predictions(hyp, metrics):
+    results = []
+    for p in hyp["predictions"]:
+        dim, a, b = p["dim"], str(p["a"]), str(p["b"])
+        va = vb = None
+        if dim == "市值组":
+            va, vb = metrics["分市值组IC"].get(a), metrics["分市值组IC"].get(b)
+        elif dim == "持有期":
+            va, vb = metrics["各持有期IC"].get(a), metrics["各持有期IC"].get(b)
+        elif dim == "行业":
+            va = metrics["分行业IC"].get(a)
+            vb = metrics["IC均值"]  # b 固定为“整体”
+        ok = va is not None and vb is not None and (va - vb) >= PRED_GAP
+        results.append({"dim": dim, "a": a, "b": b, "key": bool(p.get("key")),
+                        "a值": va, "b值": vb, "兑现": bool(ok)})
+    return results
+
+# ============================================================
+# 对抗检验（规格 2.3）：只找反例，只否决，不改因子
+# ============================================================
+def adversarial(hyp, factor, baseline_values, metrics, wide, classics):
+    adv = {"子时段反例": [], "对称检验": "不适用", "反例": False}
+    full_ic = metrics["IC均值"]
+    if full_ic is not None:
+        for seg in metrics["分段IC"]:
+            if (seg["IC"] is not None and seg["t值"] is not None
+                    and (seg["IC"] > 0) != (full_ic > 0) and abs(seg["t值"]) >= SUBPERIOD_T):
+                adv["子时段反例"].append(seg["段"])
+        if adv["子时段反例"]:
+            adv["反例"] = True
+    # 对称检验：机制对称的类别强制执行。做法为信号两端分组检验——
+    # 按基准值符号把股票日分正负两组，分别算因子 IC；任一组方向与全期相反且显著，记反例。
+    # 基准值无符号变化（如波动恒为正）时不适用。
+    if hyp["category"] in agents.SYMMETRIC_CATEGORIES and full_ic is not None:
+        pos = baseline_values > 0
+        neg = baseline_values < 0
+        if pos.any().any() and neg.any().any():
+            adv["对称检验"] = "已执行"
+            label = calc._label(wide["close"], calc.JUDGE_H)
+            for name, m in (("正组", pos), ("负组", neg)):
+                daily = calc._ic_series(factor.where(m), label)
+                ic_g, t_g = calc._mean_or_none(daily), calc._t_of(daily)
+                if (ic_g is not None and t_g is not None
+                        and (ic_g > 0) != (full_ic > 0) and abs(t_g) >= SUBPERIOD_T):
+                    adv["对称检验"] = f"{name}方向反转"
+                    adv["反例"] = True
+        else:
+            adv["对称检验"] = "不适用（基准值无符号变化）"
+    return adv
+
+# ============================================================
+# 失效层定位（规格 2.7）：程序按固定规则判定
+# ============================================================
+def failure_layer(record_kind, metrics, base_ok, pred_results, adv):
+    if record_kind == "无法表达":
+        return "实现层"
+    if metrics is not None and metrics["覆盖率"] is not None and metrics["覆盖率"] < COVERAGE_MIN:
+        return "数据层"
+    if base_ok:
+        return "检验层"   # 基础判定已过，倒在预测核对或对抗检验
+    return "想法层"
+
+def exp_status(verdict, base_ok):
+    if verdict == "通过":
+        return "已通过"
+    if base_ok:
+        return "条件成立"
+    return "已否决"
+
+# ============================================================
+# 预算（规格第三节）：每方向最多 3 次，逐次按命中率动态发放
+# ============================================================
+def direction_stats(records, direction):
+    mine = [r for r in records if r["方向"] == direction]
+    used = len(mine)
+    total = sum(len(r["预测核对"]) for r in mine if r.get("预测核对"))
+    hit = sum(1 for r in mine if r.get("预测核对") for p in r["预测核对"] if p["兑现"])
+    hit_rate = (hit / total) if total else None
+    key_failed = any(p["key"] and not p["兑现"] for r in mine if r.get("预测核对") for p in r["预测核对"])
+    return {"已用": used, "命中率": hit_rate, "关键预测曾未兑现": key_failed}
+
+def can_issue(records, direction):
+    st = direction_stats(records, direction)
+    if st["已用"] >= MAX_ATTEMPTS:
+        return False, f"已达上限 {MAX_ATTEMPTS} 次"
+    if st["已用"] == 0:
+        return True, "首次发放"
+    if st["命中率"] is None:
+        return True, "尚无可核对的预测，按未用满发放"
+    if st["命中率"] >= HIT_LINE:
+        return True, f"命中率 {st['命中率']:.2f} 达线"
+    return False, f"命中率 {st['命中率']:.2f} 未达 {HIT_LINE}，停止发放并封存"
+
+# ============================================================
+# 单条假设的完整流程：第 3 至第 6 步（实现、回测、对抗、讲评）
+# ============================================================
+def process_hypothesis(hyp, wide, classics, cap_complexity):
+    rec = {"方向": hyp["direction"], "机制类别": hyp["category"], "假设": hyp["hypothesis"],
+           "登记": {"计算方式": hyp["measure"], "基准公式": hyp["baseline_formula"],
+                    "机制": hyp["mechanism"], "条件预测": hyp["predictions"],
+                    "否定条件": hyp["falsify"]},
+           "公式": None, "判定数字": None, "预测核对": None, "对抗检验": None,
+           "结论": None, "失效层": None}
+    baseline_values = calc.eval_formula(hyp["baseline_formula"], wide)
+
+    # 第 3 步：写公式 + 程序检查（白名单、复杂度、一致性）；登记锁定，只改公式
+    formula, last_err = None, None
+    for _ in range(FORMULA_REWRITE_MAX + 1):
+        out = agents.write_formula(hyp, last_err)
+        if not out.get("formula"):
+            rec["结论"] = "无法表达"
+            rec["失效层"] = "实现层"
+            rec["无法表达原因"] = out.get("reason", "")
+            return rec
+        cand = out["formula"]
+        ok, bad = calc.check_whitelist(cand)
+        if not ok:
+            last_err = f"公式含清单外算子或字段：{bad}"
+            continue
+        if calc.complexity(cand) > cap_complexity:
+            last_err = f"复杂度 {calc.complexity(cand)} 超过上限 {cap_complexity}"
+            continue
+        try:
+            values = calc.eval_formula(cand, wide)
+        except ValueError as e:
+            last_err = str(e)
+            continue
+        corr = calc.consistency_corr(values, baseline_values)
+        if corr is None or corr < CONSISTENCY_MIN:
+            last_err = f"一致性相关 {corr} 低于 {CONSISTENCY_MIN}：公式计算的量与登记不一致"
+            continue
+        formula, rec["一致性相关"] = cand, corr
+        break
+    if formula is None:
+        rec["结论"] = "无法表达"
+        rec["失效层"] = "实现层"
+        rec["无法表达原因"] = f"重写达上限，最后错误：{last_err}"
+        return rec
+    rec["公式"] = formula
+    values = calc.eval_formula(formula, wide)
+
+    # 第 4 步：回测与基础判定
+    metrics = calc.compute_metrics(values, wide, classics)
+    rec["判定数字"] = metrics
+    base_ok = calc.base_judge(metrics, IC_THRESHOLD, ICIR_THRESHOLD, CORR_THRESHOLD)
+
+    # 第 5 步：对抗检验 + 预测核对
+    adv = adversarial(hyp, values, baseline_values, metrics, wide, classics)
+    rec["对抗检验"] = adv
+    pred_results = check_predictions(hyp, metrics)
+    rec["预测核对"] = pred_results
+    key_ok = all(p["兑现"] for p in pred_results if p["key"])
+    general = [p for p in pred_results if not p["key"]]
+    general_majority = (sum(1 for p in general if p["兑现"]) * 2 > len(general)) if general else True
+
+    if base_ok and not adv["反例"] and key_ok and general_majority:
+        verdict = "通过"
+    else:
+        verdict = "否决"
+    rec["结论"] = verdict
+    rec["失效层"] = None if verdict == "通过" else failure_layer("判定", metrics, base_ok, pred_results, adv)
+    if metrics["覆盖率"] is not None and metrics["覆盖率"] < COVERAGE_MIN and verdict != "通过":
+        rec["失效层"] = "数据层"
+
+    # 第 6 步：讲评（数字由程序逐项核对，不符打回）
+    review, review_ok = None, False
+    for _ in range(REVIEW_REWRITE_MAX + 1):
+        review = agents.write_review(hyp, metrics, pred_results, adv, verdict)
+        nums = review.get("numbers") or {}
+        want = {"ic": metrics["IC均值"], "icir": metrics["ICIR"], "max_corr": metrics["与经典因子最大相关"]}
+        review_ok = all(
+            (nums.get(k) is None and v is None) or
+            (nums.get(k) is not None and v is not None and round(float(nums[k]), 4) == round(float(v), 4))
+            for k, v in want.items())
+        if review_ok:
+            break
+    rec["讲评核对"] = "通过" if review_ok else "核对失败"
+    return rec, review, exp_status(verdict, base_ok), baseline_values
+
+def save_experience(rec, review, status):
+    entries = read_jsonl(EXP_PATH)
+    no = f"E{len(entries) + 1:03d}"
+    layer = rec["失效层"] or "无"
+    key_dim = next((p["dim"] for p in (rec["预测核对"] or []) if p["key"] and not p["兑现"]), None)
+    fail_tag = "" if status == "已通过" else f"{layer}" + (f"-关键预测未兑现（{key_dim}）" if key_dim else "")
+    entry = {"编号": no, "机制类别": rec["机制类别"], "线索主题": rec["方向"], "状态": status,
+             "失败模式标签": fail_tag, "适用条件": (review or {}).get("borrow", "") if review else "",
+             "适用时段": "训练段 2000-2016",
+             "讲评": ({"measures": review.get("measures", ""), "findings": review.get("findings", ""),
+                       "avoid": review.get("avoid", ""), "borrow": review.get("borrow", "")}
+                      if review and rec.get("讲评核对") == "通过" else
+                      {"measures": "", "findings": "", "avoid": "", "borrow": ""}),
+             "推测": (review or {}).get("speculation", "") if review else "",
+             "来源假设": rec["假设"]}
+    append_jsonl(EXP_PATH, entry)
+    return entry
+
+# ============================================================
+# 主流程：逐条线索跑七步
+# ============================================================
+def retrieve_exp(category, entries):
+    mine = [e for e in entries if e["机制类别"] == category]
+    mine.sort(key=lambda e: 0 if e["状态"] in ("已否决", "条件成立") else 1)
+    return mine[:EXP_LIMIT]
+
+def rejected_summaries(category, records):
+    out = []
+    for r in records:
+        if r["机制类别"] != category:
+            continue
+        key_fail = any(p["key"] and not p["兑现"] for p in (r.get("预测核对") or []))
+        if r["结论"] == "否决" or key_fail:
+            out.append({"方向": r["方向"], "假设摘要": r["假设"],
+                        "结局": "已否决" if r["结论"] == "否决" else "关键预测未兑现"})
+    return out
+
+def main():
+    clues = read_jsonl(CLUES_PATH)
+    if not clues:
+        print(f"没有线索：请先在 {CLUES_PATH} 登记线索（每行一条，字段 direction、phenomenon、source，可选 category）")
+        return
+    wide = calc.load_wide()
+    classics = calc.load_classics(wide)
+    cap_complexity = calc.classic_complexity_cap()
+    print(f"复杂度上限 {cap_complexity}；已加载训练段数据")
+    calls0 = agents.CALL_COUNT
+    done = passed = 0
+    pred_total = pred_hit = 0
+
+    for clue in clues:
+        direction = clue["direction"]
+        while True:
+            records = read_jsonl(RECORDS_PATH)
+            ok, why = can_issue(records, direction)
+            if not ok:
+                print(f"方向「{direction}」停止发放：{why}")
+                break
+            entries = read_jsonl(EXP_PATH)
+            exp_in = retrieve_exp(clue.get("category"), entries) if clue.get("category") else entries[:EXP_LIMIT]
+            rej = rejected_summaries(clue.get("category"), records) if clue.get("category") else []
+            hyps = agents.expand_hypotheses(clue, exp_in, rej)
+            chosen = None
+            for hyp in hyps:
+                errs = validate_registration(
+                    hyp, exp_in,
+                    [r for r in rej] if clue.get("category") else [])
+                if not errs:
+                    hyp["direction"] = direction
+                    chosen = hyp
+                    break
+                print(f"假设拒登：{errs}")
+            if chosen is None:
+                print(f"方向「{direction}」本轮无合格登记，停止")
+                break
+            result = process_hypothesis(chosen, wide, classics, cap_complexity)
+            if isinstance(result, tuple):
+                rec, review, status, _ = result
+            else:
+                rec, review, status = result, None, "已否决"
+            append_jsonl(RECORDS_PATH, rec)
+            save_experience(rec, review, status)
+            done += 1
+            passed += 1 if rec["结论"] == "通过" else 0
+            for p in (rec["预测核对"] or []):
+                pred_total += 1
+                pred_hit += 1 if p["兑现"] else 0
+            print(f"方向「{direction}」第 {direction_stats(read_jsonl(RECORDS_PATH), direction)['已用']} 次尝试："
+                  f"{chosen['hypothesis'][:40]} → {rec['结论']}"
+                  + (f"（失效层 {rec['失效层']}）" if rec["失效层"] else ""))
+
+    calls = agents.CALL_COUNT - calls0
+    print(f"\n本轮完成尝试 {done} 条，通过 {passed} 条；模型调用 {calls} 次")
+    if done:
+        print(f"首版存活率 {passed / done:.2f}；预测命中率 "
+              f"{(pred_hit / pred_total) if pred_total else 0:.2f}；"
+              f"单位算力产出 {passed / calls * 1000 if calls else 0:.1f} 个/千次调用")
+
+if __name__ == "__main__":
+    main()
