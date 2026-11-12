@@ -343,17 +343,17 @@ def compute_metrics(factor, wide, classic_values):
 
     coverage = float((factor.notna() & close.notna()).sum().sum() / close.notna().sum().sum())
 
-    classic_corr = None
-    for cv in classic_values:
+    classic_corr, classic_who = None, None
+    for i, cv in enumerate(classic_values):
         c = _mean_or_none(_ic_series(factor, cv))
-        if c is not None:
-            classic_corr = abs(c) if classic_corr is None else max(classic_corr, abs(c))
+        if c is not None and (classic_corr is None or abs(c) > classic_corr):
+            classic_corr, classic_who = abs(c), f"C{i + 1:02d}"
 
     return {
         "IC均值": ic_mean, "ICIR": icir, "t值": t_val,
         "分市值组IC": by_cap, "各持有期IC": by_h, "分行业IC": by_sector,
         "分段IC": subs, "覆盖率": coverage,
-        "与经典因子最大相关": classic_corr,
+        "与经典因子最大相关": classic_corr, "最大相关经典": classic_who,
     }
 
 def base_judge(m, ic_threshold=0.02, icir_threshold=0.2, corr_threshold=0.8):

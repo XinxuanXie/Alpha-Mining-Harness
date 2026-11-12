@@ -294,7 +294,8 @@ def process_hypothesis(hyp, wide, classics, cap_complexity):
     # 检验侧对抗审查（模型）：依据全部数字写失效解释，并指出程序检验覆盖不到的失效方式。
     # 只留痕、进经验，不推翻程序结论，不给改参数重跑的建议。
     try:
-        rec["检验侧对抗"] = agents.attack_results(hyp, metrics, pred_results, adv, verdict)
+        rec["检验侧对抗"] = agents.attack_results(hyp, metrics, pred_results, adv, verdict,
+                                                 gen_attack=rec["生成侧对抗"])
     except Exception as e:
         trace("检验对抗失败", 方向=hyp["direction"], 假设=hyp["hypothesis"], 错误=str(e))
     trace("检验对抗", 方向=hyp["direction"], 假设=hyp["hypothesis"], 对抗=rec["检验侧对抗"])

@@ -208,23 +208,28 @@ def attack_registration(hyp, classic_formulas):
 ATTACK_RES_SYSTEM = """你是一名持怀疑态度的量化评审。你的任务是在程序判定之后攻击一条假设的结果，解释它最可能为何成立或失效，并指出程序检验覆盖不到的失效方式。
 你只能依据给定的数字，不引入新数字；不给修改参数重跑的建议；不推翻程序给出的结论。只输出 JSON，不要输出其他文字。"""
 
-def attack_results(hyp, metrics, pred_results, adv_results, verdict):
+def attack_results(hyp, metrics, pred_results, adv_results, verdict, gen_attack=None):
     payload = {"hyp": hyp, "metrics": metrics, "pred_results": pred_results,
-               "adv_results": adv_results, "verdict": verdict}
+               "adv_results": adv_results, "verdict": verdict, "gen_attack": gen_attack}
+    claimed = (gen_attack or {}).get("最像的经典", "（生成侧对抗缺失）")
     user = f"""假设：{hyp['hypothesis']}
 计算方式：{hyp['measure']}
 机制：{hyp['mechanism']}
 
 判定数字（程序计算）：IC均值 {metrics['IC均值']}，ICIR {metrics['ICIR']}，
-与经典因子最大相关 {metrics['与经典因子最大相关']}，覆盖率 {metrics['覆盖率']}，
+与经典因子最大相关 {metrics['与经典因子最大相关']}（最大相关经典：{metrics.get('最大相关经典')}），覆盖率 {metrics['覆盖率']}，
 分市值组IC {metrics['分市值组IC']}，各持有期IC {metrics['各持有期IC']}，
 分行业IC {metrics['分行业IC']}，分段IC {metrics['分段IC']}。
 条件预测核对：{json.dumps(pred_results, ensure_ascii=False)}
 程序对抗检验结果：{json.dumps(adv_results, ensure_ascii=False)}
 程序结论：{verdict}
 
+换皮交叉核对：生成侧对抗在回测前声称这条假设最像的经典是「{claimed}」；
+程序实测的最大相关经典是 {metrics.get('最大相关经典')}，相关 {metrics['与经典因子最大相关']}。
+两者是否一致、声称的区别是否被实测支持，必须在备注中点明；声称不像但实测相关高、或点名的对象与实测不符的，直接指出。
+
 输出 JSON：
 {{"失效解释": "依据上述数字，这条假设最可能的死因（结论为通过时，写它最脆弱、最可能在样本外失效之处）",
   "未覆盖的失效方式": "程序已执行的检验（子时段反例、信号两端分组、预测核对）覆盖不到的失效方式，无则写 无",
-  "备注": "其他值得后续研究注意的攻击点，无则空字符串"}}"""
+  "备注": "换皮交叉核对的结论，以及其他值得后续研究注意的攻击点"}}"""
     return _dispatch("attack_res", payload, ATTACK_RES_SYSTEM, user)
