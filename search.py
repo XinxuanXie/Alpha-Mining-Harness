@@ -178,9 +178,10 @@ def search(query, limit=5):
     global LAST_REPORT
     LAST_REPORT = []
     cache = _load_cache()
-    if query in cache:
+    if query in cache and any(it.get("摘要") for it in cache[query]):
         LAST_REPORT = [{"来源": "缓存", "结果": f"返回 {len(cache[query][:limit])} 条"}]
         return cache[query][:limit]
+    # 缓存中只有标题级材料的条目不沿用：来源恢复后应能重新检索到带摘要的结果。
     results = []
     for fn in SOURCES:
         results, item = _attempt(fn, query, limit)
@@ -188,7 +189,9 @@ def search(query, limit=5):
         if results:
             break
         time.sleep(1)
-    if results:  # 空结果不缓存：限流等暂时失败不应把该检索式永久封死
+    if results and any(it.get("摘要") for it in results):
+        # 只缓存带摘要的结果：空结果不缓存（限流等暂时失败不应把检索式永久封死），
+        # 纯标题结果不缓存（下次运行应重试，争取拿到摘要）。
         cache[query] = results
         try:
             with open(CACHE_PATH, "w", encoding="utf-8") as fh:

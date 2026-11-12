@@ -220,18 +220,28 @@ def cross_check(gen_attack, metrics):
 
 # ============================================================
 # 预算（规格第三节）：每方向最多 3 次，逐次按命中率动态发放
+# 实现层失败（无法表达）不占方向预算——那是工具的边界，不是想法的死刑；
+# 但同一方向在当前工具版本下实现层失败满 2 次，停止发放（工具升级后旧失败不计）。
 # ============================================================
+IMPL_FAIL_LINE = 2         # 当前工具版本下实现层失败的停发线
+
 def direction_stats(records, direction):
     mine = [r for r in records if r["方向"] == direction]
-    used = len(mine)
+    used = sum(1 for r in mine if r.get("失效层") != "实现层")
+    impl_now = sum(1 for r in mine if r.get("失效层") == "实现层"
+                   and r.get("工具版本") == calc.TOOLING_VERSION)
     total = sum(len(r["预测核对"]) for r in mine if r.get("预测核对"))
     hit = sum(1 for r in mine if r.get("预测核对") for p in r["预测核对"] if p["兑现"])
     hit_rate = (hit / total) if total else None
     key_failed = any(p["key"] and not p["兑现"] for r in mine if r.get("预测核对") for p in r["预测核对"])
-    return {"已用": used, "命中率": hit_rate, "关键预测曾未兑现": key_failed}
+    return {"已用": used, "命中率": hit_rate, "关键预测曾未兑现": key_failed,
+            "当前工具实现层失败": impl_now}
 
 def can_issue(records, direction):
     st = direction_stats(records, direction)
+    if st["当前工具实现层失败"] >= IMPL_FAIL_LINE:
+        return False, (f"当前工具下不可表达：实现层失败 {st['当前工具实现层失败']} 次，"
+                       f"停止发放（工具升级后可再议）")
     if st["已用"] >= MAX_ATTEMPTS:
         return False, f"已达上限 {MAX_ATTEMPTS} 次"
     if st["已用"] == 0:
@@ -344,7 +354,7 @@ def process_hypothesis(hyp, wide, classics, cap_complexity):
     # 第 3 步：写公式 + 程序检查（白名单、复杂度、一致性）；登记锁定，只改公式
     formula, last_err = None, None
     for attempt in range(1, FORMULA_REWRITE_MAX + 2):
-        out = agents.write_formula(hyp, last_err)
+        out = agents.write_formula(hyp, last_err, cap=cap_complexity)
         if not out.get("formula"):
             trace("写公式", 方向=hyp["direction"], 假设=hyp["hypothesis"], 第几次=attempt,
                   公式=None, 模型原因=out.get("reason", ""))
@@ -524,6 +534,7 @@ def run_direction(clue, wide, classics, cap_complexity, sectors, stats):
         snap_attempt = agents.usage_snapshot()
         hyps = agents.expand_hypotheses(clue, exp_in, rej, sectors=sectors)
         trace("展开候选", 方向=direction, 候选=hyps, 引用经验=[e["编号"] for e in exp_in])
+        stats["candidates"] += len(hyps)
         chosen = None
         for hyp in hyps:
             errs = validate_registration(
@@ -534,6 +545,7 @@ def run_direction(clue, wide, classics, cap_complexity, sectors, stats):
                 hyp["direction"] = direction
                 chosen = hyp
                 break
+            stats["rejected"] += 1
             trace("拒登", 方向=direction, 假设=hyp.get("hypothesis"), 原因=errs)
             print(f"假设拒登：{errs}")
         if chosen is None:
@@ -547,9 +559,14 @@ def run_direction(clue, wide, classics, cap_complexity, sectors, stats):
             rec, review, status = result, None, "已否决"
         cost = stamp_cost(rec, snap_attempt, t_attempt)
         trace("成本", 方向=direction, 假设=rec["假设"], **cost)
+        rec["工具版本"] = calc.TOOLING_VERSION
         append_jsonl(RECORDS_PATH, rec)
         save_experience(rec, review, status)
         stats["done"] += 1
+        if rec.get("判定数字"):
+            stats["backtested"] += 1
+        if rec["结论"] == "无法表达":
+            stats["inexpressible"] += 1
         stats["passed"] += 1 if rec["结论"] == "通过" else 0
         for p in (rec["预测核对"] or []):
             stats["pred_total"] += 1
@@ -568,7 +585,8 @@ def main():
     print(f"复杂度上限 {cap_complexity}；已加载训练段数据")
     trace("实验开始", 初始线索数=len(read_jsonl(CLUES_PATH)), 复杂度上限=cap_complexity,
           总尝试上限=MAX_TOTAL_ATTEMPTS)
-    stats = {"done": 0, "passed": 0, "pred_total": 0, "pred_hit": 0}
+    stats = {"done": 0, "passed": 0, "pred_total": 0, "pred_hit": 0,
+             "candidates": 0, "rejected": 0, "backtested": 0, "inexpressible": 0}
     processed = set()
     stop_reason = f"总尝试数达上限 {MAX_TOTAL_ATTEMPTS}"
 
@@ -607,8 +625,12 @@ def main():
     elapsed = round(time.time() - t_start, 1)
     total_cost = est_cost(tot["in"], tot["out"])
     done, passed = stats["done"], stats["passed"]
+    bt_rate = (stats["backtested"] / done) if done else 0
+    ix_rate = (stats["inexpressible"] / done) if done else 0
+    rj_rate = (stats["rejected"] / stats["candidates"]) if stats["candidates"] else 0
     trace("实验结束", 完成尝试=done, 通过=passed, 模型调用=calls, 输入token=tot["in"],
-          输出token=tot["out"], 估算成本USD=total_cost, 总用时秒=elapsed, 停止原因=stop_reason)
+          输出token=tot["out"], 估算成本USD=total_cost, 总用时秒=elapsed, 停止原因=stop_reason,
+          完整回测率=round(bt_rate, 3), 无法表达率=round(ix_rate, 3), 拒登率=round(rj_rate, 3))
     print(f"\n本轮完成尝试 {done} 条，通过 {passed} 条；模型调用 {calls} 次；"
           f"用时 {elapsed:.0f} 秒；估算成本 ${total_cost:.3f}"
           f"（输入 {tot['in']} / 输出 {tot['out']} token，牌价估算）；停止原因：{stop_reason}")
@@ -616,6 +638,8 @@ def main():
         print(f"首版存活率 {passed / done:.2f}；预测命中率 "
               f"{(stats['pred_hit'] / stats['pred_total']) if stats['pred_total'] else 0:.2f}；"
               f"单位算力产出 {passed / calls * 1000 if calls else 0:.1f} 个/千次调用")
+        print(f"完整回测率 {bt_rate:.2f}；无法表达率 {ix_rate:.2f}；拒登率 {rj_rate:.2f}；"
+              f"单位算力完整回测 {stats['backtested'] / calls * 1000 if calls else 0:.1f} 次/千次调用")
 
 if __name__ == "__main__":
     main()

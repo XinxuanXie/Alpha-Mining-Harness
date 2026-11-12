@@ -4,8 +4,11 @@
 # 数字一律由 calc.py 计算；本文件只把结构化输入拼成提示词、把模型输出解析成字典。
 # 模型：DeepSeek（环境变量 DEEPSEEK_API_KEY）。测试时可用 set_fake 注入替身，跳过真实调用。
 
+import http.client
 import json
 import os
+import time
+import urllib.error
 import urllib.request
 
 API_URL = "https://api.deepseek.com/chat/completions"
@@ -30,7 +33,22 @@ def set_fake(fn):
 
 # ============================================================
 # 底层调用：发一次对话请求，要求返回一个 JSON 对象
+# 网络类错误（断读、连接失败、超时）自动重试一次；服务器明确回错（如 401）不重试。
 # ============================================================
+_NET_ERRORS = (http.client.IncompleteRead, TimeoutError, ConnectionError)
+
+def _post_once(body, key):
+    req = urllib.request.Request(API_URL, data=json.dumps(body).encode("utf-8"),
+                                 headers={"Authorization": f"Bearer {key}",
+                                          "Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=300) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+def _is_network_error(e):
+    if isinstance(e, urllib.error.HTTPError):
+        return False   # 服务器已明确应答（如鉴权失败），重试无意义
+    return isinstance(e, _NET_ERRORS + (urllib.error.URLError,))
+
 def call_model(role, system, user):
     global CALL_COUNT
     CALL_COUNT += 1
@@ -44,11 +62,15 @@ def call_model(role, system, user):
         "response_format": {"type": "json_object"},
         "temperature": 0.7,
     }
-    req = urllib.request.Request(API_URL, data=json.dumps(body).encode("utf-8"),
-                                 headers={"Authorization": f"Bearer {key}",
-                                          "Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=300) as resp:
-        data = json.loads(resp.read().decode("utf-8"))
+    data = None
+    for attempt in (1, 2):
+        try:
+            data = _post_once(body, key)
+            break
+        except Exception as e:
+            if attempt == 2 or not _is_network_error(e):
+                raise
+            time.sleep(2)
     u = data.get("usage") or {}
     USAGE["输入token"] += u.get("prompt_tokens") or 0
     USAGE["输出token"] += u.get("completion_tokens") or 0
@@ -62,13 +84,20 @@ def _dispatch(role, payload, system, user):
 # ============================================================
 # 可表达范围说明：写公式时必须让模型知道环境里有什么、没有什么
 # ============================================================
-EXPRESS_DOC = """可用日频字段：open、high、low、close、volume、mktcap（市值）、mktret（市场当日收益，对全体股票相同）。
-可用算子：neg、abs、log、rank（截面排名）、rank_sector（行业内排名）、sector_mean（行业均值）、gt（大于取 1）、
-delay（延迟 d 日）、delta（与 d 日前之差）、ts_mean、ts_sum、ts_std、ts_min、ts_max、ts_rank（时序排名）、
-ts_corr（两序列 d 日相关），以及 + - * / 四则运算。窗口 d 为正整数。
-不可表达的构造：逐点回归的斜率、残差、R 方本身（除非能用 ts_corr 与 ts_std 等价写出）；
-逐日横截面回归；需要财务报表、分析师预期等未提供字段的量；变长窗口。
+EXPRESS_DOC = """可用日频字段：open、high、low、close、volume、mktcap（市值）、mktret（市场当日收益，对全体股票相同）、
+ivol20（特质波动：过去 20 日个股收益对市场收益回归的残差标准差，程序预计算）、
+resid_ret（当日残差收益：个股收益减去市场模型拟合值，程序预计算）。
+可用算子（括号内为参数个数）：neg(1)、abs(1)、log(1)、rank(1，截面排名)、rank_sector(1，行业内排名)、
+sector_mean(1，行业均值)、gt(2，大于取 1)、delay(2，延迟 d 日)、delta(2，与 d 日前之差)、
+ts_mean(2)、ts_sum(2)、ts_std(2)、ts_min(2)、ts_max(2)、ts_rank(2，时序排名)、ts_corr(3，两序列 d 日滚动相关)，
+以及 + - * / 四则运算。时序算子的最后一个参数是窗口 d，为正整数。
+不可表达的构造：任意窗口的回归斜率与残差本身（残差类量只能用预计算的 ivol20 与 resid_ret，窗口固定 20 日）；
+逐日横截面回归；需要财务报表、分析师预期等未提供数据的量；变长窗口。
 公式只能使用当日及以前的数据。"""
+
+DATA_BOUNDARY = """数据边界（硬约束）：系统只有日频价量、市值、市场收益、行业归属与 ivol20、resid_ret 两个预计算字段。
+不存在分析师覆盖人数、财务报表字段、涨跌停价格、新闻与文本数据，也没有这些数据的代理变量约定。
+机制若依赖这类数据，不要提出；计算方式与基准公式中不得引用不存在的量，不得自创未定义符号（如 C_t）。"""
 
 CATEGORIES = ["过度反应", "反应不足", "流动性", "波动", "规模", "价值", "情绪与注意力"]
 SYMMETRIC_CATEGORIES = {"过度反应", "反应不足"}  # 词表中标为对称的类别，触发对称检验
@@ -110,6 +139,8 @@ def expand_hypotheses(clue, exp_entries, rejected_same_category, sectors=None):
 
 可表达范围（计算方式与基准公式必须能在此范围内实现）：
 {EXPRESS_DOC}
+
+{DATA_BOUNDARY}
 
 输出 JSON：{{"hypotheses": [每条假设一个对象]}}，每个对象字段：
 direction（方向名，与线索一致）、category（机制类别）、hypothesis（一句话陈述）、
@@ -186,6 +217,8 @@ def refine_hypothesis(hyp, lit, sectors=None):
 可表达范围：
 {EXPRESS_DOC}
 
+{DATA_BOUNDARY}
+
 检索到的学术资料：
 {lit_text}
 
@@ -212,7 +245,7 @@ def refine_hypothesis(hyp, lit, sectors=None):
 FORMULA_SYSTEM = """你是一名量化工程师。你的任务是把一条假设的计算方式写成一条公式表达式。
 公式只能使用给定的字段与算子。只输出 JSON，不要输出其他文字。"""
 
-def write_formula(hyp, error=None):
+def write_formula(hyp, error=None, cap=None):
     payload = {"hyp": hyp, "error": error}
     user = f"""假设的计算方式：{hyp['measure']}
 机制：{hyp['mechanism']}
@@ -221,6 +254,11 @@ def write_formula(hyp, error=None):
 
 可表达范围：
 {EXPRESS_DOC}
+"""
+    if cap:
+        user += f"""
+复杂度上限 {cap}：复杂度 = 公式中算子调用次数 + 字段引用次数（四则运算、常数与括号不计）。
+下笔前先按此口径自数一遍；预计超限时优先简化——去掉一层变换、合并相近窗口、用预计算字段代替多层构造——不要改变要计算的量。
 """
     if error:
         user += f"\n上一次的公式未通过检查，原因：{error}。请修正公式本身，不要改变要计算的量。\n"
@@ -374,6 +412,9 @@ def propose_clues(existing_directions, exp_entries, rejected):
 
 已否决或关键预测未兑现的方向：
 {rej_text}
+
+{DATA_BOUNDARY}
+线索优先落在价量与预计算字段可表达的机制上。
 
 输出 JSON：{{"clues": [每条线索一个对象]}}，每个对象字段：
 direction（简短的方向名）、phenomenon（观察到的现象）、source（可能的收益来源）、category（机制类别）。

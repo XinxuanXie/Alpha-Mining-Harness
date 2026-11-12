@@ -331,4 +331,85 @@ assert any(e["事件"] == "文献材料不足" for e in tr11b), "轨迹应记录
 search.search, search.fetch_fulltext = _saved_search, _saved_fetch
 print("验收 11 通过：摘要筛选、全文节选入优化、无摘要跳过优化")
 
+# ---- 验收 12：提示硬化、实现层预算、带摘要才缓存、网络重试、预计算字段 ----
+import http.client as _hc
+import tempfile as _tf
+
+assert "ivol20" in calc.FIELDS and "resid_ret" in calc.FIELDS, "预计算字段应进入字段清单"
+assert "ivol20" in wide and wide["ivol20"].notna().any().any(), "宽表应含 ivol20 且有值"
+_ok12, _bad12 = calc.check_whitelist("neg(ts_mean(ivol20, 20))")
+assert _ok12, f"ivol20 公式应过白名单：{_bad12}"
+assert "分析师" in agents.DATA_BOUNDARY and "C_t" in agents.DATA_BOUNDARY, "数据边界说明应写明不可用数据"
+assert "ts_corr(3" in agents.EXPRESS_DOC and "sector_mean(1" in agents.EXPRESS_DOC, "算子清单应带参数个数"
+
+_saved_fake = agents._fake
+agents.set_fake(None)
+_captured = {}
+_saved_call = agents.call_model
+agents.call_model = lambda role, system, user: (_captured.update(user=user),
+                                                {"formula": "close"})[1]
+agents.write_formula({"measure": "m", "mechanism": "x", "baseline_formula": "close"},
+                     None, cap=14)
+agents.call_model = _saved_call
+assert "复杂度上限 14" in _captured["user"] and "算子调用次数" in _captured["user"], \
+    "写公式提示应含复杂度上限与计数法"
+
+# 网络错误重试一次：第一次断读、第二次成功
+import os as _os
+_os.environ.setdefault("DEEPSEEK_API_KEY", "dummy")
+_post_calls = {"n": 0}
+_saved_post = agents._post_once
+def _flaky_post(body, key):
+    _post_calls["n"] += 1
+    if _post_calls["n"] == 1:
+        raise _hc.IncompleteRead(b"partial", 7)
+    return {"usage": {"prompt_tokens": 3, "completion_tokens": 2},
+            "choices": [{"message": {"content": "{\"ok\": true}"}}]}
+agents._post_once = _flaky_post
+_out12 = agents.call_model("expand", "s", "u")
+agents._post_once = _saved_post
+assert _out12 == {"ok": True} and _post_calls["n"] == 2, "网络断读应自动重试一次并成功"
+agents.set_fake(_saved_fake)
+
+# 实现层不占方向预算；当前工具版本实现层失败满 2 次停发；旧版本失败不计
+_recs12 = [{"方向": "D1", "失效层": "实现层", "预测核对": None} for _ in range(3)]
+_okb, _ = run.can_issue(_recs12, "D1")
+assert _okb, "旧工具版本下的实现层失败不应占预算、不应停发"
+_recs12 += [{"方向": "D1", "失效层": "实现层", "预测核对": None,
+             "工具版本": calc.TOOLING_VERSION} for _ in range(2)]
+_okb, _whyb = run.can_issue(_recs12, "D1")
+assert not _okb and "不可表达" in _whyb, f"当前工具实现层失败满 2 次应停发：{_whyb}"
+_recs12b = [{"方向": "D2", "失效层": "想法层", "预测核对": []} for _ in range(3)]
+_okb, _ = run.can_issue(_recs12b, "D2")
+assert not _okb, "想法层失败满 3 次应达预算上限"
+
+# 文献缓存：只有标题的不缓存、带摘要的缓存、无摘要的旧缓存不沿用
+_saved_attempt, _saved_cache_path = search._attempt, search.CACHE_PATH
+_tmp_cache = _tf.mktemp(suffix=".json")
+search.CACHE_PATH = _tmp_cache
+_items_title = [{"标题": "T1", "年份": 2020, "来源": "替身", "摘要": None, "全文链接": None}]
+_items_abs = [{"标题": "T2", "年份": 2020, "来源": "替身", "摘要": "some abstract", "全文链接": None}]
+_box = {"items": _items_title, "calls": 0}
+def _fake_attempt(fn, q, limit):
+    _box["calls"] += 1
+    return list(_box["items"]), {"来源": "替身源", "结果": f"返回 {len(_box['items'])} 条"}
+search._attempt = _fake_attempt
+search.search("q-title-only")
+_cache_now = search._load_cache()
+assert "q-title-only" not in _cache_now, "纯标题结果不应写入缓存"
+_box["items"] = _items_abs
+search.search("q-with-abstract")
+_cache_now = search._load_cache()
+assert "q-with-abstract" in _cache_now, "带摘要结果应写入缓存"
+_calls_before = _box["calls"]
+search.search("q-with-abstract")
+assert _box["calls"] == _calls_before, "带摘要的缓存应直接命中、不再请求来源"
+import json as _json
+with open(_tmp_cache, "w", encoding="utf-8") as _fh:
+    _json.dump({"q-stale": _items_title}, _fh, ensure_ascii=False)
+search.search("q-stale")
+assert _box["calls"] > _calls_before, "只有标题的旧缓存不应沿用，应重新检索"
+search._attempt, search.CACHE_PATH = _saved_attempt, _saved_cache_path
+print("验收 12 通过：提示硬化、实现层预算口径、带摘要才缓存、网络重试、预计算字段")
+
 print("\n全部替身验收通过")

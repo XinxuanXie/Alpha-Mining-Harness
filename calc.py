@@ -18,9 +18,12 @@ SEC_PATH = os.path.join(BASE, "data", "securities.parquet")
 MEMB_PATH = os.path.join(BASE, "data", "membership_intervals.parquet")
 BENCH_PATH = os.path.join(BASE, "data", "spy_benchmark.parquet")
 CLASSIC_PATH = os.path.join(BASE, "data", "classic_values.parquet")
+PRECOMP_PATH = os.path.join(BASE, "data", "precomp_fields.parquet")
 TRAIN_END = "2016-12-31"   # 只加载训练段；测试段与验证段不加载
 ID_COL = "permno"          # 股票标识列
-FIELDS = ["open", "high", "low", "close", "volume", "mktcap", "mktret"]  # 公式可用字段（mktret 为市场收益）
+TOOLING_VERSION = "v2-ivol"  # 工具版本：字段集变更时递增；旧版本下产生的实现层失败不计入停发计数
+FIELDS = ["open", "high", "low", "close", "volume", "mktcap", "mktret",
+          "ivol20", "resid_ret"]  # 公式可用字段（mktret 为市场收益；ivol20、resid_ret 为程序预计算的市场模型残差类字段，窗口固定 20 日）
 JUDGE_H = 20               # 判定期限（日）
 MIN_STOCKS = 10            # 当日参与 IC 计算的股票少于此数，当日 IC 记缺失
 SECTOR_OF = {}             # permno（int）→ GICS 行业名；load_wide 时填充
@@ -36,9 +39,7 @@ def load_wide():
     df = pd.read_parquet(DATA_PATH, filters=[("date", "<=", pd.Timestamp(TRAIN_END))])
     df = df.sort_values(["date", ID_COL])
     wide = {}
-    for f in FIELDS:
-        if f == "mktret":
-            continue
+    for f in ("open", "high", "low", "close", "volume", "mktcap"):
         wide[f] = df.pivot(index="date", columns=ID_COL, values=f)
     close = wide["close"]
     memb = pd.read_parquet(MEMB_PATH)
@@ -65,7 +66,44 @@ def load_wide():
     for permno, name in zip(sec[ID_COL], sec["sector_name"]):
         if isinstance(name, str) and name:
             SECTOR_OF[int(permno)] = name
+    ivol, resid = _precomp_fields(close, wide["mktret"])
+    wide["ivol20"] = ivol.where(mask)
+    wide["resid_ret"] = resid.where(mask)
     return wide
+
+def _precomp_fields(close, mktret):
+    """预计算市场模型残差类字段（窗口固定 20 日，只用当日及以前数据）：
+    ivol20 = 个股日收益对市场收益滚动回归的残差标准差（特质波动）；
+    resid_ret = 当日残差收益（个股收益减窗口内拟合值）。
+    结果缓存到 data/precomp_fields.parquet，缓存存在时直接读。"""
+    if os.path.exists(PRECOMP_PATH):
+        cached = pd.read_parquet(PRECOMP_PATH)
+        ivol = cached.pivot(index="date", columns=ID_COL, values="ivol20")
+        resid = cached.pivot(index="date", columns=ID_COL, values="resid_ret")
+        return (ivol.reindex(index=close.index, columns=close.columns),
+                resid.reindex(index=close.index, columns=close.columns))
+    r = close / close.shift(1) - 1
+    w = 20
+    mean_r = r.rolling(w, min_periods=w).mean()
+    mean_m = mktret.rolling(w, min_periods=w).mean()
+    var_r = r.rolling(w, min_periods=w).var()
+    var_m = mktret.rolling(w, min_periods=w).var()
+    cov = r.rolling(w, min_periods=w).cov(mktret)
+    beta = cov / var_m
+    alpha = mean_r - beta * mean_m
+    resid_var = (var_r - beta ** 2 * var_m).clip(lower=0)
+    ivol = np.sqrt(resid_var)
+    resid = r - (alpha + beta * mktret)
+    try:
+        long = pd.DataFrame({
+            "date": np.repeat(close.index.to_numpy(), len(close.columns)),
+            ID_COL: np.tile(close.columns.to_numpy(), len(close.index)),
+            "ivol20": ivol.to_numpy().ravel(),
+            "resid_ret": resid.to_numpy().ravel()})
+        long.to_parquet(PRECOMP_PATH, index=False)
+    except Exception:
+        pass
+    return ivol, resid
 
 # ============================================================
 # 算公式：表达式只能用算子清单中的算子与七个字段
