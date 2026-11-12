@@ -248,9 +248,11 @@ def process_hypothesis(hyp, wide, classics, cap_complexity):
               条数=len(lit), 标题=[m["标题"][:60] for m in lit])
     if lit:
         try:
-            refined = agents.refine_hypothesis(hyp, lit)
+            refined = agents.refine_hypothesis(hyp, lit,
+                                               sectors=frozenset(calc.SECTOR_OF.values()))
         except Exception as e:
             refined = None
+            hyp["优化说明"] = "检索后优化失败，用初稿"
             trace("假设优化失败", 方向=hyp["direction"], 假设=hyp["hypothesis"], 错误=str(e))
         if refined:
             merged = dict(hyp)

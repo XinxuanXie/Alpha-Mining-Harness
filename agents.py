@@ -123,7 +123,7 @@ REFINE_SYSTEM = """你是一名量化研究员。你的任务是依据检索到�
 优化只能依据给定资料与机制推理，不得虚构资料中没有的结论；资料与初稿冲突时以资料为准。
 只输出 JSON，不要输出其他文字。"""
 
-def refine_hypothesis(hyp, lit):
+def refine_hypothesis(hyp, lit, sectors=None):
     payload = {"hyp": hyp, "lit": lit}
     lit_text = "\n".join(
         f"[{m['编号']}] {m['标题']}（{m.get('年份')}，{m.get('来源')}）：{m.get('摘要') or '（无摘要，仅标题）'}"
@@ -147,6 +147,7 @@ def refine_hypothesis(hyp, lit):
 依据资料优化登记五项：计算方式、基准公式、机制、条件预测、否定条件。
 重点：资料报告的典型构造、成立条件与已知失效条件，应反映到计算方式与条件预测中；
 条件预测的维度与取值规则同展开时一致（市值组 小/中/大；持有期 1/5/10/20/60；行业 a 为真实行业名、b 为"整体"）。
+行业名清单（行业预测的 a 只能取自）：{', '.join(sorted(sectors)) if sectors else '（未提供）'}
 资料与初稿无关或不足以支持修改时，返回初稿原文，changes 写"无修改"。
 
 输出 JSON：

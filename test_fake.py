@@ -41,7 +41,7 @@ HYP = {
 }
 
 state = {"formula_calls": 0, "review_calls": 0, "review_mode": "先错后对", "propose_calls": 0,
-         "refine_mode": "采纳"}
+         "refine_mode": "采纳", "attack_reg_payload": None}
 
 def fake(role, payload):
     if role == "expand":
@@ -71,9 +71,10 @@ def fake(role, payload):
                 "falsify": "（优化）" + HYP["falsify"],
                 "lit_refs": ["L1"], "changes": "依据 L1 收紧否定条件"}
     if role == "attack_reg":
+        state["attack_reg_payload"] = payload
         return {"最像的经典": "C01", "相似点": "同为短期价格反转",
                 "换皮判断": "与经典反转同源，区别未成立",
-                "预测问题": "无", "机制问题": "无"}
+                "预测问题": "无", "机制问题": "无", "引用问题": "无"}
     if role == "attack_res":
         return {"失效解释": "信号强度不足，IC 未达门槛", "未覆盖的失效方式": "未按波动状态分组",
                 "备注": ""}
@@ -221,6 +222,9 @@ rec8, _, _, _ = run.process_hypothesis(hyp8, wide, classics, cap)
 assert rec8["登记"]["否定条件"] == "（优化）" + HYP["falsify"], "合格的优化稿应被采用并锁定"
 assert rec8["登记"]["文献引用"] == ["L1"], "登记应记录文献引用"
 assert "L1" in rec8["登记"]["优化说明"], "登记应记录优化说明"
+assert state["attack_reg_payload"]["lit"], "生成侧对抗应收到检索材料"
+assert state["attack_reg_payload"]["lit"][0]["编号"] == "L1", "对抗收到的材料应带编号"
+assert "引用问题" in rec8["生成侧对抗"], "生成侧对抗输出应含引用问题字段"
 state["refine_mode"] = "不采纳"
 rec8b, _, _, _ = run.process_hypothesis(dict(hyp8), wide, classics, cap)
 assert rec8b["登记"]["否定条件"] == HYP["falsify"], "优化稿不合格时应保留初稿"

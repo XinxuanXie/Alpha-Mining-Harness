@@ -88,10 +88,11 @@ def search(query, limit=5):
         if results:
             break
         time.sleep(1)
-    cache[query] = results
-    try:
-        with open(CACHE_PATH, "w", encoding="utf-8") as fh:
-            json.dump(cache, fh, ensure_ascii=False)
-    except Exception:
-        pass
+    if results:  # 空结果不缓存：限流等暂时失败不应把该检索式永久封死
+        cache[query] = results
+        try:
+            with open(CACHE_PATH, "w", encoding="utf-8") as fh:
+                json.dump(cache, fh, ensure_ascii=False)
+        except Exception:
+            pass
     return results[:limit]

@@ -138,9 +138,9 @@
 
 ### 2.10 文献检索与假设优化（search.py、agents.py 调用二、run.py）
 
-**检索**：展开在每条假设中给出 1 至 2 条英文检索式（字段 search_queries）。处理一条假设时，run.py 先调 search.search 逐式检索：来源按序尝试 Semantic Scholar、OpenAlex（均含摘要）、Crossref（仅标题级），首个返回非空的来源即采用；各式结果按标题去重、合并上限 5 条，依次编号 L1 至 L5。结果按检索式缓存于 lit_cache.json。全部来源失败或无结果时返回空，本次跳过优化，流程继续。
+**检索**：展开在每条假设中给出 1 至 2 条英文检索式（字段 search_queries）。处理一条假设时，run.py 先调 search.search 逐式检索：来源按序尝试 Semantic Scholar、OpenAlex（均含摘要）、Crossref（仅标题级），首个返回非空的来源即采用；各式结果按标题去重、合并上限 5 条，依次编号 L1 至 L5。非空结果按检索式缓存于 lit_cache.json；空结果不缓存（限流等暂时失败不永久封死该检索式）。全部来源失败或无结果时返回空，本次跳过优化，流程继续。
 
-**优化**：有材料时调 agents.refine_hypothesis（调用二），输入登记初稿与材料（编号、标题、年份、来源、摘要，无摘要者注明仅标题）。模型可改五项：measure、baseline_formula、mechanism、predictions、falsify；不得更改 direction 与 category。输出五项全文，并附 lit_refs（实际用到的材料编号）与 changes（逐条说明改动与依据）。材料与初稿冲突时以材料为准并在 changes 中说明；材料无关时可不改。
+**优化**：有材料时调 agents.refine_hypothesis（调用二），输入登记初稿、材料（编号、标题、年份、来源、摘要，无摘要者注明仅标题）与真实行业名清单（同展开）。模型可改五项：measure、baseline_formula、mechanism、predictions、falsify；不得更改 direction 与 category。输出五项全文，并附 lit_refs（实际用到的材料编号）与 changes（逐条说明改动与依据）。材料与初稿冲突时以材料为准并在 changes 中说明；材料无关时可不改。调用异常时以初稿继续，登记「优化说明」标注"检索后优化失败，用初稿"。
 
 **程序把关**：优化稿须重新通过 validate_registration 的结构性校验（类别词表、基准公式白名单、条件预测条数与取值合法性）才采用；未通过保留初稿。采用后登记即定稿锁定，账本「登记」新增 lit_refs 与优化说明两项。轨迹记「文献检索」「假设优化」（采纳与否及原因）「假设优化失败」事件。
 
