@@ -282,8 +282,8 @@ def refine_hypothesis(hyp, lit, sectors=None):
 FORMULA_SYSTEM = """你是一名量化工程师。你的任务是把一条假设的计算方式写成一条公式表达式。
 公式只能使用给定的字段与算子。只输出 JSON，不要输出其他文字。"""
 
-def write_formula(hyp, error=None, cap=None):
-    payload = {"hyp": hyp, "error": error}
+def write_formula(hyp, error=None, cap=None, guidance=None):
+    payload = {"hyp": hyp, "error": error, "guidance": guidance}
     user = f"""假设的计算方式：{hyp['measure']}
 机制：{hyp['mechanism']}
 登记的基准公式（供理解要算的量，不要直接照抄，写出你自己的实现）：{hyp['baseline_formula']}
@@ -299,6 +299,9 @@ def write_formula(hyp, error=None, cap=None):
 """
     if error:
         user += f"\n上一次的公式未通过检查，原因：{error}。请修正公式本身，不要改变要计算的量。\n"
+    if guidance:
+        user += (f"\n本轮为改因子修订：登记假设不变，按以下修改要求重写公式：{guidance}。"
+                 "公式允许偏离登记的基准公式，但必须实现计算方式所指的量，并遵守方向约定。\n")
     user += """输出 JSON：{"formula": "表达式字符串"}；确实无法用给定算子表达时输出 {"formula": null, "reason": "原因"}。"""
     return _dispatch("formula", payload, FORMULA_SYSTEM, user)
 
@@ -458,3 +461,36 @@ direction（简短的方向名）、phenomenon（观察到的现象）、source�
 提出 1 至 3 条，宁缺毋滥；确实没有新角度时输出空列表。"""
     out = _dispatch("propose", payload, PROPOSE_SYSTEM, user)
     return out.get("clues", [])
+
+# ============================================================
+# 调用八：裁决下一步修订（新假设循环专用）
+# 输入：本轮证据（失效层、逐条预测核对与实际分组数字、回测指标、
+#       双侧对抗意见、公式与一致性/复杂度信息）
+# 输出：三选一——改因子 / 改假设 / 终止，附一句话理由与一条具体修改要求。
+# 裁决只决定改什么，无判定权；通过与否由程序判定门决定。
+# ============================================================
+JUDGE_SYSTEM = """你是一名量化研究负责人。一条假设刚完成一轮回测与检验且未通过，你要依据本轮证据裁决下一步怎么走。
+三选一：改因子（假设本身成立，问题在公式构造：下一轮沿用同一登记假设、按修改要求重写公式重测）；
+改假设（假设本身有问题：下一轮带反馈包重新展开、提出完整新假设）；
+终止（本假设到此为止，无值得再试的修订）。
+修改要求只许给一类、必须具体（改因子时指明公式怎么改；改假设时指明新假设应换什么角度；终止时可为空）。
+你没有判定权，不得推翻程序结论，不得引入证据之外的数字。只输出 JSON，不要输出其他文字。"""
+
+def judge_revision(evidence):
+    payload = {"evidence": evidence}
+    m = evidence.get("判定数字") or {}
+    user = f"""本轮证据：
+假设：{evidence.get('假设')}
+公式：{evidence.get('公式')}（一致性相关 {evidence.get('一致性相关')}，复杂度 {evidence.get('复杂度')}）
+程序结论：{evidence.get('结论')}；失效层：{evidence.get('失效层')}
+判定数字：{json.dumps(m, ensure_ascii=False) if m else '（无，公式未通过程序检查或无法表达）'}
+逐条预测核对：{json.dumps(evidence.get('预测核对'), ensure_ascii=False)}
+生成侧对抗意见：{json.dumps(evidence.get('生成侧对抗'), ensure_ascii=False)}
+检验侧对抗意见：{json.dumps(evidence.get('检验侧对抗'), ensure_ascii=False)}
+无法表达原因：{evidence.get('无法表达原因')}
+
+输出 JSON：
+{{"决定": "改因子 | 改假设 | 终止（三选一）",
+  "理由": "一句话，依据上述证据",
+  "修改要求": "一条具体要求，只许一类；终止时可为空字符串"}}"""
+    return _dispatch("judge", payload, JUDGE_SYSTEM, user)
