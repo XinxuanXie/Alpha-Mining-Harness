@@ -250,4 +250,43 @@ assert rec9["成本"]["估算成本USD"] == run.est_cost(2000, 500), "记录成�
 assert rec9["成本"]["用时秒"] >= 0, "用时应非负"
 print("验收 9 通过：成本与用时可记录、估算口径一致")
 
+# ---- 验收 10：检索来源报告、429 重试与 Crossref 请求（打桩来源，不联网） ----
+import urllib.error as _urlerr
+_saved_sources, _saved_cache_path = search.SOURCES, search.CACHE_PATH
+search.CACHE_PATH = os.path.join(BASE, "lit_cache_test.json")
+if os.path.exists(search.CACHE_PATH):
+    os.remove(search.CACHE_PATH)
+def _bad_src(query, limit):
+    raise RuntimeError("源故障")
+def _ok_src(query, limit):
+    return [{"标题": "T", "年份": 2020, "来源": "替身源", "摘要": None}]
+search.SOURCES = (_bad_src, _ok_src)
+_got = search.search("验收十检索词甲", limit=3)
+assert _got and _got[0]["标题"] == "T", "第一源失败应降级到第二源"
+_rep = search.last_report()
+assert _rep[0]["结果"] == "失败" and "源故障" in _rep[0]["错误"], f"来源报告应记失败原因：{_rep}"
+assert _rep[1]["结果"].startswith("返回"), f"来源报告应记成功条数：{_rep}"
+_flaky = {"n": 0}
+def _flaky_src(query, limit):
+    _flaky["n"] += 1
+    if _flaky["n"] == 1:
+        raise _urlerr.HTTPError("https://x", 429, "Too Many", {}, None)
+    return [{"标题": "R", "年份": 2021, "来源": "替身源", "摘要": None}]
+search.SOURCES = (_flaky_src,)
+_got2 = search.search("验收十检索词乙", limit=3)
+assert _got2 and _got2[0]["标题"] == "R", "429 后应重试并拿到结果"
+assert "重试成功" in search.last_report()[0]["结果"], "来源报告应记 429 重试成功"
+_captured = {}
+_orig_get = search._get_json
+search._get_json = lambda url: (_captured.setdefault("url", url),
+                                {"message": {"items": [{"title": ["X"], "published": {"date-parts": [[2021]]}}]}})[1]
+_out = search._crossref("q", 3)
+search._get_json = _orig_get
+assert "select=" not in _captured["url"], "Crossref 请求不应带 select 参数（无效字段会被整单拒绝）"
+assert _out[0]["标题"] == "X" and _out[0]["年份"] == 2021, "Crossref 返回应能解析标题与年份"
+search.SOURCES, search.CACHE_PATH = _saved_sources, _saved_cache_path
+if os.path.exists(os.path.join(BASE, "lit_cache_test.json")):
+    os.remove(os.path.join(BASE, "lit_cache_test.json"))
+print("验收 10 通过：来源成败入报告、429 重试、Crossref 请求无无效参数")
+
 print("\n全部替身验收通过")

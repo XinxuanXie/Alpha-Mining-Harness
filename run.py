@@ -252,16 +252,21 @@ def process_hypothesis(hyp, wide, classics, cap_complexity):
     queries = [q for q in (hyp.get("search_queries") or []) if q][:2]
     if queries:
         seen_titles = set()
+        reports = []
         for q in queries:
             for item in search.search(q, limit=5):
                 if item["标题"] not in seen_titles:
                     seen_titles.add(item["标题"])
                     lit.append(item)
+            reports.append({"检索式": q, "来源报告": search.last_report()})
         lit = lit[:5]
         for i, item in enumerate(lit):
             item["编号"] = f"L{i + 1}"
         trace("文献检索", 方向=hyp["direction"], 假设=hyp["hypothesis"], 查询=queries,
-              条数=len(lit), 标题=[m["标题"][:60] for m in lit])
+              条数=len(lit), 标题=[m["标题"][:60] for m in lit], 来源报告=reports)
+        if not lit:
+            trace("文献检索失败", 方向=hyp["direction"], 假设=hyp["hypothesis"],
+                  来源报告=reports)
     if lit:
         try:
             refined = agents.refine_hypothesis(hyp, lit,
