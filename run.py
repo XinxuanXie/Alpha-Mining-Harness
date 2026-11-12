@@ -31,7 +31,7 @@ EXP_LIMIT = 10             # 经验读入上限（条）
 MAX_ATTEMPTS = 3           # 每个方向的尝试次数上限
 FORMULA_REWRITE_MAX = 3    # 公式重写上限（一致性或可算性未过时，不计入尝试次数）
 REVIEW_REWRITE_MAX = 2     # 讲评数字核对未过时的重写上限
-MAX_TOTAL_ATTEMPTS = 9     # 循环运行的停止条件：本进程总尝试数上限（防无限消耗调用）
+MAX_TOTAL_ATTEMPTS = int(os.environ.get("FACTOR_MAX_TOTAL_ATTEMPTS", "9"))  # 循环运行的停止条件：本进程总尝试数上限（防无限消耗调用）；可用环境变量 FACTOR_MAX_TOTAL_ATTEMPTS 调整
 
 # ============================================================
 # 读写：账本与经验库（JSON Lines，一行一条）
@@ -193,6 +193,14 @@ def exp_status(verdict):
     """经验状态与账本结论同名对齐：通过→已通过，条件成立→条件成立，否决→已否决。"""
     return {"通过": "已通过", "条件成立": "条件成立", "否决": "已否决"}[verdict]
 
+def cross_check(gen_attack, metrics):
+    """换皮交叉核对（程序比对）：生成侧声称的最像经典编号 vs 程序实测的最大相关经典编号。"""
+    claimed = ((gen_attack or {}).get("最像的经典") or "").strip()
+    actual = (metrics or {}).get("最大相关经典")
+    if not claimed.startswith("C") or not actual:
+        return "无法比对"
+    return "一致" if claimed[:3].upper() == actual.upper() else "不一致"
+
 # ============================================================
 # 预算（规格第三节）：每方向最多 3 次，逐次按命中率动态发放
 # ============================================================
@@ -226,7 +234,7 @@ def process_hypothesis(hyp, wide, classics, cap_complexity):
                     "机制": hyp["mechanism"], "条件预测": hyp["predictions"],
                     "否定条件": hyp["falsify"]},
            "公式": None, "判定数字": None, "预测核对": None, "对抗检验": None,
-           "生成侧对抗": None, "检验侧对抗": None,
+           "生成侧对抗": None, "检验侧对抗": None, "换皮交叉": None,
            "结论": None, "失效层": None}
     baseline_values = calc.eval_formula(hyp["baseline_formula"], wide)
 
@@ -325,6 +333,10 @@ def process_hypothesis(hyp, wide, classics, cap_complexity):
     except Exception as e:
         trace("检验对抗失败", 方向=hyp["direction"], 假设=hyp["hypothesis"], 错误=str(e))
     trace("检验对抗", 方向=hyp["direction"], 假设=hyp["hypothesis"], 对抗=rec["检验侧对抗"])
+    rec["换皮交叉"] = cross_check(rec["生成侧对抗"], metrics)
+    trace("换皮交叉", 方向=hyp["direction"], 假设=hyp["hypothesis"],
+          声称最像=(rec["生成侧对抗"] or {}).get("最像的经典"),
+          实测最大相关=metrics.get("最大相关经典"), 结果=rec["换皮交叉"])
 
     # 第 6 步：讲评（数字由程序逐项核对，不符打回）
     review, review_ok = None, False
@@ -363,6 +375,7 @@ def save_experience(rec, review, status):
              "推测": (review or {}).get("speculation", "") if review else "",
              "生成侧对抗": rec.get("生成侧对抗"),
              "对抗备忘录": rec.get("检验侧对抗"),
+             "换皮交叉": rec.get("换皮交叉"),
              "来源假设": rec["假设"]}
     append_jsonl(EXP_PATH, entry)
     return entry
@@ -410,7 +423,7 @@ def run_direction(clue, wide, classics, cap_complexity, sectors, stats):
         entries = read_jsonl(EXP_PATH)
         exp_in = retrieve_exp(clue.get("category"), entries) if clue.get("category") else entries[:EXP_LIMIT]
         rej = rejected_summaries(clue.get("category"), records) if clue.get("category") else []
-        hyps = agents.expand_hypotheses(clue, exp_in, rej)
+        hyps = agents.expand_hypotheses(clue, exp_in, rej, sectors=sectors)
         trace("展开候选", 方向=direction, 候选=hyps, 引用经验=[e["编号"] for e in exp_in])
         chosen = None
         for hyp in hyps:

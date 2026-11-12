@@ -68,7 +68,7 @@ EXPAND_SYSTEM = """你是一名量化研究员。你的任务是把一条研究�
 每条假设必须有明确的机制与收益来源，并给出可被数据证伪的条件预测。
 只输出 JSON，不要输出其他文字。"""
 
-def expand_hypotheses(clue, exp_entries, rejected_same_category):
+def expand_hypotheses(clue, exp_entries, rejected_same_category, sectors=None):
     payload = {"clue": clue, "exp_entries": exp_entries,
                "rejected_same_category": rejected_same_category}
     exp_text = "\n".join(
@@ -103,7 +103,8 @@ measure（计算方式的文字说明）、baseline_formula（用上述算子写
 mechanism（机制与收益来源）、
 predictions（至少两条，每条 {{"dim": "市值组|持有期|行业", "a": "比较的一方", "b": "比较的另一方", "key": true/false}}，
 含义为"a 组的 IC 高于 b 组"；市值组的 a、b 取自 小/中/大；持有期的 a、b 取自 1/5/10/20/60（天）；
-行业的 a 为行业名、b 固定为 "整体"；恰有一条 key 为 true，即与机制直接对应的关键预测）、
+行业的 a 只能取自下面的行业名清单、b 固定为 "整体"（a 写"整体"会被程序拒登）；恰有一条 key 为 true，即与机制直接对应的关键预测）、
+行业名清单（行业预测的 a 只能取自）：{', '.join(sorted(sectors)) if sectors else '（未提供）'}
 falsify（否定条件）、exp_refs（引用的经验编号列表）、diff_from_rejected（与上述已否决方向的区别，无则空字符串）。
 展开 1 至 3 条假设，宁缺毋滥。"""
     out = _dispatch("expand", payload, EXPAND_SYSTEM, user)
@@ -194,7 +195,8 @@ def attack_registration(hyp, classic_formulas):
 3. 机制自洽：机制叙述与收益来源是否自洽？"赚谁的钱、对方为何持续付钱"是否说得通？
 
 输出 JSON：
-{{"最像的经典": "编号与一句相似点，或写 无",
+{{"最像的经典": "只填编号，如 C09；没有像的写 无",
+  "相似点": "与该条经典像在什么地方",
   "换皮判断": "区别是否成立及理由",
   "预测问题": "注水或绕开之处，无则写 无",
   "机制问题": "不自洽之处，无则写 无"}}"""

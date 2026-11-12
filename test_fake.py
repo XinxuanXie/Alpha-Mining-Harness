@@ -5,7 +5,8 @@
 # 3) 预算规则：命中率未达线的方向不发放第 2 次，达上限的方向封存；
 # 4) 过程轨迹 trace.jsonl 逐条落盘（只写不读，供实验结束后分析）；
 # 5) 两处模型对抗审查被调用并留痕、进经验，但不改变程序结论；对抗摘要随已否决摘要回流；
-# 6) 预测取值校验（行业 a 须为真实行业名、市值组/持有期取值在固定集合内）与线索自提校验。
+# 6) 预测取值校验（行业 a 须为真实行业名、市值组/持有期取值在固定集合内）与线索自提校验；
+# 7) 主循环：无线索时自提→登记→处理→达总上限停止（打桩，不重复加载数据）。
 # 本测试只用训练段数据，不调用真实模型。运行：python test_fake.py
 
 import os
@@ -38,7 +39,7 @@ HYP = {
     "exp_refs": [], "diff_from_rejected": "",
 }
 
-state = {"formula_calls": 0, "review_calls": 0, "review_mode": "先错后对"}
+state = {"formula_calls": 0, "review_calls": 0, "review_mode": "先错后对", "propose_calls": 0}
 
 def fake(role, payload):
     if role == "expand":
@@ -50,10 +51,14 @@ def fake(role, payload):
             return {"formula": "ts_mean(volume, 5) / ts_mean(volume, 60)"}
         return {"formula": HYP["baseline_formula"]}
     if role == "propose":
-        return {"clues": [{"direction": "量缩反弹", "phenomenon": "大跌伴随成交量萎缩后反弹",
-                           "source": "流动性补偿", "category": "流动性"}]}
+        state["propose_calls"] += 1
+        names = ["量缩反弹", "循环测试方向二", "循环测试方向三"]
+        d = names[min(state["propose_calls"] - 1, len(names) - 1)]
+        return {"clues": [{"direction": d, "phenomenon": "某种现象", "source": "某种收益来源",
+                           "category": "流动性"}]}
     if role == "attack_reg":
-        return {"最像的经典": "C01 短期反转", "换皮判断": "与经典反转同源，区别未成立",
+        return {"最像的经典": "C01", "相似点": "同为短期价格反转",
+                "换皮判断": "与经典反转同源，区别未成立",
                 "预测问题": "无", "机制问题": "无"}
     if role == "attack_res":
         return {"失效解释": "信号强度不足，IC 未达门槛", "未覆盖的失效方式": "未按波动状态分组",
@@ -125,6 +130,12 @@ assert rec["检验侧对抗"]["失效解释"].startswith("信号强度不足"), 
 assert rec["结论"] in ("通过", "条件成立", "否决"), "结论仍由程序规则给出"
 assert entry["对抗备忘录"]["未覆盖的失效方式"] == "未按波动状态分组", "对抗备忘录应进经验条目"
 assert entry["生成侧对抗"]["换皮判断"].startswith("与经典反转同源"), "生成侧对抗应进经验条目"
+assert rec["换皮交叉"] in ("一致", "不一致", "无法比对"), "换皮交叉应由程序比对并写入账本"
+assert entry["换皮交叉"] == rec["换皮交叉"], "换皮交叉应进经验条目"
+assert run.cross_check({"最像的经典": "C03"}, {"最大相关经典": "C03"}) == "一致"
+assert run.cross_check({"最像的经典": "C01"}, {"最大相关经典": "C03"}) == "不一致"
+assert run.cross_check({"最像的经典": "无"}, {"最大相关经典": "C03"}) == "无法比对"
+assert run.cross_check(None, {"最大相关经典": "C03"}) == "无法比对"
 sums = run.rejected_summaries("过度反应", run.read_jsonl(run.RECORDS_PATH))
 assert sums and "死因：信号强度不足" in sums[0]["对抗摘要"], "对抗摘要应随已否决摘要回流"
 print("验收 5 通过：对抗审查留痕进经验、结论仍归程序、对抗意见回流展开输入")
@@ -157,5 +168,33 @@ assert run.validate_clue(new_clues[0], {"量缩反弹"}) != [], "与已有方向
 assert run.validate_clue({"direction": "x", "phenomenon": "y", "source": "z", "category": "不存在的类"}, set()) != [], \
     "类别不在词表应被拒"
 print("验收 6 通过：预测取值校验拦下无效登记，线索自提与校验可用")
+
+# ---- 验收 7：主循环（自提→登记→处理→达上限停止），打桩不加载数据 ----
+loop_clues = os.path.join(BASE, "clues_loop_test.jsonl")
+if os.path.exists(loop_clues):
+    os.remove(loop_clues)
+saved = (run.CLUES_PATH, run.MAX_TOTAL_ATTEMPTS, run.run_direction,
+         calc.load_wide, calc.load_classics, calc.classic_complexity_cap)
+run.CLUES_PATH = loop_clues
+run.MAX_TOTAL_ATTEMPTS = 2
+state["propose_calls"] = 0
+calc.load_wide = lambda: {}
+calc.load_classics = lambda wide: []
+calc.classic_complexity_cap = lambda: 14
+def stub_direction(clue, wide, classics, cap, sectors, stats):
+    stats["done"] += 1
+run.run_direction = stub_direction
+gen_before = sum(1 for e in run.read_jsonl(run.TRACE_PATH) if e["事件"] == "线索生成")
+run.main()
+calc.load_wide, calc.load_classics, calc.classic_complexity_cap = saved[3], saved[4], saved[5]
+run.CLUES_PATH, run.MAX_TOTAL_ATTEMPTS, run.run_direction = saved[0], saved[1], saved[2]
+loop_rows = run.read_jsonl(loop_clues)
+assert [r["direction"] for r in loop_rows] == ["量缩反弹", "循环测试方向二"], \
+    f"主循环应自提并登记两个方向后达上限停止：{loop_rows}"
+assert all("agent 自提" in r["source"] for r in loop_rows), "自提线索应标注来源"
+gen_after = sum(1 for e in run.read_jsonl(run.TRACE_PATH) if e["事件"] == "线索生成")
+assert gen_after - gen_before == 2, "主循环应触发两次线索生成"
+os.remove(loop_clues)
+print("验收 7 通过：主循环自提登记、逐方向处理、达总上限停止")
 
 print("\n全部替身验收通过")
