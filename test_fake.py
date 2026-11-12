@@ -4,7 +4,8 @@
 # 2) 讲评数字写错时被打回，重写正确后归档；始终写错时记“核对失败”；
 # 3) 预算规则：命中率未达线的方向不发放第 2 次，达上限的方向封存；
 # 4) 过程轨迹 trace.jsonl 逐条落盘（只写不读，供实验结束后分析）；
-# 5) 两处模型对抗审查被调用并留痕、进经验，但不改变程序结论；对抗摘要随已否决摘要回流。
+# 5) 两处模型对抗审查被调用并留痕、进经验，但不改变程序结论；对抗摘要随已否决摘要回流；
+# 6) 预测取值校验（行业 a 须为真实行业名、市值组/持有期取值在固定集合内）与线索自提校验。
 # 本测试只用训练段数据，不调用真实模型。运行：python test_fake.py
 
 import os
@@ -48,6 +49,9 @@ def fake(role, payload):
             # 第一次故意写错量（成交量比），应被一致性检查拦下
             return {"formula": "ts_mean(volume, 5) / ts_mean(volume, 60)"}
         return {"formula": HYP["baseline_formula"]}
+    if role == "propose":
+        return {"clues": [{"direction": "量缩反弹", "phenomenon": "大跌伴随成交量萎缩后反弹",
+                           "source": "流动性补偿", "category": "流动性"}]}
     if role == "attack_reg":
         return {"最像的经典": "C01 短期反转", "换皮判断": "与经典反转同源，区别未成立",
                 "预测问题": "无", "机制问题": "无"}
@@ -132,5 +136,26 @@ checks = [e for e in run.read_jsonl(run.TRACE_PATH) if e["事件"] == "公式检
 assert any(c["结果"].startswith("未通过") for c in checks), "轨迹应记下第一次写错量的拦截"
 assert any(c["结果"] == "通过" for c in checks), "轨迹应记下重写后的通过"
 print(f"验收 4 通过：轨迹共 {len(events)} 条事件，关键节点齐全")
+
+# ---- 验收 6：预测取值校验 + 线索自提校验 ----
+sectors = set(calc.SECTOR_OF.values())
+assert sectors, "行业集合应已随数据加载"
+bad_hyp = dict(HYP)
+bad_hyp["predictions"] = [{"dim": "行业", "a": "整体", "b": "整体", "key": True},
+                          {"dim": "市值组", "a": "微", "b": "大", "key": False}]
+errs = run.validate_registration(bad_hyp, [], [], sectors=sectors)
+assert any("真实行业名" in e for e in errs), f"行业 a=整体 应被拒登：{errs}"
+assert any("小/中/大" in e for e in errs), f"市值组取值越界应被拒登：{errs}"
+good_hyp = dict(HYP)
+good_hyp["predictions"] = [{"dim": "行业", "a": sorted(sectors)[0], "b": "整体", "key": True},
+                           {"dim": "市值组", "a": "小", "b": "大", "key": False}]
+assert run.validate_registration(good_hyp, [], [], sectors=sectors) == [], "合法预测应通过校验"
+new_clues = agents.propose_clues(["超跌反弹"], [], [])
+assert new_clues and new_clues[0]["direction"] == "量缩反弹", "线索自提应返回候选"
+assert run.validate_clue(new_clues[0], {"超跌反弹"}) == [], "自提线索应通过校验"
+assert run.validate_clue(new_clues[0], {"量缩反弹"}) != [], "与已有方向重名应被拒"
+assert run.validate_clue({"direction": "x", "phenomenon": "y", "source": "z", "category": "不存在的类"}, set()) != [], \
+    "类别不在词表应被拒"
+print("验收 6 通过：预测取值校验拦下无效登记，线索自提与校验可用")
 
 print("\n全部替身验收通过")

@@ -31,6 +31,7 @@ EXP_LIMIT = 10             # 经验读入上限（条）
 MAX_ATTEMPTS = 3           # 每个方向的尝试次数上限
 FORMULA_REWRITE_MAX = 3    # 公式重写上限（一致性或可算性未过时，不计入尝试次数）
 REVIEW_REWRITE_MAX = 2     # 讲评数字核对未过时的重写上限
+MAX_TOTAL_ATTEMPTS = 9     # 循环运行的停止条件：本进程总尝试数上限（防无限消耗调用）
 
 # ============================================================
 # 读写：账本与经验库（JSON Lines，一行一条）
@@ -65,7 +66,7 @@ def trace(event, **fields):
 # ============================================================
 # 登记校验（规格 2.4）：程序逐项检查，任一不过即拒登
 # ============================================================
-def validate_registration(hyp, exp_entries, rejected_keys):
+def validate_registration(hyp, exp_entries, rejected_keys, sectors=None):
     errs = []
     if hyp.get("category") not in agents.CATEGORIES:
         errs.append(f"机制类别不在词表内：{hyp.get('category')}")
@@ -82,12 +83,37 @@ def validate_registration(hyp, exp_entries, rejected_keys):
     if sum(1 for p in preds if p.get("key")) != 1:
         errs.append("关键预测必须恰有一条")
     for p in preds:
-        if p.get("dim") not in ("市值组", "持有期", "行业"):
-            errs.append(f"预测维度第一期不开放：{p.get('dim')}")
+        dim, a, b = p.get("dim"), str(p.get("a")), str(p.get("b"))
+        if dim not in ("市值组", "持有期", "行业"):
+            errs.append(f"预测维度第一期不开放：{dim}")
+        elif dim == "市值组" and not (a in ("小", "中", "大") and b in ("小", "中", "大")):
+            errs.append(f"市值组预测的 a、b 只能取 小/中/大：{a} vs {b}")
+        elif dim == "持有期" and not (a in ("1", "5", "10", "20", "60") and b in ("1", "5", "10", "20", "60")):
+            errs.append(f"持有期预测的 a、b 只能取 1/5/10/20/60：{a} vs {b}")
+        elif dim == "行业":
+            if b != "整体":
+                errs.append(f"行业预测的 b 固定为“整体”：{b}")
+            if sectors is not None and a not in sectors:
+                errs.append(f"行业预测的 a 必须是真实行业名：{a}")
     if exp_entries and not hyp.get("exp_refs"):
         errs.append("未引用任何经验条目")
     if rejected_keys and not (hyp.get("diff_from_rejected") or "").strip():
         errs.append("同类别有已否决或关键预测未兑现的方向，未写明区别")
+    return errs
+
+def validate_clue(clue, existing_directions):
+    """线索登记校验：人工登记与 agent 自提同一标准。"""
+    errs = []
+    if clue.get("category") not in agents.CATEGORIES:
+        errs.append(f"机制类别不在词表内：{clue.get('category')}")
+    if not (clue.get("direction") or "").strip():
+        errs.append("方向名为空")
+    elif clue["direction"] in existing_directions:
+        errs.append(f"方向已存在：{clue['direction']}")
+    if not (clue.get("phenomenon") or "").strip():
+        errs.append("现象为空")
+    if not (clue.get("source") or "").strip():
+        errs.append("收益来源为空")
     return errs
 
 # ============================================================
@@ -371,71 +397,103 @@ def rejected_summaries(category, records):
                         "对抗摘要": "；".join(bits)})
     return out
 
+def run_direction(clue, wide, classics, cap_complexity, sectors, stats):
+    """跑完一个方向：逐次申请预算、展开、处理，直到停止发放、无合格登记或达总上限。"""
+    direction = clue["direction"]
+    while stats["done"] < MAX_TOTAL_ATTEMPTS:
+        records = read_jsonl(RECORDS_PATH)
+        ok, why = can_issue(records, direction)
+        trace("预算决定", 方向=direction, 发放=ok, 原因=why)
+        if not ok:
+            print(f"方向「{direction}」停止发放：{why}")
+            return
+        entries = read_jsonl(EXP_PATH)
+        exp_in = retrieve_exp(clue.get("category"), entries) if clue.get("category") else entries[:EXP_LIMIT]
+        rej = rejected_summaries(clue.get("category"), records) if clue.get("category") else []
+        hyps = agents.expand_hypotheses(clue, exp_in, rej)
+        trace("展开候选", 方向=direction, 候选=hyps, 引用经验=[e["编号"] for e in exp_in])
+        chosen = None
+        for hyp in hyps:
+            errs = validate_registration(
+                hyp, exp_in,
+                [r for r in rej] if clue.get("category") else [],
+                sectors=sectors)
+            if not errs:
+                hyp["direction"] = direction
+                chosen = hyp
+                break
+            trace("拒登", 方向=direction, 假设=hyp.get("hypothesis"), 原因=errs)
+            print(f"假设拒登：{errs}")
+        if chosen is None:
+            trace("方向终止", 方向=direction, 原因="本轮无合格登记")
+            print(f"方向「{direction}」本轮无合格登记，停止")
+            return
+        result = process_hypothesis(chosen, wide, classics, cap_complexity)
+        if isinstance(result, tuple):
+            rec, review, status, _ = result
+        else:
+            rec, review, status = result, None, "已否决"
+        append_jsonl(RECORDS_PATH, rec)
+        save_experience(rec, review, status)
+        stats["done"] += 1
+        stats["passed"] += 1 if rec["结论"] == "通过" else 0
+        for p in (rec["预测核对"] or []):
+            stats["pred_total"] += 1
+            stats["pred_hit"] += 1 if p["兑现"] else 0
+        print(f"方向「{direction}」第 {direction_stats(read_jsonl(RECORDS_PATH), direction)['已用']} 次尝试："
+              f"{chosen['hypothesis'][:40]} → {rec['结论']}"
+              + (f"（失效层 {rec['失效层']}）" if rec["失效层"] else ""))
+
 def main():
-    clues = read_jsonl(CLUES_PATH)
-    if not clues:
-        print(f"没有线索：请先在 {CLUES_PATH} 登记线索（每行一条，字段 direction、phenomenon、source，可选 category）")
-        return
     wide = calc.load_wide()
     classics = calc.load_classics(wide)
     cap_complexity = calc.classic_complexity_cap()
+    sectors = set(calc.SECTOR_OF.values())
     print(f"复杂度上限 {cap_complexity}；已加载训练段数据")
-    trace("实验开始", 线索数=len(clues), 复杂度上限=cap_complexity)
+    trace("实验开始", 初始线索数=len(read_jsonl(CLUES_PATH)), 复杂度上限=cap_complexity,
+          总尝试上限=MAX_TOTAL_ATTEMPTS)
     calls0 = agents.CALL_COUNT
-    done = passed = 0
-    pred_total = pred_hit = 0
+    stats = {"done": 0, "passed": 0, "pred_total": 0, "pred_hit": 0}
+    processed = set()
+    stop_reason = f"总尝试数达上限 {MAX_TOTAL_ATTEMPTS}"
 
-    for clue in clues:
-        direction = clue["direction"]
-        while True:
+    while stats["done"] < MAX_TOTAL_ATTEMPTS:
+        clues = read_jsonl(CLUES_PATH)
+        todo = [c for c in clues if c["direction"] not in processed]
+        if not todo:
+            # 无待处理线索：由模型基于经验与已否决记录自提新线索，程序校验后登记
             records = read_jsonl(RECORDS_PATH)
-            ok, why = can_issue(records, direction)
-            trace("预算决定", 方向=direction, 发放=ok, 原因=why)
-            if not ok:
-                print(f"方向「{direction}」停止发放：{why}")
-                break
-            entries = read_jsonl(EXP_PATH)
-            exp_in = retrieve_exp(clue.get("category"), entries) if clue.get("category") else entries[:EXP_LIMIT]
-            rej = rejected_summaries(clue.get("category"), records) if clue.get("category") else []
-            hyps = agents.expand_hypotheses(clue, exp_in, rej)
-            trace("展开候选", 方向=direction, 候选=hyps, 引用经验=[e["编号"] for e in exp_in])
-            chosen = None
-            for hyp in hyps:
-                errs = validate_registration(
-                    hyp, exp_in,
-                    [r for r in rej] if clue.get("category") else [])
+            existing = {c["direction"] for c in clues} | {r["方向"] for r in records}
+            rej_all = [s for cat in agents.CATEGORIES for s in rejected_summaries(cat, records)]
+            proposed = agents.propose_clues(sorted(existing), read_jsonl(EXP_PATH), rej_all)
+            accepted = []
+            for c in proposed:
+                errs = validate_clue(c, existing | {a["direction"] for a in accepted})
                 if not errs:
-                    hyp["direction"] = direction
-                    chosen = hyp
-                    break
-                trace("拒登", 方向=direction, 假设=hyp.get("hypothesis"), 原因=errs)
-                print(f"假设拒登：{errs}")
-            if chosen is None:
-                trace("方向终止", 方向=direction, 原因="本轮无合格登记")
-                print(f"方向「{direction}」本轮无合格登记，停止")
+                    c = dict(c)
+                    c["source"] = f"{c['source']}（agent 自提）"
+                    accepted.append(c)
+                else:
+                    print(f"线索拒登：{errs}")
+            trace("线索生成", 候选=proposed, 采纳=[a["direction"] for a in accepted])
+            if not accepted:
+                stop_reason = "agent 无新线索可提，循环结束"
                 break
-            result = process_hypothesis(chosen, wide, classics, cap_complexity)
-            if isinstance(result, tuple):
-                rec, review, status, _ = result
-            else:
-                rec, review, status = result, None, "已否决"
-            append_jsonl(RECORDS_PATH, rec)
-            save_experience(rec, review, status)
-            done += 1
-            passed += 1 if rec["结论"] == "通过" else 0
-            for p in (rec["预测核对"] or []):
-                pred_total += 1
-                pred_hit += 1 if p["兑现"] else 0
-            print(f"方向「{direction}」第 {direction_stats(read_jsonl(RECORDS_PATH), direction)['已用']} 次尝试："
-                  f"{chosen['hypothesis'][:40]} → {rec['结论']}"
-                  + (f"（失效层 {rec['失效层']}）" if rec["失效层"] else ""))
+            for a in accepted:
+                append_jsonl(CLUES_PATH, a)
+                print(f"新线索登记：「{a['direction']}」（{a['category']}）")
+            continue
+        clue = todo[0]
+        run_direction(clue, wide, classics, cap_complexity, sectors, stats)
+        processed.add(clue["direction"])
 
     calls = agents.CALL_COUNT - calls0
-    trace("实验结束", 完成尝试=done, 通过=passed, 模型调用=calls)
-    print(f"\n本轮完成尝试 {done} 条，通过 {passed} 条；模型调用 {calls} 次")
+    done, passed = stats["done"], stats["passed"]
+    trace("实验结束", 完成尝试=done, 通过=passed, 模型调用=calls, 停止原因=stop_reason)
+    print(f"\n本轮完成尝试 {done} 条，通过 {passed} 条；模型调用 {calls} 次；停止原因：{stop_reason}")
     if done:
         print(f"首版存活率 {passed / done:.2f}；预测命中率 "
-              f"{(pred_hit / pred_total) if pred_total else 0:.2f}；"
+              f"{(stats['pred_hit'] / stats['pred_total']) if stats['pred_total'] else 0:.2f}；"
               f"单位算力产出 {passed / calls * 1000 if calls else 0:.1f} 个/千次调用")
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 # agents.py — 模型调用层
-# 职责：五个模型调用——展开假设、写公式、写讲评、生成侧对抗审查、检验侧对抗审查。
+# 职责：六个模型调用——展开假设、写公式、写讲评、生成侧对抗审查、检验侧对抗审查、提出线索。
 # 只生成与判断，不计算数字，不写任何文件；对抗审查只留痕，不参与判定（判定归 run.py 按程序规则执行）。
 # 数字一律由 calc.py 计算；本文件只把结构化输入拼成提示词、把模型输出解析成字典。
 # 模型：DeepSeek（环境变量 DEEPSEEK_API_KEY）。测试时可用 set_fake 注入替身，跳过真实调用。
@@ -92,6 +92,7 @@ def expand_hypotheses(clue, exp_entries, rejected_same_category):
 {rej_text}
 
 方向约定：假设与基准公式的方向须使因子值越大、预期收益越高；与收益呈反向关系的量，先取负再写。
+基准公式须保留原始量纲与符号，不要套 rank 等截面变换（否则按符号分组的检验无法执行）。
 
 可表达范围（计算方式与基准公式必须能在此范围内实现）：
 {EXPRESS_DOC}
@@ -233,3 +234,44 @@ def attack_results(hyp, metrics, pred_results, adv_results, verdict, gen_attack=
   "未覆盖的失效方式": "程序已执行的检验（子时段反例、信号两端分组、预测核对）覆盖不到的失效方式，无则写 无",
   "备注": "换皮交叉核对的结论，以及其他值得后续研究注意的攻击点"}}"""
     return _dispatch("attack_res", payload, ATTACK_RES_SYSTEM, user)
+
+# ============================================================
+# 调用六：提出线索
+# 输入：已有方向清单 + 全部经验条目 + 全部已否决摘要
+# 输出：新线索列表。线索由模型自提，程序做词表与去重校验后才登记（见 run.py）。
+# ============================================================
+PROPOSE_SYSTEM = """你是一名量化研究负责人。你的任务是基于已有研究记录提出新的研究线索，开辟值得检验的方向。
+线索要具体到现象与可能的收益来源；不得与已有方向重复或同义改名；不得重提已封存方向的同一机制。
+只输出 JSON，不要输出其他文字。"""
+
+def propose_clues(existing_directions, exp_entries, rejected):
+    payload = {"existing_directions": existing_directions,
+               "exp_entries": exp_entries, "rejected": rejected}
+    exp_text = "\n".join(
+        f"[经验{e['编号']}] 类别 {e['机制类别']}，状态 {e['状态']}：{e['讲评']['findings']}"
+        f" 借用：{e['讲评']['borrow']}"
+        + (f" 对抗备忘录：{e['对抗备忘录']['失效解释']}；未覆盖：{e['对抗备忘录']['未覆盖的失效方式']}"
+           if e.get("对抗备忘录") else "")
+        for e in exp_entries) or "（暂无经验条目）"
+    rej_text = "\n".join(
+        f"- 方向「{r['方向']}」：{r['假设摘要']}（结局：{r['结局']}）"
+        + (f"；对抗意见：{r['对抗摘要']}" if r.get("对抗摘要") else "")
+        for r in rejected) or "（无）"
+    user = f"""已有方向（不得重复，不得同义改名重提）：
+{', '.join(existing_directions) or '（无）'}
+
+机制类别只能从这七类中选：{', '.join(CATEGORIES)}。
+优先考虑：尚未有方向覆盖的机制类别；经验中指出值得借用的结论；对抗备忘录中"未覆盖的失效方式"提示的新角度；
+已否决方向的同一机制不得原样重提，换角度须在 phenomenon 中写明新角度。
+
+已有经验：
+{exp_text}
+
+已否决或关键预测未兑现的方向：
+{rej_text}
+
+输出 JSON：{{"clues": [每条线索一个对象]}}，每个对象字段：
+direction（简短的方向名）、phenomenon（观察到的现象）、source（可能的收益来源）、category（机制类别）。
+提出 1 至 3 条，宁缺毋滥；确实没有新角度时输出空列表。"""
+    out = _dispatch("propose", payload, PROPOSE_SYSTEM, user)
+    return out.get("clues", [])
