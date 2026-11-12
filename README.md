@@ -13,6 +13,7 @@
 | `clues.jsonl` | 线索登记（人工）：每行一条，字段 direction、phenomenon、source，可选 category。 |
 | `records.jsonl` | 账本（程序写）：一条假设一行。 |
 | `experience.jsonl` | 经验库（程序写）：一条经验一行。 |
+| `trace.jsonl` | 过程轨迹（程序写）：一条事件一行，只写不读，供实验结束后分析，不回流给模型。 |
 | `data/` | panel、securities、membership_intervals、spy_benchmark 四个数据文件（本机为符号链接，迁移时换成实体文件）；classic_values.parquet 为程序生成的经典因子值表缓存。 |
 
 ## 运行

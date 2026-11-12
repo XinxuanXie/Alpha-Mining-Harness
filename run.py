@@ -6,6 +6,7 @@
 import json
 import os
 import sys
+from datetime import datetime
 
 import calc
 import agents
@@ -17,6 +18,7 @@ BASE = os.path.dirname(os.path.abspath(__file__))
 RECORDS_PATH = os.path.join(BASE, "records.jsonl")
 EXP_PATH = os.path.join(BASE, "experience.jsonl")
 CLUES_PATH = os.path.join(BASE, "clues.jsonl")
+TRACE_PATH = os.path.join(BASE, "trace.jsonl")
 IC_THRESHOLD = 0.02        # 基础判定：Rank IC 门槛
 ICIR_THRESHOLD = 0.2       # 基础判定：ICIR 门槛
 CORR_THRESHOLD = 0.8       # 基础判定：与经典因子最大相关上限
@@ -47,6 +49,18 @@ def read_jsonl(path):
 def append_jsonl(path, obj):
     with open(path, "a", encoding="utf-8") as fh:
         fh.write(json.dumps(obj, ensure_ascii=False) + "\n")
+
+def trace(event, **fields):
+    """过程轨迹：逐条事件落盘，只写不读——供实验结束后分析，不回流给模型、不进任何提示。
+
+    写入失败绝不中断实验（best-effort，静默）。
+    """
+    try:
+        row = {"时间": datetime.now().isoformat(timespec="seconds"), "事件": event}
+        row.update(fields)
+        append_jsonl(TRACE_PATH, row)
+    except Exception:
+        pass
 
 # ============================================================
 # 登记校验（规格 2.4）：程序逐项检查，任一不过即拒登
@@ -191,9 +205,11 @@ def process_hypothesis(hyp, wide, classics, cap_complexity):
 
     # 第 3 步：写公式 + 程序检查（白名单、复杂度、一致性）；登记锁定，只改公式
     formula, last_err = None, None
-    for _ in range(FORMULA_REWRITE_MAX + 1):
+    for attempt in range(1, FORMULA_REWRITE_MAX + 2):
         out = agents.write_formula(hyp, last_err)
         if not out.get("formula"):
+            trace("写公式", 方向=hyp["direction"], 假设=hyp["hypothesis"], 第几次=attempt,
+                  公式=None, 模型原因=out.get("reason", ""))
             rec["结论"] = "无法表达"
             rec["失效层"] = "实现层"
             rec["无法表达原因"] = out.get("reason", "")
@@ -202,25 +218,37 @@ def process_hypothesis(hyp, wide, classics, cap_complexity):
         ok, bad = calc.check_whitelist(cand)
         if not ok:
             last_err = f"公式含清单外算子或字段：{bad}"
+            trace("公式检查", 方向=hyp["direction"], 假设=hyp["hypothesis"], 第几次=attempt,
+                  公式=cand, 结果="未通过：" + last_err)
             continue
         if calc.complexity(cand) > cap_complexity:
             last_err = f"复杂度 {calc.complexity(cand)} 超过上限 {cap_complexity}"
+            trace("公式检查", 方向=hyp["direction"], 假设=hyp["hypothesis"], 第几次=attempt,
+                  公式=cand, 复杂度=calc.complexity(cand), 结果="未通过：" + last_err)
             continue
         try:
             values = calc.eval_formula(cand, wide)
         except ValueError as e:
             last_err = str(e)
+            trace("公式检查", 方向=hyp["direction"], 假设=hyp["hypothesis"], 第几次=attempt,
+                  公式=cand, 结果="未通过：" + last_err)
             continue
         corr = calc.consistency_corr(values, baseline_values)
         if corr is None or corr < CONSISTENCY_MIN:
             last_err = f"一致性相关 {corr} 低于 {CONSISTENCY_MIN}：公式计算的量与登记不一致"
+            trace("公式检查", 方向=hyp["direction"], 假设=hyp["hypothesis"], 第几次=attempt,
+                  公式=cand, 一致性相关=corr, 结果="未通过：" + last_err)
             continue
         formula, rec["一致性相关"] = cand, corr
+        trace("公式检查", 方向=hyp["direction"], 假设=hyp["hypothesis"], 第几次=attempt,
+              公式=cand, 复杂度=calc.complexity(cand), 一致性相关=corr, 结果="通过")
         break
     if formula is None:
         rec["结论"] = "无法表达"
         rec["失效层"] = "实现层"
         rec["无法表达原因"] = f"重写达上限，最后错误：{last_err}"
+        trace("结论", 方向=hyp["direction"], 假设=hyp["hypothesis"], 结论="无法表达",
+              失效层="实现层", 原因=rec["无法表达原因"])
         return rec
     rec["公式"] = formula
     values = calc.eval_formula(formula, wide)
@@ -229,12 +257,16 @@ def process_hypothesis(hyp, wide, classics, cap_complexity):
     metrics = calc.compute_metrics(values, wide, classics)
     rec["判定数字"] = metrics
     base_ok = calc.base_judge(metrics, IC_THRESHOLD, ICIR_THRESHOLD, CORR_THRESHOLD)
+    trace("回测", 方向=hyp["direction"], 假设=hyp["hypothesis"],
+          判定数字=metrics, 基础判定="通过" if base_ok else "未通过")
 
     # 第 5 步：对抗检验 + 预测核对
     adv = adversarial(hyp, values, baseline_values, metrics, wide, classics)
     rec["对抗检验"] = adv
     pred_results = check_predictions(hyp, metrics)
     rec["预测核对"] = pred_results
+    trace("对抗与核对", 方向=hyp["direction"], 假设=hyp["hypothesis"],
+          对抗检验=adv, 预测核对=pred_results)
     key_ok = all(p["兑现"] for p in pred_results if p["key"])
     general = [p for p in pred_results if not p["key"]]
     general_majority = (sum(1 for p in general if p["兑现"]) * 2 > len(general)) if general else True
@@ -252,7 +284,7 @@ def process_hypothesis(hyp, wide, classics, cap_complexity):
 
     # 第 6 步：讲评（数字由程序逐项核对，不符打回）
     review, review_ok = None, False
-    for _ in range(REVIEW_REWRITE_MAX + 1):
+    for r_attempt in range(1, REVIEW_REWRITE_MAX + 2):
         review = agents.write_review(hyp, metrics, pred_results, adv, verdict)
         nums = review.get("numbers") or {}
         want = {"ic": metrics["IC均值"], "icir": metrics["ICIR"], "max_corr": metrics["与经典因子最大相关"]}
@@ -262,7 +294,11 @@ def process_hypothesis(hyp, wide, classics, cap_complexity):
             for k, v in want.items())
         if review_ok:
             break
+        trace("讲评打回", 方向=hyp["direction"], 假设=hyp["hypothesis"], 第几次=r_attempt,
+              模型数字=nums, 程序数字=want)
     rec["讲评核对"] = "通过" if review_ok else "核对失败"
+    trace("结论", 方向=hyp["direction"], 假设=hyp["hypothesis"], 结论=verdict,
+          失效层=rec["失效层"], 经验状态=exp_status(verdict), 讲评核对=rec["讲评核对"])
     return rec, review, exp_status(verdict), baseline_values
 
 def save_experience(rec, review, status):
@@ -313,6 +349,7 @@ def main():
     classics = calc.load_classics(wide)
     cap_complexity = calc.classic_complexity_cap()
     print(f"复杂度上限 {cap_complexity}；已加载训练段数据")
+    trace("实验开始", 线索数=len(clues), 复杂度上限=cap_complexity)
     calls0 = agents.CALL_COUNT
     done = passed = 0
     pred_total = pred_hit = 0
@@ -322,6 +359,7 @@ def main():
         while True:
             records = read_jsonl(RECORDS_PATH)
             ok, why = can_issue(records, direction)
+            trace("预算决定", 方向=direction, 发放=ok, 原因=why)
             if not ok:
                 print(f"方向「{direction}」停止发放：{why}")
                 break
@@ -329,6 +367,7 @@ def main():
             exp_in = retrieve_exp(clue.get("category"), entries) if clue.get("category") else entries[:EXP_LIMIT]
             rej = rejected_summaries(clue.get("category"), records) if clue.get("category") else []
             hyps = agents.expand_hypotheses(clue, exp_in, rej)
+            trace("展开候选", 方向=direction, 候选=hyps, 引用经验=[e["编号"] for e in exp_in])
             chosen = None
             for hyp in hyps:
                 errs = validate_registration(
@@ -338,8 +377,10 @@ def main():
                     hyp["direction"] = direction
                     chosen = hyp
                     break
+                trace("拒登", 方向=direction, 假设=hyp.get("hypothesis"), 原因=errs)
                 print(f"假设拒登：{errs}")
             if chosen is None:
+                trace("方向终止", 方向=direction, 原因="本轮无合格登记")
                 print(f"方向「{direction}」本轮无合格登记，停止")
                 break
             result = process_hypothesis(chosen, wide, classics, cap_complexity)
@@ -359,6 +400,7 @@ def main():
                   + (f"（失效层 {rec['失效层']}）" if rec["失效层"] else ""))
 
     calls = agents.CALL_COUNT - calls0
+    trace("实验结束", 完成尝试=done, 通过=passed, 模型调用=calls)
     print(f"\n本轮完成尝试 {done} 条，通过 {passed} 条；模型调用 {calls} 次")
     if done:
         print(f"首版存活率 {passed / done:.2f}；预测命中率 "

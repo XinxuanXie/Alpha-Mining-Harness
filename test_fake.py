@@ -2,7 +2,8 @@
 # 用假模型回复跑通完整流程，验收三件事：
 # 1) 一条假设走完实现→回测→对抗→讲评，公式写错量时被一致性检查拦下并重写成功；
 # 2) 讲评数字写错时被打回，重写正确后归档；始终写错时记“核对失败”；
-# 3) 预算规则：命中率未达线的方向不发放第 2 次，达上限的方向封存。
+# 3) 预算规则：命中率未达线的方向不发放第 2 次，达上限的方向封存；
+# 4) 过程轨迹 trace.jsonl 逐条落盘（只写不读，供实验结束后分析）。
 # 本测试只用训练段数据，不调用真实模型。运行：python test_fake.py
 
 import os
@@ -16,7 +17,8 @@ import run
 BASE = os.path.dirname(os.path.abspath(__file__))
 run.RECORDS_PATH = os.path.join(BASE, "records_test.jsonl")
 run.EXP_PATH = os.path.join(BASE, "experience_test.jsonl")
-for p in (run.RECORDS_PATH, run.EXP_PATH):
+run.TRACE_PATH = os.path.join(BASE, "trace_test.jsonl")
+for p in (run.RECORDS_PATH, run.EXP_PATH, run.TRACE_PATH):
     if os.path.exists(p):
         os.remove(p)
 
@@ -102,5 +104,14 @@ recs = [mkrec("方向丙", [(True, True)]) for _ in range(3)]          # 已用�
 ok, _ = run.can_issue(recs, "方向丙")
 assert not ok, "已用满 3 次应封存"
 print("验收 3 通过：预算按命中率发放、上限封存")
+
+# ---- 验收 4：过程轨迹落盘 ----
+events = [e["事件"] for e in run.read_jsonl(run.TRACE_PATH)]
+for need in ("公式检查", "回测", "对抗与核对", "讲评打回", "结论"):
+    assert need in events, f"轨迹缺少事件：{need}"
+checks = [e for e in run.read_jsonl(run.TRACE_PATH) if e["事件"] == "公式检查"]
+assert any(c["结果"].startswith("未通过") for c in checks), "轨迹应记下第一次写错量的拦截"
+assert any(c["结果"] == "通过" for c in checks), "轨迹应记下重写后的通过"
+print(f"验收 4 通过：轨迹共 {len(events)} 条事件，关键节点齐全")
 
 print("\n全部替身验收通过")
