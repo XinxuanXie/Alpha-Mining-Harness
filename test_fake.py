@@ -3,7 +3,8 @@
 # 1) 一条假设走完实现→回测→对抗→讲评，公式写错量时被一致性检查拦下并重写成功；
 # 2) 讲评数字写错时被打回，重写正确后归档；始终写错时记“核对失败”；
 # 3) 预算规则：命中率未达线的方向不发放第 2 次，达上限的方向封存；
-# 4) 过程轨迹 trace.jsonl 逐条落盘（只写不读，供实验结束后分析）。
+# 4) 过程轨迹 trace.jsonl 逐条落盘（只写不读，供实验结束后分析）；
+# 5) 两处模型对抗审查被调用并留痕、进经验，但不改变程序结论；对抗摘要随已否决摘要回流。
 # 本测试只用训练段数据，不调用真实模型。运行：python test_fake.py
 
 import os
@@ -47,6 +48,12 @@ def fake(role, payload):
             # 第一次故意写错量（成交量比），应被一致性检查拦下
             return {"formula": "ts_mean(volume, 5) / ts_mean(volume, 60)"}
         return {"formula": HYP["baseline_formula"]}
+    if role == "attack_reg":
+        return {"最像的经典": "C01 短期反转", "换皮判断": "与经典反转同源，区别未成立",
+                "预测问题": "无", "机制问题": "无"}
+    if role == "attack_res":
+        return {"失效解释": "信号强度不足，IC 未达门槛", "未覆盖的失效方式": "未按波动状态分组",
+                "备注": ""}
     if role == "review":
         state["review_calls"] += 1
         m = payload["metrics"]
@@ -106,8 +113,18 @@ assert not ok, "已用满 3 次应封存"
 print("验收 3 通过：预算按命中率发放、上限封存")
 
 # ---- 验收 4：过程轨迹落盘 ----
+# ---- 验收 5：模型对抗审查留痕、进经验、不改变程序结论，并随已否决摘要回流 ----
+assert rec["生成侧对抗"]["最像的经典"].startswith("C01"), "生成侧对抗应已留痕"
+assert rec["检验侧对抗"]["失效解释"].startswith("信号强度不足"), "检验侧对抗应已留痕"
+assert rec["结论"] in ("通过", "条件成立", "否决"), "结论仍由程序规则给出"
+assert entry["对抗备忘录"]["未覆盖的失效方式"] == "未按波动状态分组", "对抗备忘录应进经验条目"
+assert entry["生成侧对抗"]["换皮判断"].startswith("与经典反转同源"), "生成侧对抗应进经验条目"
+sums = run.rejected_summaries("过度反应", run.read_jsonl(run.RECORDS_PATH))
+assert sums and "死因：信号强度不足" in sums[0]["对抗摘要"], "对抗摘要应随已否决摘要回流"
+print("验收 5 通过：对抗审查留痕进经验、结论仍归程序、对抗意见回流展开输入")
+
 events = [e["事件"] for e in run.read_jsonl(run.TRACE_PATH)]
-for need in ("公式检查", "回测", "对抗与核对", "讲评打回", "结论"):
+for need in ("生成对抗", "公式检查", "回测", "对抗与核对", "检验对抗", "讲评打回", "结论"):
     assert need in events, f"轨迹缺少事件：{need}"
 checks = [e for e in run.read_jsonl(run.TRACE_PATH) if e["事件"] == "公式检查"]
 assert any(c["结果"].startswith("未通过") for c in checks), "轨迹应记下第一次写错量的拦截"

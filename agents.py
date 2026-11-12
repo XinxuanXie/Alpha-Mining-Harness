@@ -1,5 +1,6 @@
 # agents.py — 模型调用层
-# 职责：三个模型调用——展开假设、写公式、写讲评。只生成与判断，不计算数字，不写任何文件。
+# 职责：五个模型调用——展开假设、写公式、写讲评、生成侧对抗审查、检验侧对抗审查。
+# 只生成与判断，不计算数字，不写任何文件；对抗审查只留痕，不参与判定（判定归 run.py 按程序规则执行）。
 # 数字一律由 calc.py 计算；本文件只把结构化输入拼成提示词、把模型输出解析成字典。
 # 模型：DeepSeek（环境变量 DEEPSEEK_API_KEY）。测试时可用 set_fake 注入替身，跳过真实调用。
 
@@ -74,7 +75,9 @@ def expand_hypotheses(clue, exp_entries, rejected_same_category):
         f"[经验{e['编号']}] 类别 {e['机制类别']}，状态 {e['状态']}：{e['讲评']['findings']} 避开：{e['讲评']['avoid']}"
         for e in exp_entries) or "（该类别暂无经验条目）"
     rej_text = "\n".join(
-        f"- 方向「{r['方向']}」：{r['假设摘要']}（结局：{r['结局']}）" for r in rejected_same_category) or "（无）"
+        f"- 方向「{r['方向']}」：{r['假设摘要']}（结局：{r['结局']}）"
+        + (f"；对抗意见：{r['对抗摘要']}" if r.get("对抗摘要") else "")
+        for r in rejected_same_category) or "（无）"
     user = f"""线索：
 方向：{clue['direction']}
 现象：{clue['phenomenon']}
@@ -85,7 +88,7 @@ def expand_hypotheses(clue, exp_entries, rejected_same_category):
 相关经验（展开时必须引用，用 exp_refs 标注编号）：
 {exp_text}
 
-同类别已被否决或关键预测未兑现的方向（新假设须在 diff_from_rejected 中写明与它们的区别，没有区别的不要提出）：
+同类别已被否决或关键预测未兑现的方向（新假设须在 diff_from_rejected 中写明与它们的区别，并回应其中的对抗意见；没有区别的不要提出）：
 {rej_text}
 
 方向约定：假设与基准公式的方向须使因子值越大、预期收益越高；与收益呈反向关系的量，先取负再写。
@@ -159,3 +162,69 @@ def write_review(hyp, metrics, pred_results, adv_results, verdict):
   "speculation": "机理性推测，无则空字符串",
   "numbers": {{"ic": 上面的IC均值, "icir": 上面的ICIR, "max_corr": 上面的与经典因子最大相关}}}}"""
     return _dispatch("review", payload, REVIEW_SYSTEM, user)
+
+# ============================================================
+# 调用四：生成侧对抗审查
+# 输入：一条已登记假设 + 经典因子公式清单
+# 输出：攻击记录。只攻击、只留痕：不作通过与否的结论，不给修改方案，不参与判定。
+# 攻击记录随账本与经验回流，成为下一次展开必须回应的输入。
+# ============================================================
+ATTACK_REG_SYSTEM = """你是一名持怀疑态度的量化评审。你的任务是攻击一条刚登记的因子假设，找出它最可能站不住的地方。
+你只负责攻击：不作通过与否的结论，不给修改方案，不预测它的回测数字。只输出 JSON，不要输出其他文字。"""
+
+def attack_registration(hyp, classic_formulas):
+    payload = {"hyp": hyp, "classic_formulas": classic_formulas}
+    classics_text = "\n".join(f"{i + 1:02d}. {f}" for i, f in enumerate(classic_formulas))
+    user = f"""待攻击的假设登记：
+假设：{hyp['hypothesis']}
+机制类别：{hyp['category']}
+计算方式：{hyp['measure']}
+基准公式：{hyp['baseline_formula']}
+机制与收益来源：{hyp['mechanism']}
+条件预测：{json.dumps(hyp['predictions'], ensure_ascii=False)}
+否定条件：{hyp['falsify']}
+
+经典因子公式清单（编号即账本中的经典编号）：
+{classics_text}
+
+攻击三件事：
+1. 换皮：这条假设与清单中哪条经典因子最像？像在什么地方？它声称的区别是否真实成立？
+2. 预测注水：条件预测里有没有写了等于没写的（按机制必然如此、无法被数据证伪）、或刻意绕开否定条件的？
+3. 机制自洽：机制叙述与收益来源是否自洽？"赚谁的钱、对方为何持续付钱"是否说得通？
+
+输出 JSON：
+{{"最像的经典": "编号与一句相似点，或写 无",
+  "换皮判断": "区别是否成立及理由",
+  "预测问题": "注水或绕开之处，无则写 无",
+  "机制问题": "不自洽之处，无则写 无"}}"""
+    return _dispatch("attack_reg", payload, ATTACK_REG_SYSTEM, user)
+
+# ============================================================
+# 调用五：检验侧对抗审查
+# 输入：假设登记 + 全部判定数字 + 预测核对 + 程序对抗结果 + 程序结论
+# 输出：失效解释备忘录。只依据给定数字攻击，不引入新数字，不给改参数重跑的建议，
+# 不推翻程序结论。备忘录存入经验库，供后续研究与下一次展开使用。
+# ============================================================
+ATTACK_RES_SYSTEM = """你是一名持怀疑态度的量化评审。你的任务是在程序判定之后攻击一条假设的结果，解释它最可能为何成立或失效，并指出程序检验覆盖不到的失效方式。
+你只能依据给定的数字，不引入新数字；不给修改参数重跑的建议；不推翻程序给出的结论。只输出 JSON，不要输出其他文字。"""
+
+def attack_results(hyp, metrics, pred_results, adv_results, verdict):
+    payload = {"hyp": hyp, "metrics": metrics, "pred_results": pred_results,
+               "adv_results": adv_results, "verdict": verdict}
+    user = f"""假设：{hyp['hypothesis']}
+计算方式：{hyp['measure']}
+机制：{hyp['mechanism']}
+
+判定数字（程序计算）：IC均值 {metrics['IC均值']}，ICIR {metrics['ICIR']}，
+与经典因子最大相关 {metrics['与经典因子最大相关']}，覆盖率 {metrics['覆盖率']}，
+分市值组IC {metrics['分市值组IC']}，各持有期IC {metrics['各持有期IC']}，
+分行业IC {metrics['分行业IC']}，分段IC {metrics['分段IC']}。
+条件预测核对：{json.dumps(pred_results, ensure_ascii=False)}
+程序对抗检验结果：{json.dumps(adv_results, ensure_ascii=False)}
+程序结论：{verdict}
+
+输出 JSON：
+{{"失效解释": "依据上述数字，这条假设最可能的死因（结论为通过时，写它最脆弱、最可能在样本外失效之处）",
+  "未覆盖的失效方式": "程序已执行的检验（子时段反例、信号两端分组、预测核对）覆盖不到的失效方式，无则写 无",
+  "备注": "其他值得后续研究注意的攻击点，无则空字符串"}}"""
+    return _dispatch("attack_res", payload, ATTACK_RES_SYSTEM, user)

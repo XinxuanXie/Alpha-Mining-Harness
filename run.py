@@ -200,8 +200,17 @@ def process_hypothesis(hyp, wide, classics, cap_complexity):
                     "机制": hyp["mechanism"], "条件预测": hyp["predictions"],
                     "否定条件": hyp["falsify"]},
            "公式": None, "判定数字": None, "预测核对": None, "对抗检验": None,
+           "生成侧对抗": None, "检验侧对抗": None,
            "结论": None, "失效层": None}
     baseline_values = calc.eval_formula(hyp["baseline_formula"], wide)
+
+    # 生成侧对抗审查（模型）：专攻登记内容——是否经典换皮、预测是否注水、机制是否自洽。
+    # 只留痕，不参与判定，不给修改方案；攻击记录经已否决摘要回流，成为下一次展开必须回应的输入。
+    try:
+        rec["生成侧对抗"] = agents.attack_registration(hyp, calc.CLASSIC_FORMULAS)
+    except Exception as e:
+        trace("生成对抗失败", 方向=hyp["direction"], 假设=hyp["hypothesis"], 错误=str(e))
+    trace("生成对抗", 方向=hyp["direction"], 假设=hyp["hypothesis"], 对抗=rec["生成侧对抗"])
 
     # 第 3 步：写公式 + 程序检查（白名单、复杂度、一致性）；登记锁定，只改公式
     formula, last_err = None, None
@@ -282,6 +291,14 @@ def process_hypothesis(hyp, wide, classics, cap_complexity):
     if metrics["覆盖率"] is not None and metrics["覆盖率"] < COVERAGE_MIN and verdict != "通过":
         rec["失效层"] = "数据层"
 
+    # 检验侧对抗审查（模型）：依据全部数字写失效解释，并指出程序检验覆盖不到的失效方式。
+    # 只留痕、进经验，不推翻程序结论，不给改参数重跑的建议。
+    try:
+        rec["检验侧对抗"] = agents.attack_results(hyp, metrics, pred_results, adv, verdict)
+    except Exception as e:
+        trace("检验对抗失败", 方向=hyp["direction"], 假设=hyp["hypothesis"], 错误=str(e))
+    trace("检验对抗", 方向=hyp["direction"], 假设=hyp["hypothesis"], 对抗=rec["检验侧对抗"])
+
     # 第 6 步：讲评（数字由程序逐项核对，不符打回）
     review, review_ok = None, False
     for r_attempt in range(1, REVIEW_REWRITE_MAX + 2):
@@ -317,6 +334,8 @@ def save_experience(rec, review, status):
                       if review and rec.get("讲评核对") == "通过" else
                       {"measures": "", "findings": "", "avoid": "", "borrow": ""}),
              "推测": (review or {}).get("speculation", "") if review else "",
+             "生成侧对抗": rec.get("生成侧对抗"),
+             "对抗备忘录": rec.get("检验侧对抗"),
              "来源假设": rec["假设"]}
     append_jsonl(EXP_PATH, entry)
     return entry
@@ -336,8 +355,19 @@ def rejected_summaries(category, records):
             continue
         key_fail = any(p["key"] and not p["兑现"] for p in (r.get("预测核对") or []))
         if r["结论"] == "否决" or key_fail:
+            bits = []
+            ga, ra = r.get("生成侧对抗") or {}, r.get("检验侧对抗") or {}
+            if ga.get("换皮判断"):
+                bits.append(f"换皮：{ga['换皮判断']}")
+            if ga.get("预测问题") and ga["预测问题"] != "无":
+                bits.append(f"预测：{ga['预测问题']}")
+            if ga.get("机制问题") and ga["机制问题"] != "无":
+                bits.append(f"机制：{ga['机制问题']}")
+            if ra.get("失效解释"):
+                bits.append(f"死因：{ra['失效解释']}")
             out.append({"方向": r["方向"], "假设摘要": r["假设"],
-                        "结局": "已否决" if r["结论"] == "否决" else "关键预测未兑现"})
+                        "结局": "已否决" if r["结论"] == "否决" else "关键预测未兑现",
+                        "对抗摘要": "；".join(bits)})
     return out
 
 def main():
