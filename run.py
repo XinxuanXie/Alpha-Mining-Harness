@@ -268,28 +268,59 @@ def process_hypothesis(hyp, wide, classics, cap_complexity):
             trace("文献检索失败", 方向=hyp["direction"], 假设=hyp["hypothesis"],
                   来源报告=reports)
     if lit:
-        try:
-            refined = agents.refine_hypothesis(hyp, lit,
-                                               sectors=frozenset(calc.SECTOR_OF.values()))
-        except Exception as e:
-            refined = None
-            hyp["优化说明"] = "检索后优化失败，用初稿"
-            trace("假设优化失败", 方向=hyp["direction"], 假设=hyp["hypothesis"], 错误=str(e))
-        if refined:
-            merged = dict(hyp)
-            for k in ("measure", "baseline_formula", "mechanism", "predictions", "falsify"):
-                if refined.get(k):
-                    merged[k] = refined[k]
-            errs = validate_registration(merged, [], [], frozenset(calc.SECTOR_OF.values()))
-            if not errs:
-                merged["lit_refs"] = refined.get("lit_refs") or []
-                merged["优化说明"] = refined.get("changes") or ""
-                hyp = merged
-                trace("假设优化", 方向=hyp["direction"], 假设=hyp["hypothesis"], 采纳=True,
-                      引用=merged["lit_refs"], 说明=merged["优化说明"][:200])
-            else:
-                trace("假设优化", 方向=hyp["direction"], 假设=hyp["hypothesis"], 采纳=False,
-                      原因=errs)
+        with_abs = [m for m in lit if m.get("摘要")]
+        if not with_abs:
+            # 材料不足门：没有一篇带摘要，筛选与优化无从依据，跳过并留痕，不空转。
+            hyp["优化说明"] = "材料不足（检索材料均无摘要），未优化"
+            trace("文献材料不足", 方向=hyp["direction"], 假设=hyp["hypothesis"],
+                  原因="检索材料均无摘要，跳过筛选与优化")
+        else:
+            # 文献筛选：模型读摘要挑 1 至 2 篇，抓其开放获取全文深读，节选随材料交给优化。
+            picks = []
+            try:
+                picked = agents.pick_readings(hyp, lit)
+                by_id = {m["编号"]: m for m in with_abs}
+                picks = [by_id[i] for i in (picked.get("picks") or []) if i in by_id][:2]
+                trace("文献筛选", 方向=hyp["direction"], 假设=hyp["hypothesis"],
+                      选中=[m["编号"] for m in picks],
+                      理由=(picked.get("reason") or "")[:300])
+            except Exception as e:
+                trace("文献筛选失败", 方向=hyp["direction"], 假设=hyp["hypothesis"],
+                      错误=str(e))
+            for m in picks:
+                ft = search.fetch_fulltext(m)
+                if ft:
+                    m["全文节选"] = ft["节选"]
+                    trace("全文抓取", 方向=hyp["direction"], 假设=hyp["hypothesis"],
+                          编号=m["编号"], 成功=True, 字数=ft["字数"])
+                else:
+                    trace("全文抓取", 方向=hyp["direction"], 假设=hyp["hypothesis"],
+                          编号=m["编号"], 成功=False)
+            try:
+                refined = agents.refine_hypothesis(hyp, lit,
+                                                   sectors=frozenset(calc.SECTOR_OF.values()))
+            except Exception as e:
+                refined = None
+                hyp["优化说明"] = "检索后优化失败，用初稿"
+                trace("假设优化失败", 方向=hyp["direction"], 假设=hyp["hypothesis"],
+                      错误=str(e))
+            if refined:
+                merged = dict(hyp)
+                for k in ("measure", "baseline_formula", "mechanism", "predictions", "falsify"):
+                    if refined.get(k):
+                        merged[k] = refined[k]
+                errs = validate_registration(merged, [], [],
+                                             frozenset(calc.SECTOR_OF.values()))
+                if not errs:
+                    merged["lit_refs"] = refined.get("lit_refs") or []
+                    merged["优化说明"] = refined.get("changes") or ""
+                    hyp = merged
+                    trace("假设优化", 方向=hyp["direction"], 假设=hyp["hypothesis"],
+                          采纳=True, 引用=merged["lit_refs"],
+                          说明=merged["优化说明"][:200])
+                else:
+                    trace("假设优化", 方向=hyp["direction"], 假设=hyp["hypothesis"],
+                          采纳=False, 原因=errs)
 
     rec = {"方向": hyp["direction"], "机制类别": hyp["category"], "假设": hyp["hypothesis"],
            "登记": {"计算方式": hyp["measure"], "基准公式": hyp["baseline_formula"],

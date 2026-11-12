@@ -41,7 +41,8 @@ HYP = {
 }
 
 state = {"formula_calls": 0, "review_calls": 0, "review_mode": "先错后对", "propose_calls": 0,
-         "refine_mode": "采纳", "attack_reg_payload": None}
+         "refine_mode": "采纳", "attack_reg_payload": None,
+         "refine_calls": 0, "refine_payload": None, "pick_payload": None}
 
 def fake(role, payload):
     if role == "expand":
@@ -58,7 +59,12 @@ def fake(role, payload):
         d = names[min(state["propose_calls"] - 1, len(names) - 1)]
         return {"clues": [{"direction": d, "phenomenon": "某种现象", "source": "某种收益来源",
                            "category": "流动性"}]}
+    if role == "pick":
+        state["pick_payload"] = payload
+        return {"picks": ["L1"], "reason": "L1 与机制最相关"}
     if role == "refine":
+        state["refine_calls"] += 1
+        state["refine_payload"] = payload
         if state["refine_mode"] == "不采纳":
             # 优化稿只剩一条预测，过不了登记校验，应保留初稿
             return {"measure": HYP["measure"], "baseline_formula": HYP["baseline_formula"],
@@ -251,7 +257,9 @@ assert rec9["成本"]["用时秒"] >= 0, "用时应非负"
 print("验收 9 通过：成本与用时可记录、估算口径一致")
 
 # ---- 验收 10：检索来源报告、429 重试与 Crossref 请求（打桩来源，不联网） ----
+import importlib as _importlib
 import urllib.error as _urlerr
+_importlib.reload(search)   # 验收 8 把 search.search 换成了打桩函数，这里恢复真函数再测
 _saved_sources, _saved_cache_path = search.SOURCES, search.CACHE_PATH
 search.CACHE_PATH = os.path.join(BASE, "lit_cache_test.json")
 if os.path.exists(search.CACHE_PATH):
@@ -288,5 +296,34 @@ search.SOURCES, search.CACHE_PATH = _saved_sources, _saved_cache_path
 if os.path.exists(os.path.join(BASE, "lit_cache_test.json")):
     os.remove(os.path.join(BASE, "lit_cache_test.json"))
 print("验收 10 通过：来源成败入报告、429 重试、Crossref 请求无无效参数")
+
+# ---- 验收 11：文献三段流程——有摘要才筛选深读，无摘要跳过优化 ----
+_saved_search, _saved_fetch = search.search, search.fetch_fulltext
+state["refine_mode"] = "采纳"
+search.search = lambda query, limit=5: [
+    {"标题": "Short-Term Reversal and Liquidity", "年份": 2010, "来源": "替身",
+     "摘要": "reversal profits are related to liquidity provision",
+     "全文链接": "https://example.org/full"}]
+search.fetch_fulltext = lambda item: {"节选": "FULLTEXT-EXCERPT", "字数": 5000}
+hyp11 = dict(HYP)
+hyp11["search_queries"] = ["short-term reversal liquidity"]
+rec11, _, _, _ = run.process_hypothesis(hyp11, wide, classics, cap)
+assert state["pick_payload"] is not None, "有摘要时应先调用文献筛选"
+assert state["refine_payload"]["lit"][0].get("全文节选") == "FULLTEXT-EXCERPT", \
+    "筛选选中篇目的全文节选应随材料交给优化"
+tr11 = run.read_jsonl(run.TRACE_PATH)
+assert any(e["事件"] == "文献筛选" and e.get("选中") == ["L1"] for e in tr11), \
+    "轨迹应记录文献筛选结果"
+assert any(e["事件"] == "全文抓取" and e.get("成功") for e in tr11), "轨迹应记录全文抓取成功"
+search.search = lambda query, limit=5: [
+    {"标题": "Title Only Paper", "年份": 2015, "来源": "替身", "摘要": None, "全文链接": None}]
+_refine_before = state["refine_calls"]
+rec11b, _, _, _ = run.process_hypothesis(dict(hyp11), wide, classics, cap)
+assert state["refine_calls"] == _refine_before, "材料无摘要时不应调用优化"
+assert "材料不足" in rec11b["登记"]["优化说明"], "无摘要时登记应标注材料不足、未优化"
+tr11b = run.read_jsonl(run.TRACE_PATH)
+assert any(e["事件"] == "文献材料不足" for e in tr11b), "轨迹应记录文献材料不足"
+search.search, search.fetch_fulltext = _saved_search, _saved_fetch
+print("验收 11 通过：摘要筛选、全文节选入优化、无摘要跳过优化")
 
 print("\n全部替身验收通过")
