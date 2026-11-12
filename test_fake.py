@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import calc
 import agents
 import run
+import search
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 run.RECORDS_PATH = os.path.join(BASE, "records_test.jsonl")
@@ -39,7 +40,8 @@ HYP = {
     "exp_refs": [], "diff_from_rejected": "",
 }
 
-state = {"formula_calls": 0, "review_calls": 0, "review_mode": "先错后对", "propose_calls": 0}
+state = {"formula_calls": 0, "review_calls": 0, "review_mode": "先错后对", "propose_calls": 0,
+         "refine_mode": "采纳"}
 
 def fake(role, payload):
     if role == "expand":
@@ -56,6 +58,18 @@ def fake(role, payload):
         d = names[min(state["propose_calls"] - 1, len(names) - 1)]
         return {"clues": [{"direction": d, "phenomenon": "某种现象", "source": "某种收益来源",
                            "category": "流动性"}]}
+    if role == "refine":
+        if state["refine_mode"] == "不采纳":
+            # 优化稿只剩一条预测，过不了登记校验，应保留初稿
+            return {"measure": HYP["measure"], "baseline_formula": HYP["baseline_formula"],
+                    "mechanism": HYP["mechanism"],
+                    "predictions": [{"dim": "市值组", "a": "小", "b": "大", "key": True}],
+                    "falsify": "x", "lit_refs": [], "changes": "删减预测"}
+        return {"measure": HYP["measure"], "baseline_formula": HYP["baseline_formula"],
+                "mechanism": HYP["mechanism"] + "（据 L1 补充流动性条件）",
+                "predictions": HYP["predictions"],
+                "falsify": "（优化）" + HYP["falsify"],
+                "lit_refs": ["L1"], "changes": "依据 L1 收紧否定条件"}
     if role == "attack_reg":
         return {"最像的经典": "C01", "相似点": "同为短期价格反转",
                 "换皮判断": "与经典反转同源，区别未成立",
@@ -196,5 +210,25 @@ gen_after = sum(1 for e in run.read_jsonl(run.TRACE_PATH) if e["事件"] == "线
 assert gen_after - gen_before == 2, "主循环应触发两次线索生成"
 os.remove(loop_clues)
 print("验收 7 通过：主循环自提登记、逐方向处理、达总上限停止")
+
+# ---- 验收 8：文献检索与假设优化（检索打桩，不联网） ----
+search.search = lambda query, limit=5: [
+    {"标题": "Short-Term Reversal and Liquidity", "年份": 2010, "来源": "替身",
+     "摘要": "reversal profits are related to liquidity provision"}]
+hyp8 = dict(HYP)
+hyp8["search_queries"] = ["short-term reversal liquidity"]
+rec8, _, _, _ = run.process_hypothesis(hyp8, wide, classics, cap)
+assert rec8["登记"]["否定条件"] == "（优化）" + HYP["falsify"], "合格的优化稿应被采用并锁定"
+assert rec8["登记"]["文献引用"] == ["L1"], "登记应记录文献引用"
+assert "L1" in rec8["登记"]["优化说明"], "登记应记录优化说明"
+state["refine_mode"] = "不采纳"
+rec8b, _, _, _ = run.process_hypothesis(dict(hyp8), wide, classics, cap)
+assert rec8b["登记"]["否定条件"] == HYP["falsify"], "优化稿不合格时应保留初稿"
+assert rec8b["登记"]["文献引用"] == [], "未采纳时不应记录文献引用"
+tr8 = run.read_jsonl(run.TRACE_PATH)
+assert any(e["事件"] == "文献检索" for e in tr8), "轨迹应记录文献检索"
+assert any(e["事件"] == "假设优化" and e["采纳"] for e in tr8), "轨迹应记录优化采纳"
+assert any(e["事件"] == "假设优化" and not e["采纳"] for e in tr8), "轨迹应记录优化未采纳"
+print("验收 8 通过：检索后优化定稿、校验把关、不合格保留初稿")
 
 print("\n全部替身验收通过")

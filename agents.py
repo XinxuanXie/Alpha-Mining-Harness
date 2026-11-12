@@ -1,5 +1,5 @@
 # agents.py — 模型调用层
-# 职责：六个模型调用——展开假设、写公式、写讲评、生成侧对抗审查、检验侧对抗审查、提出线索。
+# 职责：七个模型调用——展开假设、文献优化假设、写公式、写讲评、生成侧对抗审查、检验侧对抗审查、提出线索。
 # 只生成与判断，不计算数字，不写任何文件；对抗审查只留痕，不参与判定（判定归 run.py 按程序规则执行）。
 # 数字一律由 calc.py 计算；本文件只把结构化输入拼成提示词、把模型输出解析成字典。
 # 模型：DeepSeek（环境变量 DEEPSEEK_API_KEY）。测试时可用 set_fake 注入替身，跳过真实调用。
@@ -105,13 +105,61 @@ predictions（至少两条，每条 {{"dim": "市值组|持有期|行业", "a": 
 含义为"a 组的 IC 高于 b 组"；市值组的 a、b 取自 小/中/大；持有期的 a、b 取自 1/5/10/20/60（天）；
 行业的 a 只能取自下面的行业名清单、b 固定为 "整体"（a 写"整体"会被程序拒登）；恰有一条 key 为 true，即与机制直接对应的关键预测）、
 行业名清单（行业预测的 a 只能取自）：{', '.join(sorted(sectors)) if sectors else '（未提供）'}
-falsify（否定条件）、exp_refs（引用的经验编号列表）、diff_from_rejected（与上述已否决方向的区别，无则空字符串）。
+falsify（否定条件）、exp_refs（引用的经验编号列表）、diff_from_rejected（与上述已否决方向的区别，无则空字符串）、
+search_queries（1 至 2 条英文检索式，用于为这条假设检索学术资料，须具体到机制与现象，如 "short-term return reversal liquidity provision"）。
 展开 1 至 3 条假设，宁缺毋滥。"""
     out = _dispatch("expand", payload, EXPAND_SYSTEM, user)
     return out.get("hypotheses", [])
 
 # ============================================================
-# 调用二：写公式
+# 调用二：文献优化假设
+# 输入：假设登记初稿 + 检索到的学术资料（带编号）
+# 输出：优化后的登记五项（计算方式、基准公式、机制、条件预测、否定条件）
+#       + lit_refs（实际用到的材料编号）+ changes（逐条说明改了什么、依据哪条材料）
+# 纪律：此时尚无任何回测数字，优化只依据资料与机制推理；方向与类别不得更改；
+#       材料与初稿冲突时以材料为准并说明；材料无关时可不改。
+# ============================================================
+REFINE_SYSTEM = """你是一名量化研究员。你的任务是依据检索到的学术资料，优化一条因子假设的登记内容。
+优化只能依据给定资料与机制推理，不得虚构资料中没有的结论；资料与初稿冲突时以资料为准。
+只输出 JSON，不要输出其他文字。"""
+
+def refine_hypothesis(hyp, lit):
+    payload = {"hyp": hyp, "lit": lit}
+    lit_text = "\n".join(
+        f"[{m['编号']}] {m['标题']}（{m.get('年份')}，{m.get('来源')}）：{m.get('摘要') or '（无摘要，仅标题）'}"
+        for m in lit)
+    user = f"""假设登记初稿：
+假设：{hyp['hypothesis']}
+机制类别：{hyp['category']}（不得更改）
+计算方式：{hyp['measure']}
+基准公式：{hyp['baseline_formula']}
+机制与收益来源：{hyp['mechanism']}
+条件预测：{json.dumps(hyp['predictions'], ensure_ascii=False)}
+否定条件：{hyp['falsify']}
+
+方向约定与基准公式要求同展开时一致：因子值越大、预期收益越高；基准公式保留原始量纲与符号，不套 rank。
+可表达范围：
+{EXPRESS_DOC}
+
+检索到的学术资料：
+{lit_text}
+
+依据资料优化登记五项：计算方式、基准公式、机制、条件预测、否定条件。
+重点：资料报告的典型构造、成立条件与已知失效条件，应反映到计算方式与条件预测中；
+条件预测的维度与取值规则同展开时一致（市值组 小/中/大；持有期 1/5/10/20/60；行业 a 为真实行业名、b 为"整体"）。
+资料与初稿无关或不足以支持修改时，返回初稿原文，changes 写"无修改"。
+
+输出 JSON：
+{{"measure": "优化后的计算方式", "baseline_formula": "优化后的基准公式",
+  "mechanism": "优化后的机制与收益来源",
+  "predictions": [同初稿格式的条件预测，至少两条、恰一条 key 为 true],
+  "falsify": "优化后的否定条件",
+  "lit_refs": ["实际用到的材料编号，如 L1"],
+  "changes": "逐条说明改了什么、依据哪条材料；无修改时写 无修改"}}"""
+    return _dispatch("refine", payload, REFINE_SYSTEM, user)
+
+# ============================================================
+# 调用三：写公式
 # 输入：一条已登记假设 + 上次失败原因（首次为空）
 # 输出：{"formula": 表达式} 或 {"formula": null, "reason": 原因}
 # ============================================================
@@ -134,7 +182,7 @@ def write_formula(hyp, error=None):
     return _dispatch("formula", payload, FORMULA_SYSTEM, user)
 
 # ============================================================
-# 调用三：写讲评
+# 调用四：写讲评
 # 输入：假设登记 + 判定数字 + 预测核对 + 对抗结果 + 结论
 # 输出：讲评字典，数字走 numbers 字段（程序逐项与账本核对）
 # ============================================================
@@ -166,7 +214,7 @@ def write_review(hyp, metrics, pred_results, adv_results, verdict):
     return _dispatch("review", payload, REVIEW_SYSTEM, user)
 
 # ============================================================
-# 调用四：生成侧对抗审查
+# 调用五：生成侧对抗审查
 # 输入：一条已登记假设 + 经典因子公式清单
 # 输出：攻击记录。只攻击、只留痕：不作通过与否的结论，不给修改方案，不参与判定。
 # 攻击记录随账本与经验回流，成为下一次展开必须回应的输入。
@@ -174,9 +222,12 @@ def write_review(hyp, metrics, pred_results, adv_results, verdict):
 ATTACK_REG_SYSTEM = """你是一名持怀疑态度的量化评审。你的任务是攻击一条刚登记的因子假设，找出它最可能站不住的地方。
 你只负责攻击：不作通过与否的结论，不给修改方案，不预测它的回测数字。只输出 JSON，不要输出其他文字。"""
 
-def attack_registration(hyp, classic_formulas):
-    payload = {"hyp": hyp, "classic_formulas": classic_formulas}
+def attack_registration(hyp, classic_formulas, lit=None):
+    payload = {"hyp": hyp, "classic_formulas": classic_formulas, "lit": lit}
     classics_text = "\n".join(f"{i + 1:02d}. {f}" for i, f in enumerate(classic_formulas))
+    lit_text = "\n".join(
+        f"[{m['编号']}] {m['标题']}（{m.get('年份')}，{m.get('来源')}）：{m.get('摘要') or '（无摘要，仅标题）'}"
+        for m in (lit or [])) or "（本次无检索材料）"
     user = f"""待攻击的假设登记：
 假设：{hyp['hypothesis']}
 机制类别：{hyp['category']}
@@ -185,25 +236,31 @@ def attack_registration(hyp, classic_formulas):
 机制与收益来源：{hyp['mechanism']}
 条件预测：{json.dumps(hyp['predictions'], ensure_ascii=False)}
 否定条件：{hyp['falsify']}
+文献引用：{hyp.get('lit_refs') or '（未引用）'}
 
 经典因子公式清单（编号即账本中的经典编号）：
 {classics_text}
 
-攻击三件事：
+检索到的学术资料：
+{lit_text}
+
+攻击四件事：
 1. 换皮：这条假设与清单中哪条经典因子最像？像在什么地方？它声称的区别是否真实成立？
 2. 预测注水：条件预测里有没有写了等于没写的（按机制必然如此、无法被数据证伪）、或刻意绕开否定条件的？
 3. 机制自洽：机制叙述与收益来源是否自洽？"赚谁的钱、对方为何持续付钱"是否说得通？
+4. 引用核对：声称的机制与所引用的资料对不对得上？引用是否只是贴标签（材料与机制无关、或材料并不支持该机制）？未引用资料时写 无。
 
 输出 JSON：
 {{"最像的经典": "只填编号，如 C09；没有像的写 无",
   "相似点": "与该条经典像在什么地方",
   "换皮判断": "区别是否成立及理由",
   "预测问题": "注水或绕开之处，无则写 无",
-  "机制问题": "不自洽之处，无则写 无"}}"""
+  "机制问题": "不自洽之处，无则写 无",
+  "引用问题": "引用与机制对不上或贴标签之处，无则写 无"}}"""
     return _dispatch("attack_reg", payload, ATTACK_REG_SYSTEM, user)
 
 # ============================================================
-# 调用五：检验侧对抗审查
+# 调用六：检验侧对抗审查
 # 输入：假设登记 + 全部判定数字 + 预测核对 + 程序对抗结果 + 程序结论
 # 输出：失效解释备忘录。只依据给定数字攻击，不引入新数字，不给改参数重跑的建议，
 # 不推翻程序结论。备忘录存入经验库，供后续研究与下一次展开使用。
@@ -238,7 +295,7 @@ def attack_results(hyp, metrics, pred_results, adv_results, verdict, gen_attack=
     return _dispatch("attack_res", payload, ATTACK_RES_SYSTEM, user)
 
 # ============================================================
-# 调用六：提出线索
+# 调用七：提出线索
 # 输入：已有方向清单 + 全部经验条目 + 全部已否决摘要
 # 输出：新线索列表。线索由模型自提，程序做词表与去重校验后才登记（见 run.py）。
 # ============================================================

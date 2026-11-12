@@ -10,6 +10,7 @@ from datetime import datetime
 
 import calc
 import agents
+import search
 
 # ============================================================
 # 参数（规格第五节的待定数值，第一期初始值）
@@ -229,10 +230,50 @@ def can_issue(records, direction):
 # 单条假设的完整流程：第 3 至第 6 步（实现、回测、对抗、讲评）
 # ============================================================
 def process_hypothesis(hyp, wide, classics, cap_complexity):
+    # 文献检索与假设优化：按登记里的检索式查资料，模型据此优化登记五项，此后登记锁定。
+    # 优化稿须重新通过登记校验才采用，否则保留初稿；全程尚无回测数字。
+    lit = []
+    queries = [q for q in (hyp.get("search_queries") or []) if q][:2]
+    if queries:
+        seen_titles = set()
+        for q in queries:
+            for item in search.search(q, limit=5):
+                if item["标题"] not in seen_titles:
+                    seen_titles.add(item["标题"])
+                    lit.append(item)
+        lit = lit[:5]
+        for i, item in enumerate(lit):
+            item["编号"] = f"L{i + 1}"
+        trace("文献检索", 方向=hyp["direction"], 假设=hyp["hypothesis"], 查询=queries,
+              条数=len(lit), 标题=[m["标题"][:60] for m in lit])
+    if lit:
+        try:
+            refined = agents.refine_hypothesis(hyp, lit)
+        except Exception as e:
+            refined = None
+            trace("假设优化失败", 方向=hyp["direction"], 假设=hyp["hypothesis"], 错误=str(e))
+        if refined:
+            merged = dict(hyp)
+            for k in ("measure", "baseline_formula", "mechanism", "predictions", "falsify"):
+                if refined.get(k):
+                    merged[k] = refined[k]
+            errs = validate_registration(merged, [], [], frozenset(calc.SECTOR_OF.values()))
+            if not errs:
+                merged["lit_refs"] = refined.get("lit_refs") or []
+                merged["优化说明"] = refined.get("changes") or ""
+                hyp = merged
+                trace("假设优化", 方向=hyp["direction"], 假设=hyp["hypothesis"], 采纳=True,
+                      引用=merged["lit_refs"], 说明=merged["优化说明"][:200])
+            else:
+                trace("假设优化", 方向=hyp["direction"], 假设=hyp["hypothesis"], 采纳=False,
+                      原因=errs)
+
     rec = {"方向": hyp["direction"], "机制类别": hyp["category"], "假设": hyp["hypothesis"],
            "登记": {"计算方式": hyp["measure"], "基准公式": hyp["baseline_formula"],
                     "机制": hyp["mechanism"], "条件预测": hyp["predictions"],
-                    "否定条件": hyp["falsify"]},
+                    "否定条件": hyp["falsify"],
+                    "文献引用": hyp.get("lit_refs") or [],
+                    "优化说明": hyp.get("优化说明", "")},
            "公式": None, "判定数字": None, "预测核对": None, "对抗检验": None,
            "生成侧对抗": None, "检验侧对抗": None, "换皮交叉": None,
            "结论": None, "失效层": None}
@@ -241,7 +282,7 @@ def process_hypothesis(hyp, wide, classics, cap_complexity):
     # 生成侧对抗审查（模型）：专攻登记内容——是否经典换皮、预测是否注水、机制是否自洽。
     # 只留痕，不参与判定，不给修改方案；攻击记录经已否决摘要回流，成为下一次展开必须回应的输入。
     try:
-        rec["生成侧对抗"] = agents.attack_registration(hyp, calc.CLASSIC_FORMULAS)
+        rec["生成侧对抗"] = agents.attack_registration(hyp, calc.CLASSIC_FORMULAS, lit=lit)
     except Exception as e:
         trace("生成对抗失败", 方向=hyp["direction"], 假设=hyp["hypothesis"], 错误=str(e))
     trace("生成对抗", 方向=hyp["direction"], 假设=hyp["hypothesis"], 对抗=rec["生成侧对抗"])
@@ -403,6 +444,8 @@ def rejected_summaries(category, records):
                 bits.append(f"预测：{ga['预测问题']}")
             if ga.get("机制问题") and ga["机制问题"] != "无":
                 bits.append(f"机制：{ga['机制问题']}")
+            if ga.get("引用问题") and ga["引用问题"] != "无":
+                bits.append(f"引用：{ga['引用问题']}")
             if ra.get("失效解释"):
                 bits.append(f"死因：{ra['失效解释']}")
             out.append({"方向": r["方向"], "假设摘要": r["假设"],
