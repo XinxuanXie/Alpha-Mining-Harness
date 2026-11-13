@@ -213,11 +213,14 @@ def _resid_cs(a, b):
     return out.where(mask & ok.values[:, None])
 
 def _where(c, a, b):
-    if hasattr(a, "where"):
-        return a.where(c > 0, b)
-    if hasattr(b, "where"):
-        return b.where(c <= 0, a)
-    return a if c > 0 else b
+    cond = c > 0
+    if hasattr(cond, "values"):
+        # c 是 DataFrame：逐格选择，a、b 可为 DataFrame 或标量
+        av = a.values if hasattr(a, "values") else a
+        bv = b.values if hasattr(b, "values") else b
+        return pd.DataFrame(np.where(cond.values, av, bv),
+                            index=c.index, columns=c.columns)
+    return a if cond else b
 
 def _ts_arg_extreme(x, d, want_max):
     # 距窗口内极值出现位置的天数（0 表示就在当日）；窗口含缺失记缺失
