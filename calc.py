@@ -21,7 +21,7 @@ CLASSIC_PATH = os.path.join(BASE, "data", "classic_values.parquet")
 PRECOMP_PATH = os.path.join(BASE, "data", "precomp_fields.parquet")
 TRAIN_END = "2016-12-31"   # 只加载训练段；测试段与验证段不加载
 ID_COL = "permno"          # 股票标识列
-TOOLING_VERSION = "v2-ivol"  # 工具版本：字段集变更时递增；旧版本下产生的实现层失败不计入停发计数
+TOOLING_VERSION = "v3-ops"  # 工具版本：字段集或算子集变更时递增；旧版本下产生的实现层失败不计入停发计数
 FIELDS = ["open", "high", "low", "close", "volume", "mktcap", "mktret",
           "ivol20", "resid_ret"]  # 公式可用字段（mktret 为市场收益；ivol20、resid_ret 为程序预计算的市场模型残差类字段，窗口固定 20 日）
 JUDGE_H = 20               # 判定期限（日）
@@ -158,6 +158,83 @@ def _sector_mean(x):
         out[cols] = np.repeat(m[:, None], len(cols), axis=1)
     return out
 
+def _sign(a):
+    if hasattr(a, "sub"):
+        return (a > 0) * 1.0 - (a < 0) * 1.0
+    return float(np.sign(a))
+
+def _sqrt(a):
+    if hasattr(a, "where"):
+        return np.sqrt(a.where(a >= 0))
+    return float(np.sqrt(a)) if a >= 0 else float("nan")
+
+def _inverse(a):
+    if hasattr(a, "replace"):
+        return (1.0 / a).replace([np.inf, -np.inf], np.nan)
+    return 1.0 / a if a else float("nan")
+
+def _power(a, p):
+    with np.errstate(invalid="ignore", divide="ignore", over="ignore"):
+        if hasattr(a, "pow"):
+            return a.pow(p)
+        return float(np.power(a, p))
+
+def _signed_power(a, p):
+    if hasattr(a, "abs"):
+        return _sign(a) * a.abs().pow(p)
+    return float(np.sign(a) * (abs(a) ** p))
+
+def _zscore(x):
+    m = x.mean(axis=1)
+    s = x.std(axis=1)
+    out = x.sub(m, axis=0).div(s, axis=0)
+    return out.where((s > 0) & (x.notna().sum(axis=1) >= 2))
+
+def _winsorize(x):
+    lo = x.quantile(0.01, axis=1)
+    hi = x.quantile(0.99, axis=1)
+    return x.clip(lower=lo, upper=hi, axis=0)
+
+def _resid_cs(a, b):
+    # 逐日截面一元回归 a ~ b 取残差；任一缺失记缺失，有效股票不足或 b 无方差记缺失
+    mask = a.notna() & b.notna()
+    af = a.where(mask).fillna(0.0)
+    bf = b.where(mask).fillna(0.0)
+    n = mask.sum(axis=1).astype(float)
+    ma = af.sum(axis=1) / n
+    mb = bf.sum(axis=1) / n
+    da = (af - ma.values[:, None]).where(mask, 0.0)
+    db = (bf - mb.values[:, None]).where(mask, 0.0)
+    var = (db * db).sum(axis=1)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        beta = (da * db).sum(axis=1) / var
+    out = da - beta.values[:, None] * db
+    ok = (n >= MIN_STOCKS) & (var > 0)
+    return out.where(mask & ok.values[:, None])
+
+def _where(c, a, b):
+    if hasattr(a, "where"):
+        return a.where(c > 0, b)
+    if hasattr(b, "where"):
+        return b.where(c <= 0, a)
+    return a if c > 0 else b
+
+def _ts_arg_extreme(x, d, want_max):
+    # 距窗口内极值出现位置的天数（0 表示就在当日）；窗口含缺失记缺失
+    def f(w):
+        if np.isnan(w).any():
+            return np.nan
+        idx = int(np.argmax(w)) if want_max else int(np.argmin(w))
+        return float(len(w) - 1 - idx)
+    return x.rolling(d, min_periods=d).apply(f, raw=True)
+
+def _ts_beta(a, b, d):
+    cov = a.rolling(d, min_periods=d).cov(b)
+    var = b.rolling(d, min_periods=d).var()
+    out = cov / var
+    valid = (a.notna() & b.notna()).rolling(d, min_periods=d).sum() == d
+    return out.where(valid & (var > 0))
+
 OPS = {
     "neg": lambda a: -a,
     "abs": lambda a: a.abs() if hasattr(a, "abs") else abs(a),
@@ -175,8 +252,26 @@ OPS = {
     "ts_max": lambda a, d: a.rolling(d, min_periods=d).max(),
     "ts_rank": _ts_rank,
     "ts_corr": _ts_corr,
+    "sign": _sign,
+    "sqrt": _sqrt,
+    "inverse": _inverse,
+    "power": _power,
+    "signed_power": _signed_power,
+    "zscore": _zscore,
+    "winsorize": _winsorize,
+    "resid": _resid_cs,
+    "where": _where,
+    "ts_median": lambda a, d: a.rolling(d, min_periods=d).median(),
+    "ts_skew": lambda a, d: a.rolling(d, min_periods=d).skew(),
+    "ts_kurt": lambda a, d: a.rolling(d, min_periods=d).kurt(),
+    "ts_decay": lambda a, d: a.ewm(halflife=d, min_periods=d).mean(),
+    "ts_count": lambda a, d: a.rolling(d, min_periods=d).sum(),
+    "ts_argmax": lambda a, d: _ts_arg_extreme(a, d, True),
+    "ts_argmin": lambda a, d: _ts_arg_extreme(a, d, False),
+    "ts_beta": _ts_beta,
 }
-WINDOW_OPS = {"delay", "delta", "ts_mean", "ts_sum", "ts_std", "ts_min", "ts_max", "ts_rank", "ts_corr"}
+WINDOW_OPS = {"delay", "delta", "ts_mean", "ts_sum", "ts_std", "ts_min", "ts_max", "ts_rank", "ts_corr",
+              "ts_median", "ts_skew", "ts_kurt", "ts_decay", "ts_count", "ts_argmax", "ts_argmin", "ts_beta"}
 
 def _eval(node, wide):
     if isinstance(node, ast.Expression):
@@ -210,7 +305,8 @@ def _eval(node, wide):
         if not isinstance(node.func, ast.Name) or node.func.id not in OPS:
             raise ValueError(f"不允许的算子：{ast.dump(node.func)[:40]}")
         name = node.func.id
-        arity = {"neg": 1, "abs": 1, "log": 1, "rank": 1, "rank_sector": 1, "sector_mean": 1, "ts_corr": 3}.get(name, 2)
+        arity = {"neg": 1, "abs": 1, "log": 1, "rank": 1, "rank_sector": 1, "sector_mean": 1, "ts_corr": 3,
+                 "sign": 1, "sqrt": 1, "inverse": 1, "zscore": 1, "winsorize": 1, "where": 3, "ts_beta": 3}.get(name, 2)
         if len(node.args) != arity:
             raise ValueError(f"算子 {name} 需要 {arity} 个参数，给了 {len(node.args)} 个")
         args = [_eval(a, wide) for a in node.args]

@@ -87,12 +87,16 @@ def _dispatch(role, payload, system, user):
 EXPRESS_DOC = """可用日频字段：open、high、low、close、volume、mktcap（市值）、mktret（市场当日收益，对全体股票相同）、
 ivol20（特质波动：过去 20 日个股收益对市场收益回归的残差标准差，程序预计算）、
 resid_ret（当日残差收益：个股收益减去市场模型拟合值，程序预计算）。
-可用算子（括号内为参数个数）：neg(1)、abs(1)、log(1)、rank(1，截面排名)、rank_sector(1，行业内排名)、
-sector_mean(1，行业均值)、gt(2，大于取 1)、delay(2，延迟 d 日)、delta(2，与 d 日前之差)、
-ts_mean(2)、ts_sum(2)、ts_std(2)、ts_min(2)、ts_max(2)、ts_rank(2，时序排名)、ts_corr(3，两序列 d 日滚动相关)，
-以及 + - * / 四则运算。时序算子的最后一个参数是窗口 d，为正整数。
-不可表达的构造：任意窗口的回归斜率与残差本身（残差类量只能用预计算的 ivol20 与 resid_ret，窗口固定 20 日）；
-逐日横截面回归；需要财务报表、分析师预期等未提供数据的量；变长窗口。
+可用算子（括号内为参数个数）：neg(1)、abs(1)、log(1)、sign(1，符号)、sqrt(1)、inverse(1，倒数)、rank(1，截面排名)、rank_sector(1，行业内排名)、
+sector_mean(1，行业均值)、zscore(1，截面标准化)、winsorize(1，截面 1%/99% 分位截尾)、gt(2，大于取 1)、power(2，幂)、signed_power(2，带符号幂)、
+resid(2，截面一元回归残差：第一个量对第二个量逐日回归取残差)、delay(2，延迟 d 日)、delta(2，与 d 日前之差)、
+ts_mean(2)、ts_sum(2)、ts_std(2)、ts_min(2)、ts_max(2)、ts_rank(2，时序排名)、ts_median(2，时序中位数)、ts_skew(2，时序偏度)、
+ts_kurt(2，时序峰度)、ts_decay(2，指数衰减平均，半衰期 d 日)、ts_count(2，窗口求和，对 0/1 量即为计数)、
+ts_argmax(2，距窗口内最大值出现的天数)、ts_argmin(2，距窗口内最小值出现的天数)、ts_corr(3，两序列 d 日滚动相关),
+ts_beta(3，滚动回归斜率：第一个量对第二个量)、where(3，条件选择：第一个量 > 0 取第二个量，否则取第三个量），
+以及 + - * / 四则运算。时序算子的最后一个参数是窗口 d，为正整数（power 与 signed_power 的第二个参数是指数，不在此列）。
+不可表达的构造：多变量回归（resid 只支持一个控制变量，ts_beta 只给斜率）；时序回归残差；
+需要财务报表、分析师预期等未提供数据的量；变长窗口。ivol20 与 resid_ret 为程序预计算的市场模型残差类字段，窗口固定 20 日。
 公式只能使用当日及以前的数据。"""
 
 DATA_BOUNDARY = """数据边界（硬约束）：系统只有日频价量、市值、市场收益、行业归属与 ivol20、resid_ret 两个预计算字段。
