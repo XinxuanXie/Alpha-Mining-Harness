@@ -1,7 +1,8 @@
 # run.py — 调度程序
 # 职责：按七步串联全流程——登记线索 → 展开假设 → 实现与程序检查 → 回测 → 对抗检验
 #       → 讲评归档 → 经验回流。本文件是唯一有权写账本与经验库的程序。
-#       驱动方式为新假设循环：新方向逐轮以反馈改假设，已有记录的旧方向跳过。
+#       驱动方式为假设锁定 + 因子内循环：新方向的假设只定一次并锁定，
+#       循环只在因子层改公式；已有记录的旧方向跳过。
 # 依据：《因子挖掘系统新计划》与《第一期实现规格》。判定一律由程序按规则执行，模型不参与判定。
 
 import csv
@@ -26,6 +27,7 @@ TRACE_PATH = os.path.join(BASE, "trace.jsonl")
 IC_THRESHOLD = 0.02        # 基础判定：Rank IC 门槛
 ICIR_THRESHOLD = 0.2       # 基础判定：ICIR 门槛
 CORR_THRESHOLD = 0.8       # 基础判定：与经典因子最大相关上限
+COMPLEXITY_CAP = 20        # 复杂度上限：固定值（Ethan 2026-11-13 定），不再由经典库最大复杂度推导
 CONSISTENCY_MIN = 0.99     # 一致性检查：截面相关下限
 PRED_GAP = 0.005           # 预测兑现：两组 IC 差值线
 SUBPERIOD_T = 2.0          # 对抗检验：子时段反例的 |t| 线
@@ -228,16 +230,13 @@ def cross_check(gen_attack, metrics):
 
 
 # ============================================================
-# 单条假设的完整流程：第 3 至第 6 步（实现、回测、对抗、讲评）
+# 阶段 A 的文献链：检索 → 筛选 → 全文抓取 → 优化定稿
+# 按登记里的检索式查资料，模型据此优化登记五项；优化稿须重新通过
+# 登记校验才采用，否则保留初稿；全程尚无回测数字。一个方向只走一次。
 # ============================================================
-def process_hypothesis(hyp, wide, classics, cap_complexity, revise_req=None):
-    # 文献检索与假设优化：按登记里的检索式查资料，模型据此优化登记五项，此后登记锁定。
-    # 优化稿须重新通过登记校验才采用，否则保留初稿；全程尚无回测数字。
-    # revise_req 非空时为改因子轮次：跳过文献链，公式按裁决的修改要求重写。
-    if revise_req:
-        trace("改因子修订", 方向=hyp["direction"], 修改要求=revise_req)
+def apply_literature(hyp):
     lit = []
-    queries = [] if revise_req else [q for q in (hyp.get("search_queries") or []) if q][:2]
+    queries = [q for q in (hyp.get("search_queries") or []) if q][:2]
     if queries:
         seen_titles = set()
         reports = []
@@ -319,6 +318,17 @@ def process_hypothesis(hyp, wide, classics, cap_complexity, revise_req=None):
                     trace("假设优化", 方向=hyp["direction"], 假设=hyp["hypothesis"],
                           采纳=False, 原因=errs)
 
+    return hyp, lit
+
+# ============================================================
+# 阶段 B 的一轮：第 3 至第 6 步（实现、回测、对抗、讲评）
+# 假设已在阶段 A 锁定；revision 非空时为因子修订轮次——按程序给出的
+# 修改要求改公式，假设与登记一字不动。
+# ============================================================
+def process_hypothesis(hyp, wide, classics, cap_complexity, revision=None, lit=None):
+    if revision:
+        trace("因子修订", 方向=hyp["direction"], 修改要求=revision.get("修改要求"))
+    lit = lit or []
     rec = {"方向": hyp["direction"], "机制类别": hyp["category"], "假设": hyp["hypothesis"],
            "登记": {"计算方式": hyp["measure"], "基准公式": hyp["baseline_formula"],
                     "机制": hyp["mechanism"], "条件预测": hyp["predictions"],
@@ -341,7 +351,7 @@ def process_hypothesis(hyp, wide, classics, cap_complexity, revise_req=None):
     # 第 3 步：写公式 + 程序检查（白名单、复杂度、一致性）；登记锁定，只改公式
     formula, last_err = None, None
     for attempt in range(1, FORMULA_REWRITE_MAX + 2):
-        out = agents.write_formula(hyp, last_err, cap=cap_complexity, guidance=revise_req)
+        out = agents.write_formula(hyp, last_err, cap=cap_complexity, revision=revision)
         if not out.get("formula"):
             trace("写公式", 方向=hyp["direction"], 假设=hyp["hypothesis"], 第几次=attempt,
                   公式=None, 模型原因=out.get("reason", ""))
@@ -369,10 +379,10 @@ def process_hypothesis(hyp, wide, classics, cap_complexity, revise_req=None):
                   公式=cand, 结果="未通过：" + last_err)
             continue
         corr = calc.consistency_corr(values, baseline_values)
-        # 改因子轮次：公式允许偏离登记基准，一致性不按基准公式对拍（对拍对象改为登记
-        # 计算方式的语义与裁决修改要求）；白名单、复杂度、可算性三项检查照常。
-        # 普通轮次照旧：一致性低于下限打回重写。
-        if revise_req is None and (corr is None or corr < CONSISTENCY_MIN):
+        # 因子修订轮次：修改要求本就指向公式层构造（窗口、参照系、组合、门控），
+        # 公式允许偏离登记基准，一致性不按基准公式对拍（数值照常计算并记账）；
+        # 白名单、复杂度、可算性三项检查照常。首版照旧：一致性低于下限打回重写。
+        if revision is None and (corr is None or corr < CONSISTENCY_MIN):
             last_err = f"一致性相关 {corr} 低于 {CONSISTENCY_MIN}：公式计算的量与登记不一致"
             trace("公式检查", 方向=hyp["direction"], 假设=hyp["hypothesis"], 第几次=attempt,
                   公式=cand, 一致性相关=corr, 结果="未通过：" + last_err)
@@ -380,7 +390,7 @@ def process_hypothesis(hyp, wide, classics, cap_complexity, revise_req=None):
         formula, rec["一致性相关"] = cand, corr
         trace("公式检查", 方向=hyp["direction"], 假设=hyp["hypothesis"], 第几次=attempt,
               公式=cand, 复杂度=calc.complexity(cand), 一致性相关=corr,
-              结果="通过" if revise_req is None else "通过（改因子轮次，未按基准公式对拍）")
+              结果="通过" if revision is None else "通过（因子修订轮次，未按基准公式对拍）")
         break
     if formula is None:
         rec["结论"] = "无法表达"
@@ -509,7 +519,8 @@ def rejected_summaries(category, records):
     return out
 
 # ============================================================
-# 反馈包（方向第 2 次及以后尝试）：把上次尝试的完整回执结构化喂回展开，
+# 反馈包（保留部件，已不再接入循环：阶段 A 展开无反馈）：
+# 把上次尝试的完整回执结构化喂回展开，
 # 让修改有据可依：改了什么、为什么，由展开在 feedback_response 中逐条回应，
 # 登记校验把关（见 validate_registration）。训练段数字按既定口径可喂生成侧；
 # 修改只能以新尝试出现，同一次尝试内仍不按回测或对抗改登记。
@@ -558,89 +569,143 @@ def build_feedback(records, direction, terrain):
     }
 
 # ============================================================
-# 新假设循环（唯一驱动模式）：从全新假设出发，展开→回测→拿反馈
-# 改假设→再测，轮次上限 3（沿用原每方向尝试次数上限的口径）。
-# 修改以新一轮完整新假设的形式出现，不改上一轮的公式字符串；
-# 停止条件为通过、轮次达上限、本轮无合格登记、无改进（新假设与
-# 上一轮实质相同）。已有账本记录的旧方向不再处理，由 main 跳过。
+# 阶段 A 的对抗后修订：生成侧对抗之后，把对抗意见喂给修订调用
+#（复用 refine 的五项输出协议），修订稿重过登记校验才采用并锁定；
+# 不合格保留对抗前版本。只修订一遍，不循环对抗。
 # ============================================================
-def _pred_keyset(preds):
-    """条件预测集合的规范化表示（供无改进判定逐项比对）。"""
-    return {(p.get("dim"), str(p.get("a")), str(p.get("b")), bool(p.get("key")))
-            for p in (preds or [])}
+def revise_after_attack_step(hyp, attack, exp_in, rej_keys, sectors):
+    failed = None
+    try:
+        rev = agents.revise_after_attack(hyp, attack, sectors=sectors)
+    except Exception as e:
+        rev, failed = None, f"修订调用失败：{e}"
+    if not rev:
+        reason = failed or "修订无输出"
+        trace("对抗后修订", 方向=hyp["direction"], 假设=hyp["hypothesis"], 采纳=False,
+              说明=reason)
+        trace("对抗后修订未采用", 方向=hyp["direction"], 假设=hyp["hypothesis"],
+              原因=reason)
+        return hyp
+    merged = dict(hyp)
+    for k in ("measure", "baseline_formula", "mechanism", "predictions", "falsify"):
+        if rev.get(k):
+            merged[k] = rev[k]
+    errs = validate_registration(merged, exp_in, rej_keys, sectors=sectors)
+    if errs:
+        trace("对抗后修订", 方向=hyp["direction"], 假设=hyp["hypothesis"], 采纳=False,
+              说明=(rev.get("changes") or "")[:200])
+        trace("对抗后修订未采用", 方向=hyp["direction"], 假设=hyp["hypothesis"], 原因=errs)
+        return hyp
+    trace("对抗后修订", 方向=hyp["direction"], 假设=hyp["hypothesis"], 采纳=True,
+          说明=(rev.get("changes") or "")[:200])
+    return merged
 
+# ============================================================
+# 修改要求（程序组装）：阶段 B 每轮未过后，程序按本轮数字与失效类型
+# 模板化给出一条修改要求，只许改一类公式层构造（窗口 / 参照系 /
+# 组合方式 / 符号与门控），不调模型。要求连同上一版公式、本轮全部
+# 数字、逐条预测实际值与检验侧对抗备忘录，一并喂给写公式 agent。
+# ============================================================
+def build_revision_requirement(rec):
+    if rec["结论"] == "无法表达":
+        return ("组合方式：上一版未能写出可通过程序检查的公式"
+                f"（{rec.get('无法表达原因') or '原因未记'}），"
+                "简化构造——减少嵌套与变换层数，优先用单层时序算子与预计算字段"
+                "实现登记的计算方式；只改组合方式，不改窗口与参照系。")
+    m = rec["判定数字"] or {}
+    adv = rec["对抗检验"] or {}
+    if adv.get("子时段反例"):
+        return (f"窗口：子时段 {'、'.join(adv['子时段反例'])} 的 IC 方向与全期相反且显著，"
+                "把构造窗口拉长做平滑，只改窗口长度，不改参照系与组合方式。")
+    sym = adv.get("对称检验") or ""
+    if "方向反转" in sym:
+        return (f"符号与门控：{sym}——信号两端方向不一致，只保留与全期同向一端的门控"
+                "（反向一端置零）；只改门控，不改窗口与参照系。")
+    for p in rec["预测核对"] or []:
+        if p.get("key") and not p["兑现"]:
+            dim, a, b = p["dim"], p["a"], p["b"]
+            if dim == "持有期":
+                return (f"窗口：关键预测（持有期 {a} 日高于 {b} 日）未兑现，"
+                        f"实际 {a} 日 IC {p['a值']}、{b} 日 IC {p['b值']}；"
+                        "把构造窗口向实际更强的期限调整，只改窗口。")
+            return (f"参照系：关键预测（{dim} {a} 高于 {b}）未兑现，"
+                    f"实际 {a} 组 IC {p['a值']}、{b} 组 IC {p['b值']}；"
+                    "改为行业内相对构造（以 sector_mean 或 rank_sector 为参照），只改参照系。")
+    ic = m.get("IC均值")
+    if ic is not None and ic < 0:
+        return (f"符号与门控：全期 IC {ic} 为负，与登记的方向约定相反；"
+                "核对公式符号与门控方向后修正，只改符号与门控。")
+    hp = {k: v for k, v in (m.get("各持有期IC") or {}).items() if v is not None}
+    if hp:
+        best = max(hp, key=hp.get)
+        return (f"窗口：全期 IC {ic} 未达门槛，各持有期中 {best} 日期限 IC 最高"
+                f"（{hp[best]}），把构造窗口向 {best} 日靠拢，只改窗口。")
+    return ("组合方式：换组合方式——以时序均值平滑代替单日点值构造，"
+            "只改组合方式，不改窗口与参照系。")
+
+# ============================================================
+# 假设锁定 + 因子内循环（唯一驱动模式）
+# 阶段 A（每个新方向只走一次）：展开假设 → 文献链（检索、筛选、
+# 全文抓取、优化）→ 登记校验 → 生成侧对抗 → 对抗后修订 → 锁定假设。
+# 阶段 B（因子循环，总轮次上限 3，含首版）：每轮只重跑写公式 → 程序
+# 检查 → 回测与程序检验 → 对抗与讲评；未过则程序组装修改要求（连同
+# 检验侧对抗备忘录）喂回写公式 agent 改公式。假设在阶段 B 永不重开。
+# 已有账本记录的旧方向不再处理，由 main 跳过。
+# ============================================================
 def run_fresh_loop(clue, wide, classics, cap_complexity, sectors, stats):
-    """新方向循环：逐轮跑单条假设完整流程，每轮写一条账本记录
-    （轮次、父假设、修订类型、裁决理由）。每轮未通过后由裁决（judge）读本轮证据
-    决定下一步：改因子（沿用同一登记、按修改要求重写公式）、改假设（带反馈包
-    重新展开完整新假设）或终止。轮次上限 3，两种修订共用计数。"""
     direction = clue["direction"]
-    prev_hyp_text = ""
-    prev_preds = None
-    prev_factor_values = None
-    prev_reg_hyp = None   # 上一轮实际登记者（自账本登记重建），供改因子轮次沿用
-    pending = None        # 上一轮裁决留给本轮的修订指令：{"类型", "理由", "修改要求"}
-    for round_no in range(1, 3 + 1):   # 轮次上限 3，口径同原每方向尝试上限
-        if stats["done"] >= MAX_TOTAL_ATTEMPTS:
-            return
-        records = read_jsonl(RECORDS_PATH)
-        entries = read_jsonl(EXP_PATH)
-        exp_in = retrieve_exp(clue.get("category"), entries) if clue.get("category") else entries[:EXP_LIMIT]
-        rej = rejected_summaries(clue.get("category"), records) if clue.get("category") else []
-        # 改因子轮次沿用上一轮登记：不展开、不带反馈包。其余轮次：第 1 轮不带反馈，
-        # 第 2 轮起带反馈包（由该方向已有记录组装），改假设须逐条回应。
-        factor_round = pending is not None and pending["类型"] == "因子"
-        feedback = None
-        if not factor_round and round_no > 1:
-            feedback = build_feedback(records, direction, load_terrain())
-        if feedback:
-            trace("反馈包", 方向=direction, 轮次=round_no, 未兑现维度=feedback["未兑现维度"],
-                  地形条数=len(feedback["数据地形"]))
-        t_attempt = time.time()
-        snap_attempt = agents.usage_snapshot()
-        if factor_round:
-            chosen = prev_reg_hyp
-        else:
-            hyps = agents.expand_hypotheses(clue, exp_in, rej, sectors=sectors,
-                                            feedback=feedback)
-            trace("展开候选", 方向=direction, 轮次=round_no, 候选=hyps,
-                  引用经验=[e["编号"] for e in exp_in])
-            stats["candidates"] += len(hyps)
-            chosen = None
-            for hyp in hyps:
-                errs = validate_registration(
-                    hyp, exp_in,
-                    [r for r in rej] if clue.get("category") else [],
-                    sectors=sectors,
-                    feedback_dims=(feedback["未兑现维度"] if feedback else None))
-                if not errs:
-                    hyp["direction"] = direction
-                    chosen = hyp
-                    break
-                stats["rejected"] += 1
-                trace("拒登", 方向=direction, 假设=hyp.get("hypothesis"), 原因=errs)
-                print(f"假设拒登：{errs}")
-            if chosen is None:
-                trace("循环停止", 方向=direction, 轮次=round_no, 原因="本轮无合格登记")
-                print(f"方向「{direction}」第 {round_no} 轮无合格登记，循环停止")
+    if stats["done"] >= MAX_TOTAL_ATTEMPTS:
+        return
+    records = read_jsonl(RECORDS_PATH)
+    entries = read_jsonl(EXP_PATH)
+    exp_in = retrieve_exp(clue.get("category"), entries) if clue.get("category") else entries[:EXP_LIMIT]
+    rej = rejected_summaries(clue.get("category"), records) if clue.get("category") else []
+    rej_keys = [r for r in rej] if clue.get("category") else []
+
+    # ---------- 阶段 A：假设只定一次 ----------
+    t_attempt = time.time()
+    snap_attempt = agents.usage_snapshot()
+    hyps = agents.expand_hypotheses(clue, exp_in, rej, sectors=sectors, feedback=None)
+    trace("展开候选", 方向=direction, 候选=hyps, 引用经验=[e["编号"] for e in exp_in])
+    stats["candidates"] += len(hyps)
+    locked, lit = None, []
+    for hyp in hyps:
+        hyp, hyp_lit = apply_literature(hyp)
+        errs = validate_registration(hyp, exp_in, rej_keys, sectors=sectors)
+        if errs:
+            stats["rejected"] += 1
+            trace("拒登", 方向=direction, 假设=hyp.get("hypothesis"), 原因=errs)
+            print(f"假设拒登：{errs}")
+            continue
+        hyp["direction"] = direction
+        attack = None
+        try:
+            attack = agents.attack_registration(hyp, calc.CLASSIC_FORMULAS, lit=hyp_lit)
+        except Exception as e:
+            trace("生成对抗失败", 方向=direction, 假设=hyp["hypothesis"], 错误=str(e))
+        trace("生成对抗", 方向=direction, 假设=hyp["hypothesis"], 对抗=attack)
+        if attack:
+            hyp = revise_after_attack_step(hyp, attack, exp_in, rej_keys, sectors)
+        locked, lit = hyp, hyp_lit
+        trace("假设锁定", 方向=direction, 假设=hyp["hypothesis"])
+        break
+    if locked is None:
+        trace("循环停止", 方向=direction, 原因="阶段 A 无合格登记")
+        print(f"方向「{direction}」阶段 A 无合格登记，停止")
+        return
+
+    # ---------- 阶段 B：因子内循环 ----------
+    revision = None
+    prev_factor_values, prev_ic = None, None
+    round_no = 0
+    for round_no in range(1, 3 + 1):   # 总轮次上限 3，含首版
+        if round_no > 1:
+            if stats["done"] >= MAX_TOTAL_ATTEMPTS:
                 return
-            if round_no > 1 and prev_factor_values is not None:
-                # 无改进：新假设的基准构造与上一轮因子实质相同、条件预测集合也不变，
-                # 再测一轮不会产生新信息，停（不写本轮记录）。改因子轮次不查此项：
-                # 其基准与预测按定义与上一轮相同，查了必然误停。
-                try:
-                    cur_base_values = calc.eval_formula(chosen["baseline_formula"], wide)
-                    same_corr = calc.consistency_corr(cur_base_values, prev_factor_values)
-                except ValueError:
-                    same_corr = None
-                if (same_corr is not None and same_corr >= CONSISTENCY_MIN
-                        and _pred_keyset(chosen.get("predictions")) == prev_preds):
-                    trace("循环停止", 方向=direction, 轮次=round_no,
-                          原因=f"无改进：基准公式与上一轮因子一致性相关 {same_corr:.4f}，条件预测集合相同")
-                    print(f"方向「{direction}」第 {round_no} 轮与上一轮无改进，循环停止")
-                    return
-        result = process_hypothesis(chosen, wide, classics, cap_complexity,
-                                    revise_req=(pending["修改要求"] if factor_round else None))
+            t_attempt = time.time()
+            snap_attempt = agents.usage_snapshot()
+        result = process_hypothesis(locked, wide, classics, cap_complexity,
+                                    revision=revision, lit=lit)
         if isinstance(result, tuple):
             rec, review, status, _ = result
         else:
@@ -649,9 +714,11 @@ def run_fresh_loop(clue, wide, classics, cap_complexity, sectors, stats):
         trace("成本", 方向=direction, 假设=rec["假设"], **cost)
         rec["工具版本"] = calc.TOOLING_VERSION
         rec["轮次"] = round_no
-        rec["父假设"] = prev_hyp_text
-        rec["修订类型"] = "无" if round_no == 1 else pending["类型"]
-        rec["裁决理由"] = "" if round_no == 1 else pending["理由"]
+        rec["假设锁定文本"] = locked["hypothesis"] if round_no == 1 else ""
+        rec["修订类型"] = "无" if round_no == 1 else "因子"
+        rec["修改要求"] = "" if revision is None else revision["修改要求"]
+        rec["修改依据"] = ("" if revision is None else
+                          "程序按数字组装的修改要求 + 检验侧对抗备忘录")
         append_jsonl(RECORDS_PATH, rec)
         save_experience(rec, review, status)
         stats["done"] += 1
@@ -663,53 +730,31 @@ def run_fresh_loop(clue, wide, classics, cap_complexity, sectors, stats):
         for p in (rec["预测核对"] or []):
             stats["pred_total"] += 1
             stats["pred_hit"] += 1 if p["兑现"] else 0
-        print(f"方向「{direction}」第 {round_no} 轮：{chosen['hypothesis'][:40]} → {rec['结论']}"
+        print(f"方向「{direction}」第 {round_no} 轮：{locked['hypothesis'][:40]} → {rec['结论']}"
               + (f"（失效层 {rec['失效层']}）" if rec["失效层"] else ""))
-        prev_hyp_text = rec["假设"]
-        prev_preds = _pred_keyset(rec["登记"]["条件预测"])
-        reg = rec["登记"]
-        prev_reg_hyp = {"direction": direction, "category": rec["机制类别"],
-                        "hypothesis": rec["假设"], "measure": reg["计算方式"],
-                        "baseline_formula": reg["基准公式"], "mechanism": reg["机制"],
-                        "predictions": reg["条件预测"], "falsify": reg["否定条件"],
-                        "lit_refs": reg["文献引用"]}
-        if rec.get("公式"):
-            prev_factor_values = calc.eval_formula(rec["公式"], wide)
-        else:
-            prev_factor_values = calc.eval_formula(rec["登记"]["基准公式"], wide)
         if rec["结论"] == "通过":
             trace("循环停止", 方向=direction, 轮次=round_no, 原因="本轮通过")
             return
-        # 裁决步：本轮未通过且仍有下一轮额度时，judge 读本轮证据决定改什么。
-        # judge 无判定权；输出无效或调用失败按终止处理，不空转烧轮次。
-        if round_no < 3 and stats["done"] < MAX_TOTAL_ATTEMPTS:
-            evidence = {"假设": rec["假设"], "公式": rec["公式"],
-                        "一致性相关": rec.get("一致性相关"),
-                        "复杂度": calc.complexity(rec["公式"]) if rec.get("公式") else None,
-                        "结论": rec["结论"], "失效层": rec["失效层"],
-                        "判定数字": rec["判定数字"], "预测核对": rec["预测核对"],
-                        "生成侧对抗": rec["生成侧对抗"], "检验侧对抗": rec["检验侧对抗"],
-                        "无法表达原因": rec.get("无法表达原因")}
-            try:
-                verdict_j = agents.judge_revision(evidence)
-            except Exception as e:
-                verdict_j = None
-                trace("裁决失败", 方向=direction, 轮次=round_no, 错误=str(e))
-            decision = (verdict_j or {}).get("决定")
-            if decision not in ("改因子", "改假设", "终止"):
-                trace("裁决", 方向=direction, 轮次=round_no, 决定="终止",
-                      理由=f"裁决输出无效（{decision}），按终止处理", 修改要求="")
-                trace("循环停止", 方向=direction, 轮次=round_no, 原因="裁决无效，按终止处理")
+        cur_values = calc.eval_formula(rec["公式"], wide) if rec.get("公式") else None
+        cur_ic = (rec.get("判定数字") or {}).get("IC均值")
+        if (round_no >= 2 and cur_values is not None and prev_factor_values is not None):
+            corr = calc.consistency_corr(cur_values, prev_factor_values)
+            improved = (cur_ic is not None and prev_ic is not None and cur_ic > prev_ic)
+            if corr is not None and corr >= CONSISTENCY_MIN and not improved:
+                trace("循环停止", 方向=direction, 轮次=round_no,
+                      原因=f"无改进：新公式与上一轮因子一致性相关 {corr:.4f}，IC 未改善")
+                print(f"方向「{direction}」第 {round_no} 轮无改进，循环停止")
                 return
-            trace("裁决", 方向=direction, 轮次=round_no, 决定=decision,
-                  理由=verdict_j.get("理由") or "", 修改要求=verdict_j.get("修改要求") or "")
-            if decision == "终止":
-                trace("循环停止", 方向=direction, 轮次=round_no, 原因="裁决终止")
-                print(f"方向「{direction}」裁决终止，循环停止")
-                return
-            pending = {"类型": "因子" if decision == "改因子" else "假设",
-                       "理由": verdict_j.get("理由") or "",
-                       "修改要求": verdict_j.get("修改要求") or ""}
+        prev_factor_values, prev_ic = cur_values, cur_ic
+        if round_no == 3:
+            break
+        if stats["done"] >= MAX_TOTAL_ATTEMPTS:
+            return
+        revision = {"修改要求": build_revision_requirement(rec),
+                    "上一版公式": rec.get("公式"),
+                    "判定数字": rec.get("判定数字"),
+                    "预测核对": rec.get("预测核对"),
+                    "对抗备忘录": rec.get("检验侧对抗")}
     trace("循环停止", 方向=direction, 轮次=round_no, 原因="轮次达上限")
 
 def main():
@@ -717,7 +762,7 @@ def main():
     snap0 = agents.usage_snapshot()
     wide = calc.load_wide()
     classics = calc.load_classics(wide)
-    cap_complexity = calc.classic_complexity_cap()
+    cap_complexity = COMPLEXITY_CAP
     sectors = set(calc.SECTOR_OF.values())
     print(f"复杂度上限 {cap_complexity}；已加载训练段数据")
     trace("实验开始", 初始线索数=len(read_jsonl(CLUES_PATH)), 复杂度上限=cap_complexity,

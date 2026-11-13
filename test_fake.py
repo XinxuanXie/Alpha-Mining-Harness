@@ -44,7 +44,7 @@ state = {"formula_calls": 0, "review_calls": 0, "review_mode": "先错后对", "
          "refine_calls": 0, "refine_payload": None, "pick_payload": None,
          "expand_payload": None, "expand_hyps": None,
          "expand_seq": None, "expand_payloads": [], "formula_mode": None,
-         "judge_seq": None, "judge_payloads": [],
+         "formula_seq": None, "formula_payloads": [], "post_attack_calls": 0,
          "revise_formula": "neg(ts_mean(close / delay(close, 1) - 1, 20))"}
 
 def fake(role, payload):
@@ -58,8 +58,11 @@ def fake(role, payload):
         return {"hypotheses": [HYP]}
     if role == "formula":
         state["formula_calls"] += 1
-        if payload.get("guidance"):
-            # 改因子轮次：按裁决修改要求给出与基准不同的公式
+        state["formula_payloads"].append(payload)
+        if state["formula_seq"]:
+            return {"formula": state["formula_seq"].pop(0)}
+        if payload.get("revision"):
+            # 因子修订轮次：按程序修改要求给出与基准不同的公式
             return {"formula": state["revise_formula"]}
         if state["formula_mode"] == "回登记基准":
             return {"formula": payload["hyp"]["baseline_formula"]}
@@ -110,11 +113,13 @@ def fake(role, payload):
     if role == "attack_res":
         return {"失效解释": "信号强度不足，IC 未达门槛", "未覆盖的失效方式": "未按波动状态分组",
                 "备注": ""}
-    if role == "judge":
-        state["judge_payloads"].append(payload)
-        if state["judge_seq"]:
-            return state["judge_seq"].pop(0)
-        return {"决定": "改假设", "理由": "默认裁决：改假设", "修改要求": ""}
+    if role == "revise_after_attack":
+        state["post_attack_calls"] += 1
+        return {"measure": HYP["measure"], "baseline_formula": HYP["baseline_formula"],
+                "mechanism": HYP["mechanism"] + "（据对抗意见补明付钱方）",
+                "predictions": HYP["predictions"],
+                "falsify": "（对抗后修订）" + HYP["falsify"],
+                "changes": "依据对抗意见收紧否定条件并补明机制"}
     if role == "review":
         state["review_calls"] += 1
         m = payload["metrics"]
@@ -242,17 +247,21 @@ search.search = lambda query, limit=5: [
      "摘要": "reversal profits are related to liquidity provision"}]
 hyp8 = dict(HYP)
 hyp8["search_queries"] = ["short-term reversal liquidity"]
-rec8, _, _, _ = run.process_hypothesis(hyp8, wide, classics, cap)
-assert rec8["登记"]["否定条件"] == "（优化）" + HYP["falsify"], "合格的优化稿应被采用并锁定"
-assert rec8["登记"]["文献引用"] == ["L1"], "登记应记录文献引用"
-assert "L1" in rec8["登记"]["优化说明"], "登记应记录优化说明"
+hyp8, lit8 = run.apply_literature(hyp8)
+assert hyp8["falsify"] == "（优化）" + HYP["falsify"], "合格的优化稿应被采用并锁定"
+assert hyp8["lit_refs"] == ["L1"], "登记应记录文献引用"
+assert "L1" in hyp8["优化说明"], "登记应记录优化说明"
+rec8, _, _, _ = run.process_hypothesis(hyp8, wide, classics, cap, lit=lit8)
 assert state["attack_reg_payload"]["lit"], "生成侧对抗应收到检索材料"
 assert state["attack_reg_payload"]["lit"][0]["编号"] == "L1", "对抗收到的材料应带编号"
 assert "引用问题" in rec8["生成侧对抗"], "生成侧对抗输出应含引用问题字段"
+assert rec8["登记"]["否定条件"] == "（优化）" + HYP["falsify"], "锁定后的登记应进入账本"
 state["refine_mode"] = "不采纳"
-rec8b, _, _, _ = run.process_hypothesis(dict(hyp8), wide, classics, cap)
-assert rec8b["登记"]["否定条件"] == HYP["falsify"], "优化稿不合格时应保留初稿"
-assert rec8b["登记"]["文献引用"] == [], "未采纳时不应记录文献引用"
+hyp8b_src = dict(HYP)
+hyp8b_src["search_queries"] = ["short-term reversal liquidity"]
+hyp8b, _ = run.apply_literature(hyp8b_src)
+assert hyp8b["falsify"] == HYP["falsify"], "优化稿不合格时应保留初稿"
+assert not hyp8b.get("lit_refs"), "未采纳时不应记录文献引用"
 tr8 = run.read_jsonl(run.TRACE_PATH)
 assert any(e["事件"] == "文献检索" for e in tr8), "轨迹应记录文献检索"
 assert any(e["事件"] == "假设优化" and e["采纳"] for e in tr8), "轨迹应记录优化采纳"
@@ -335,7 +344,7 @@ search.search = lambda query, limit=5: [
 search.fetch_fulltext = lambda item: {"节选": "FULLTEXT-EXCERPT", "字数": 5000}
 hyp11 = dict(HYP)
 hyp11["search_queries"] = ["short-term reversal liquidity"]
-rec11, _, _, _ = run.process_hypothesis(hyp11, wide, classics, cap)
+run.apply_literature(hyp11)
 assert state["pick_payload"] is not None, "有摘要时应先调用文献筛选"
 assert state["refine_payload"]["lit"][0].get("全文节选") == "FULLTEXT-EXCERPT", \
     "筛选选中篇目的全文节选应随材料交给优化"
@@ -346,9 +355,9 @@ assert any(e["事件"] == "全文抓取" and e.get("成功") for e in tr11), "�
 search.search = lambda query, limit=5: [
     {"标题": "Title Only Paper", "年份": 2015, "来源": "替身", "摘要": None, "全文链接": None}]
 _refine_before = state["refine_calls"]
-rec11b, _, _, _ = run.process_hypothesis(dict(hyp11), wide, classics, cap)
+hyp11b, _ = run.apply_literature(dict(hyp11))
 assert state["refine_calls"] == _refine_before, "材料无摘要时不应调用优化"
-assert "材料不足" in rec11b["登记"]["优化说明"], "无摘要时登记应标注材料不足、未优化"
+assert "材料不足" in hyp11b["优化说明"], "无摘要时登记应标注材料不足、未优化"
 tr11b = run.read_jsonl(run.TRACE_PATH)
 assert any(e["事件"] == "文献材料不足" for e in tr11b), "轨迹应记录文献材料不足"
 search.search, search.fetch_fulltext = _saved_search, _saved_fetch
@@ -372,9 +381,9 @@ _saved_call = agents.call_model
 agents.call_model = lambda role, system, user: (_captured.update(user=user),
                                                 {"formula": "close"})[1]
 agents.write_formula({"measure": "m", "mechanism": "x", "baseline_formula": "close"},
-                     None, cap=14)
+                     None, cap=20)
 agents.call_model = _saved_call
-assert "复杂度上限 14" in _captured["user"] and "算子调用次数" in _captured["user"], \
+assert "复杂度上限 20" in _captured["user"] and "算子调用次数" in _captured["user"], \
     "写公式提示应含复杂度上限与计数法"
 
 # 网络错误重试一次：第一次断读、第二次成功
@@ -433,20 +442,20 @@ hyp13["search_queries"] = ["short-term reversal liquidity"]
 for _mode13 in ("空转", "空转无修改"):
     state["refine_mode"] = _mode13
     _refine_before13 = state["refine_calls"]
-    rec13, _, _, _ = run.process_hypothesis(dict(hyp13), wide, classics, cap)
+    hyp13r, _ = run.apply_literature(dict(hyp13))
     assert state["refine_calls"] == _refine_before13 + 1, "空转场景应确有调用优化"
-    assert rec13["登记"]["否定条件"] == HYP["falsify"], \
-        f"模式 {_mode13}：零引用零修改应判优化失败、保留初稿，实际登记 {rec13['登记']['否定条件']}"
-    assert rec13["登记"]["优化说明"] == "检索后优化失败，用初稿", \
-        f"模式 {_mode13}：登记应沿用失败标注，实际 {rec13['登记']['优化说明']}"
-    assert rec13["登记"]["文献引用"] == [], "判失败时不应记录文献引用"
+    assert hyp13r["falsify"] == HYP["falsify"], \
+        f"模式 {_mode13}：零引用零修改应判优化失败、保留初稿，实际登记 {hyp13r['falsify']}"
+    assert hyp13r["优化说明"] == "检索后优化失败，用初稿", \
+        f"模式 {_mode13}：登记应沿用失败标注，实际 {hyp13r['优化说明']}"
+    assert not hyp13r.get("lit_refs"), "判失败时不应记录文献引用"
 tr13 = run.read_jsonl(run.TRACE_PATH)
 assert any(e["事件"] == "假设优化失败" and e.get("原因") == "无引用无修改" for e in tr13), \
     "轨迹应记假设优化失败事件并注明原因“无引用无修改”"
 state["refine_mode"] = "采纳"
-rec13c, _, _, _ = run.process_hypothesis(dict(hyp13), wide, classics, cap)
-assert rec13c["登记"]["否定条件"] == "（优化）" + HYP["falsify"], "含引用与修改的正常优化应照常采纳"
-assert rec13c["登记"]["文献引用"] == ["L1"], "正常采纳时应记录文献引用"
+hyp13c, _ = run.apply_literature(dict(hyp13))
+assert hyp13c["falsify"] == "（优化）" + HYP["falsify"], "含引用与修改的正常优化应照常采纳"
+assert hyp13c["lit_refs"] == ["L1"], "正常采纳时应记录文献引用"
 search.search = _saved_search13
 print("验收 13 通过：零引用零修改判优化失败用初稿并留痕，正常优化照常采纳")
 
@@ -492,111 +501,11 @@ _errs_ok = run.validate_registration(cand_resp, [], [], sectors=_sectors14,
 assert _errs_ok == [], f"带合格回应（点名未兑现维度）的候选应放行：{_errs_ok}"
 print("验收 14 通过：反馈包组装完整、无回应拒登、合格回应放行")
 
-# ---- 验收 15：新假设循环——逐轮裁决分流（改假设/改因子/终止），无改进停止 ----
-state["formula_mode"] = "回登记基准"
-_fresh_base = dict(HYP)
-_fresh_base.update({"exp_refs": ["E001"], "search_queries": [],
-                    "diff_from_rejected": "限定触发条件，与已否决方向不同"})
-_resp_all_dims = ("逐条回应上次未兑现预测：市值组维度改以组内相对量触发；"
-                  "持有期维度调整信号窗口与关键预测期限；行业维度限定高覆盖行业验证")
-# 情形 A：第 1 轮否决 → 第 2 轮带反馈包换构造再测，账本两条、轮次与父假设成链
-hyp_a1 = dict(_fresh_base)
-hyp_a1["hypothesis"] = "循环甲第一轮假设：过去 5 日跌幅越大的股票，未来收益越高"
-hyp_a2 = dict(_fresh_base)
-hyp_a2.update({"hypothesis": "循环甲第二轮假设：近期波动越低的股票，未来收益越高",
-               "measure": "过去 60 日日收益标准差取负",
-               "baseline_formula": "neg(ts_std(close / delay(close, 1) - 1, 60))",
-               "mechanism": "低波动股票被杠杆约束投资者忽视，赚风险定价偏差"})
-hyp_a2_resp = dict(hyp_a2)
-hyp_a2_resp["feedback_response"] = _resp_all_dims
-_pay_before_a = len(state["expand_payloads"])
-_rej_before_a = sum(1 for e in run.read_jsonl(run.TRACE_PATH) if e["事件"] == "拒登")
-_judge_before_a = len(state["judge_payloads"])
-state["judge_seq"] = [{"决定": "改假设", "理由": "构造与假设脱节，换假设",
-                        "修改要求": "换一个构造角度"}]
-state["expand_seq"] = [[hyp_a1], [hyp_a2, hyp_a2_resp]]
-stats15a = {"done": run.MAX_TOTAL_ATTEMPTS - 2, "passed": 0, "pred_total": 0,
-            "pred_hit": 0, "candidates": 0, "rejected": 0, "backtested": 0,
-            "inexpressible": 0}
-clue15a = {"direction": "循环新方向甲", "phenomenon": "某种现象",
-           "source": "某种收益来源", "category": "过度反应"}
-run.run_fresh_loop(clue15a, wide, classics, cap, set(calc.SECTOR_OF.values()), stats15a)
-recs15a = [r for r in run.read_jsonl(run.RECORDS_PATH) if r["方向"] == "循环新方向甲"]
-assert len(recs15a) == 2, f"新假设循环应完成两轮、各写一条记录：{len(recs15a)} 条"
-assert [r["轮次"] for r in recs15a] == [1, 2], f"两条记录轮次应为 1、2：{[r.get('轮次') for r in recs15a]}"
-assert recs15a[0]["父假设"] == "", "第 1 轮父假设应为空"
-assert recs15a[1]["父假设"] == recs15a[0]["假设"], "第 2 轮父假设应为第 1 轮假设文本"
-assert recs15a[0]["结论"] == "否决", f"第 1 轮应被否决以进入反馈轮：{recs15a[0]['结论']}"
-assert recs15a[0]["修订类型"] == "无" and recs15a[0]["裁决理由"] == "", "首轮修订类型应为无"
-assert recs15a[1]["修订类型"] == "假设", "裁决改假设时第 2 轮修订类型应为假设"
-assert recs15a[1]["裁决理由"] == "构造与假设脱节，换假设", "第 2 轮应记上一轮裁决理由"
-_ev_a = state["judge_payloads"][_judge_before_a]["evidence"]
-assert _ev_a["失效层"] == recs15a[0]["失效层"] and _ev_a["判定数字"] is not None, \
-    "裁决应收到本轮证据（失效层与判定数字）"
-_pays_a = state["expand_payloads"][_pay_before_a:]
-assert len(_pays_a) == 2, "循环应恰好展开两次（第三轮前因总上限停止）"
-assert _pays_a[0]["feedback"] is None, "第 1 轮展开不应带反馈包"
-assert _pays_a[1]["feedback"] is not None, "第 2 轮展开应带反馈包"
-assert _pays_a[1]["feedback"]["上次尝试"]["失效层"] == recs15a[0]["失效层"], \
-    "第 2 轮反馈包应含第 1 轮失效层"
-_rej_a = [e for e in run.read_jsonl(run.TRACE_PATH) if e["事件"] == "拒登"][_rej_before_a:]
-assert any(any("feedback_response" in x for x in e.get("原因", [])) for e in _rej_a), \
-    "第 2 轮无 feedback_response 的候选应被拒登并注明原因，随后合格回应才登记"
-# 情形 B：第 2 轮交回与第 1 轮实质相同的假设 → 无改进停止，不再有下一轮
-hyp_b1 = dict(_fresh_base)
-hyp_b1["hypothesis"] = "循环乙第一轮假设：过去 5 日跌幅越大的股票，未来收益越高"
-hyp_b2 = dict(_fresh_base)
-hyp_b2.update({"hypothesis": "循环乙第二轮假设：与第一轮同一构造",
-               "feedback_response": _resp_all_dims})
-state["expand_seq"] = [[hyp_b1], [hyp_b2]]
-state["judge_seq"] = [{"决定": "改假设", "理由": "换假设再试", "修改要求": ""}]
-stats15b = {"done": 0, "passed": 0, "pred_total": 0, "pred_hit": 0,
-            "candidates": 0, "rejected": 0, "backtested": 0, "inexpressible": 0}
-clue15b = {"direction": "循环新方向乙", "phenomenon": "某种现象",
-           "source": "某种收益来源", "category": "过度反应"}
-run.run_fresh_loop(clue15b, wide, classics, cap, set(calc.SECTOR_OF.values()), stats15b)
-recs15b = [r for r in run.read_jsonl(run.RECORDS_PATH) if r["方向"] == "循环新方向乙"]
-assert len(recs15b) == 1, f"无改进时第 2 轮不应写记录、不应有第 3 轮：{len(recs15b)} 条"
-assert recs15b[0]["轮次"] == 1 and recs15b[0]["父假设"] == "", "乙方向应只有第 1 轮记录"
-tr15 = run.read_jsonl(run.TRACE_PATH)
-assert any(e["事件"] == "循环停止" and e.get("方向") == "循环新方向乙"
-           and "无改进" in (e.get("原因") or "") for e in tr15), \
-    "无改进应在轨迹记「循环停止」并注明原因"
-# 情形 C：裁决改因子 → 下一轮沿用同一登记、公式按修改要求重写；再裁决终止 → 循环结束
-hyp_c1 = dict(_fresh_base)
-hyp_c1["hypothesis"] = "循环丙第一轮假设：过去 5 日跌幅越大的股票，未来收益越高"
-state["expand_seq"] = [[hyp_c1]]
-state["judge_seq"] = [{"决定": "改因子", "理由": "假设成立但窗口太短",
-                        "修改要求": "把构造窗口拉长到 20 日"},
-                       {"决定": "终止", "理由": "两轮均无信号", "修改要求": ""}]
-_pay_before_c = len(state["expand_payloads"])
-stats15c = {"done": 0, "passed": 0, "pred_total": 0, "pred_hit": 0,
-            "candidates": 0, "rejected": 0, "backtested": 0, "inexpressible": 0}
-clue15c = {"direction": "循环新方向丙", "phenomenon": "某种现象",
-           "source": "某种收益来源", "category": "过度反应"}
-run.run_fresh_loop(clue15c, wide, classics, cap, set(calc.SECTOR_OF.values()), stats15c)
-recs15c = [r for r in run.read_jsonl(run.RECORDS_PATH) if r["方向"] == "循环新方向丙"]
-assert len(recs15c) == 2, f"改因子后裁决终止，丙方向应恰有两轮记录：{len(recs15c)} 条"
-assert recs15c[1]["假设"] == recs15c[0]["假设"], "改因子轮次应沿用同一登记假设，假设文本不变"
-assert recs15c[1]["公式"] == state["revise_formula"], "改因子轮次公式应按修改要求重写"
-assert recs15c[1]["公式"] != recs15c[0]["公式"], "改因子轮次公式应与上一轮不同"
-assert recs15c[1]["修订类型"] == "因子", "裁决改因子时下一轮修订类型应为因子"
-assert recs15c[1]["裁决理由"] == "假设成立但窗口太短", "改因子轮次应记裁决理由"
-assert recs15c[1]["轮次"] == 2 and recs15c[1]["父假设"] == recs15c[0]["假设"], \
-    "改因子轮次轮次与父假设应成链"
-assert len(state["expand_payloads"]) - _pay_before_c == 1, "改因子轮次不应再展开"
-tr15c = [e for e in run.read_jsonl(run.TRACE_PATH)
-         if e["事件"] == "裁决" and e.get("方向") == "循环新方向丙"]
-assert [e["决定"] for e in tr15c] == ["改因子", "终止"], \
-    f"轨迹应依次记裁决改因子、终止：{[e.get('决定') for e in tr15c]}"
-assert stats15c["done"] == 2, "丙方向两轮均应计入完成数"
-state["expand_seq"] = None
-state["judge_seq"] = None
-state["formula_mode"] = None
+# ---- 验收 15：旧模式已删除——裁决（judge）与预算发放不复存在 ----
+assert not hasattr(agents, "judge_revision"), "裁决调用 judge_revision 应已删除"
 assert not hasattr(run, "can_issue"), "预算发放函数 can_issue 应已删除"
 assert not hasattr(run, "run_direction"), "预算发放驱动 run_direction 应已删除"
-print("验收 15 通过：新假设循环两轮成链（轮次/父假设）、次轮带反馈包、无改进停止、"
-      "裁决三路（改假设/改因子/终止）分流正确、旧模式已删除")
+print("验收 15 通过：裁决（judge）与预算发放模式已删除")
 
 # ---- 验收 16：普通网络搜索接入——片段材料走通筛选→优化链路，轨迹来源标注网络搜索 ----
 _saved_search, _saved_fetch = search.search, search.fetch_fulltext
@@ -618,7 +527,7 @@ hyp16 = dict(HYP)
 hyp16["search_queries"] = ["short-term reversal liquidity provision"]
 state["pick_payload"] = None
 _refine_before16 = state["refine_calls"]
-rec16, _, _, _ = run.process_hypothesis(hyp16, wide, classics, cap)
+run.apply_literature(hyp16)
 assert state["pick_payload"] is not None, "带片段的网络搜索材料应先调用筛选"
 assert state["refine_calls"] > _refine_before16, "筛选后应调用优化（片段即摘要，链路照常）"
 assert state["refine_payload"]["lit"][0].get("全文节选") == "FULLTEXT-EXCERPT", \
@@ -631,5 +540,67 @@ assert "网络搜索" in _json16.dumps(_ev16[-1].get("来源报告"), ensure_asc
 search.search, search.fetch_fulltext = _saved_search, _saved_fetch
 search.LAST_REPORT = _saved_report
 print("验收 16 通过：网络搜索材料走通筛选→优化链路、轨迹检索事件来源标注为网络搜索")
+
+# ---- 验收 17：假设锁定 + 因子内循环——假设只定一次，循环只改公式 ----
+_saved_search17, _saved_fetch17 = search.search, search.fetch_fulltext
+_search_calls17 = {"n": 0}
+def _counting_search17(query, limit=5):
+    _search_calls17["n"] += 1
+    return [{"标题": "Short-Term Reversal and Liquidity", "年份": 2010, "来源": "替身",
+             "摘要": "reversal profits are related to liquidity provision",
+             "全文链接": "https://example.org/full"}]
+search.search = _counting_search17
+search.fetch_fulltext = lambda item: {"节选": "FULLTEXT-EXCERPT", "字数": 5000}
+state["refine_mode"] = "采纳"
+hyp17 = dict(HYP)
+hyp17.update({"exp_refs": ["E001"],
+              "diff_from_rejected": "限定触发条件，与已否决方向不同",
+              "search_queries": ["short-term reversal liquidity"]})
+state["expand_hyps"] = [hyp17]
+state["formula_seq"] = ["-(close / delay(close, 5) - 1)",
+                        "neg(ts_mean(close / delay(close, 1) - 1, 20))",
+                        "neg(ts_mean(close / delay(close, 1) - 1, 60))"]
+_exp_before17 = len(state["expand_payloads"])
+_formula_before17 = len(state["formula_payloads"])
+_attack_before17 = state["post_attack_calls"]
+stats17 = {"done": 0, "passed": 0, "pred_total": 0, "pred_hit": 0,
+           "candidates": 0, "rejected": 0, "backtested": 0, "inexpressible": 0}
+clue17 = {"direction": "锁定循环测试方向", "phenomenon": "某种现象",
+          "source": "某种收益来源", "category": "过度反应"}
+run.run_fresh_loop(clue17, wide, classics, cap, set(calc.SECTOR_OF.values()), stats17)
+recs17 = [r for r in run.read_jsonl(run.RECORDS_PATH) if r["方向"] == "锁定循环测试方向"]
+assert len(recs17) == 3, f"因子循环应跑满三轮、各写一条记录：{len(recs17)} 条"
+assert [r["轮次"] for r in recs17] == [1, 2, 3], "三条记录轮次应为 1、2、3"
+assert all(r["结论"] == "否决" for r in recs17), "三轮均应被否决（预验过的公式）"
+assert len({r["假设"] for r in recs17}) == 1, "三轮假设文本应相同（假设已锁定）"
+assert all(r["登记"]["否定条件"].startswith("（对抗后修订）") for r in recs17), \
+    "三轮登记应均为对抗后修订的锁定版"
+assert recs17[0]["假设锁定文本"] == recs17[0]["假设"], "首轮应记假设锁定文本"
+assert recs17[1]["假设锁定文本"] == "" and recs17[2]["假设锁定文本"] == "", \
+    "假设锁定文本仅首轮记"
+assert [r["修订类型"] for r in recs17] == ["无", "因子", "因子"], \
+    f"修订类型应依次为无/因子/因子：{[r['修订类型'] for r in recs17]}"
+assert recs17[0]["修改要求"] == "" and recs17[1]["修改要求"] and recs17[2]["修改要求"], \
+    "首轮无修改要求，后两轮应记产生本轮的修改要求"
+assert len(state["expand_payloads"]) - _exp_before17 == 1, "生命周期内展开应恰好 1 次"
+assert _search_calls17["n"] == 1, f"生命周期内搜索应恰好 1 次：{_search_calls17['n']} 次"
+assert state["post_attack_calls"] - _attack_before17 == 1, "对抗后修订应恰好发生 1 次"
+_fp17 = state["formula_payloads"][_formula_before17:]
+assert len(_fp17) == 3, f"write_formula 应恰好调用 3 次：{len(_fp17)} 次"
+assert _fp17[0]["revision"] is None, "首轮 write_formula 不应带修订依据"
+_rev2 = _fp17[1]["revision"]
+assert _rev2 and _rev2["修改要求"] == recs17[1]["修改要求"], \
+    "第二轮 payload 应含程序组装的修改要求"
+assert _rev2["判定数字"]["IC均值"] == recs17[0]["判定数字"]["IC均值"], \
+    "第二轮 payload 应含首轮 IC"
+assert (_rev2["对抗备忘录"] or {}).get("失效解释") == "信号强度不足，IC 未达门槛", \
+    "第二轮 payload 应含首轮检验侧对抗备忘录"
+assert recs17[1]["修改依据"] and "对抗" in recs17[1]["修改依据"], \
+    "第二轮记录应注明修改依据含对抗意见"
+state["formula_seq"] = None
+state["expand_hyps"] = None
+search.search, search.fetch_fulltext = _saved_search17, _saved_fetch17
+print("验收 17 通过：假设锁定（展开/搜索/对抗后修订各一次）、因子内循环三轮、"
+      "修订类型无/因子/因子、修改依据含程序要求与对抗备忘录")
 
 print("\n全部替身验收通过")

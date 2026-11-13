@@ -1,5 +1,5 @@
 # agents.py — 模型调用层
-# 职责：八个模型调用——展开假设、文献筛选、文献优化假设、写公式、写讲评、生成侧对抗审查、检验侧对抗审查、提出线索。
+# 职责：九个模型调用——展开假设、文献筛选、文献优化假设、对抗后修订、写公式、写讲评、生成侧对抗审查、检验侧对抗审查、提出线索。
 # 只生成与判断，不计算数字，不写任何文件；对抗审查只留痕，不参与判定（判定归 run.py 按程序规则执行）。
 # 数字一律由 calc.py 计算；本文件只把结构化输入拼成提示词、把模型输出解析成字典。
 # 模型：DeepSeek（环境变量 DEEPSEEK_API_KEY）。测试时可用 set_fake 注入替身，跳过真实调用。
@@ -275,15 +275,66 @@ def refine_hypothesis(hyp, lit, sectors=None):
     return _dispatch("refine", payload, REFINE_SYSTEM, user)
 
 # ============================================================
+# 调用二补：对抗后修订（阶段 A 专用，复用调用二的输出协议）
+# 输入：文献优化定稿后的假设 + 生成侧对抗意见（换皮点名、预测问题、机制问题、引用问题）
+# 输出：修订后的登记五项 + changes；不得更改 direction 与 category。
+# 纪律：只依据对抗意见修订一遍，修订稿由 run.py 重过登记校验才采用并锁定。
+# ============================================================
+REVISE_ATTACK_SYSTEM = """你是一名量化研究员。你的任务是依据评审给出的对抗意见，修订一条因子假设的登记内容。
+修订只针对对抗意见指出的问题，不得更改假设方向与机制类别；对抗意见不成立之处可在 changes 中说明并保留原文。
+只输出 JSON，不要输出其他文字。"""
+
+def revise_after_attack(hyp, attack, sectors=None):
+    payload = {"hyp": hyp, "attack": attack}
+    user = f"""假设登记（文献优化定稿后）：
+假设：{hyp['hypothesis']}
+机制类别：{hyp['category']}（不得更改）
+计算方式：{hyp['measure']}
+基准公式：{hyp['baseline_formula']}
+机制与收益来源：{hyp['mechanism']}
+条件预测：{json.dumps(hyp['predictions'], ensure_ascii=False)}
+否定条件：{hyp['falsify']}
+
+生成侧对抗意见：
+最像的经典：{attack.get('最像的经典')}
+相似点：{attack.get('相似点')}
+换皮判断：{attack.get('换皮判断')}
+预测问题：{attack.get('预测问题')}
+机制问题：{attack.get('机制问题')}
+引用问题：{attack.get('引用问题')}
+
+方向约定与基准公式要求同展开时一致：因子值越大、预期收益越高；基准公式保留原始量纲与符号，不套 rank。
+可表达范围：
+{EXPRESS_DOC}
+
+{DATA_BOUNDARY}
+
+依据对抗意见修订登记五项：计算方式、基准公式、机制、条件预测、否定条件。
+重点：换皮点名成立的，须改出与该经典因子的真实区别或换构造；预测注水的，改成可被数据证伪的预测；
+机制不自洽的，修通"赚谁的钱、对方为何持续付钱"；引用对不上的，修正机制表述或去掉不实引用。
+条件预测的维度与取值规则同展开时一致（市值组 小/中/大；持有期 1/5/10/20/60；行业 a 为真实行业名、b 为"整体"；至少两条、恰一条 key 为 true）。
+行业名清单（行业预测的 a 只能取自）：{', '.join(sorted(sectors)) if sectors else '（未提供）'}
+对抗意见均不成立时，返回原文，changes 写"无修改"。
+
+输出 JSON：
+{{"measure": "修订后的计算方式", "baseline_formula": "修订后的基准公式",
+  "mechanism": "修订后的机制与收益来源",
+  "predictions": [同登记格式的条件预测],
+  "falsify": "修订后的否定条件",
+  "changes": "逐条说明改了什么、对应哪条对抗意见；无修改时写 无修改"}}"""
+    return _dispatch("revise_after_attack", payload, REVISE_ATTACK_SYSTEM, user)
+
+# ============================================================
 # 调用三：写公式
-# 输入：一条已登记假设 + 上次失败原因（首次为空）
+# 输入：一条已登记假设 + 上次失败原因（首次为空）；因子修订轮次另带 revision
+#       （程序给出的修改要求、上一版公式、本轮全部数字、逐条预测实际值）
 # 输出：{"formula": 表达式} 或 {"formula": null, "reason": 原因}
 # ============================================================
 FORMULA_SYSTEM = """你是一名量化工程师。你的任务是把一条假设的计算方式写成一条公式表达式。
 公式只能使用给定的字段与算子。只输出 JSON，不要输出其他文字。"""
 
-def write_formula(hyp, error=None, cap=None, guidance=None):
-    payload = {"hyp": hyp, "error": error, "guidance": guidance}
+def write_formula(hyp, error=None, cap=None, revision=None):
+    payload = {"hyp": hyp, "error": error, "revision": revision}
     user = f"""假设的计算方式：{hyp['measure']}
 机制：{hyp['mechanism']}
 登记的基准公式（供理解要算的量，不要直接照抄，写出你自己的实现）：{hyp['baseline_formula']}
@@ -299,9 +350,21 @@ def write_formula(hyp, error=None, cap=None, guidance=None):
 """
     if error:
         user += f"\n上一次的公式未通过检查，原因：{error}。请修正公式本身，不要改变要计算的量。\n"
-    if guidance:
-        user += (f"\n本轮为改因子修订：登记假设不变，按以下修改要求重写公式：{guidance}。"
-                 "公式允许偏离登记的基准公式，但必须实现计算方式所指的量，并遵守方向约定。\n")
+    if revision:
+        m = revision.get("判定数字") or {}
+        memo = revision.get("对抗备忘录") or {}
+        memo_text = (f"\n检验侧对抗备忘录：失效解释：{memo.get('失效解释')}"
+                     f"；未覆盖的失效方式：{memo.get('未覆盖的失效方式')}"
+                     f"；备注：{memo.get('备注')}" if memo else "")
+        user += f"""
+本轮为因子修订（假设已锁定，不得改假设）：上一版公式为 {revision.get('上一版公式')}，
+其回测数字：IC均值 {m.get('IC均值')}，ICIR {m.get('ICIR')}，
+与经典因子最大相关 {m.get('与经典因子最大相关')}，覆盖率 {m.get('覆盖率')}，
+分市值组IC {m.get('分市值组IC')}，各持有期IC {m.get('各持有期IC')}，分段IC {m.get('分段IC')}。
+逐条预测实际值：{json.dumps(revision.get('预测核对'), ensure_ascii=False)}
+程序给出的修改要求（只许改这一类，其余构造不变）：{revision.get('修改要求')}{memo_text}
+按修改要求改公式：公式允许偏离登记的基准公式，但计算的量仍须对应登记的计算方式，并遵守方向约定。
+"""
     user += """输出 JSON：{"formula": "表达式字符串"}；确实无法用给定算子表达时输出 {"formula": null, "reason": "原因"}。"""
     return _dispatch("formula", payload, FORMULA_SYSTEM, user)
 
@@ -387,7 +450,8 @@ def attack_registration(hyp, classic_formulas, lit=None):
 # 调用六：检验侧对抗审查
 # 输入：假设登记 + 全部判定数字 + 预测核对 + 程序对抗结果 + 程序结论
 # 输出：失效解释备忘录。只依据给定数字攻击，不引入新数字，不给改参数重跑的建议，
-# 不推翻程序结论。备忘录存入经验库，供后续研究与下一次展开使用。
+# 不推翻程序结论。备忘录存入经验库，并在阶段 B 作为下一轮改因子的依据之一
+# （与程序修改要求一并喂给写公式 agent）。
 # ============================================================
 ATTACK_RES_SYSTEM = """你是一名持怀疑态度的量化评审。你的任务是在程序判定之后攻击一条假设的结果，解释它最可能为何成立或失效，并指出程序检验覆盖不到的失效方式。
 你只能依据给定的数字，不引入新数字；不给修改参数重跑的建议；不推翻程序给出的结论。只输出 JSON，不要输出其他文字。"""
@@ -461,36 +525,3 @@ direction（简短的方向名）、phenomenon（观察到的现象）、source�
 提出 1 至 3 条，宁缺毋滥；确实没有新角度时输出空列表。"""
     out = _dispatch("propose", payload, PROPOSE_SYSTEM, user)
     return out.get("clues", [])
-
-# ============================================================
-# 调用八：裁决下一步修订（新假设循环专用）
-# 输入：本轮证据（失效层、逐条预测核对与实际分组数字、回测指标、
-#       双侧对抗意见、公式与一致性/复杂度信息）
-# 输出：三选一——改因子 / 改假设 / 终止，附一句话理由与一条具体修改要求。
-# 裁决只决定改什么，无判定权；通过与否由程序判定门决定。
-# ============================================================
-JUDGE_SYSTEM = """你是一名量化研究负责人。一条假设刚完成一轮回测与检验且未通过，你要依据本轮证据裁决下一步怎么走。
-三选一：改因子（假设本身成立，问题在公式构造：下一轮沿用同一登记假设、按修改要求重写公式重测）；
-改假设（假设本身有问题：下一轮带反馈包重新展开、提出完整新假设）；
-终止（本假设到此为止，无值得再试的修订）。
-修改要求只许给一类、必须具体（改因子时指明公式怎么改；改假设时指明新假设应换什么角度；终止时可为空）。
-你没有判定权，不得推翻程序结论，不得引入证据之外的数字。只输出 JSON，不要输出其他文字。"""
-
-def judge_revision(evidence):
-    payload = {"evidence": evidence}
-    m = evidence.get("判定数字") or {}
-    user = f"""本轮证据：
-假设：{evidence.get('假设')}
-公式：{evidence.get('公式')}（一致性相关 {evidence.get('一致性相关')}，复杂度 {evidence.get('复杂度')}）
-程序结论：{evidence.get('结论')}；失效层：{evidence.get('失效层')}
-判定数字：{json.dumps(m, ensure_ascii=False) if m else '（无，公式未通过程序检查或无法表达）'}
-逐条预测核对：{json.dumps(evidence.get('预测核对'), ensure_ascii=False)}
-生成侧对抗意见：{json.dumps(evidence.get('生成侧对抗'), ensure_ascii=False)}
-检验侧对抗意见：{json.dumps(evidence.get('检验侧对抗'), ensure_ascii=False)}
-无法表达原因：{evidence.get('无法表达原因')}
-
-输出 JSON：
-{{"决定": "改因子 | 改假设 | 终止（三选一）",
-  "理由": "一句话，依据上述证据",
-  "修改要求": "一条具体要求，只许一类；终止时可为空字符串"}}"""
-    return _dispatch("judge", payload, JUDGE_SYSTEM, user)
