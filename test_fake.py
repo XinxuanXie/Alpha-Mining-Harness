@@ -274,51 +274,56 @@ assert rec9["成本"]["估算成本USD"] == run.est_cost(2000, 500), "记录成�
 assert rec9["成本"]["用时秒"] >= 0, "用时应非负"
 print("验收 9 通过：成本与用时可记录、估算口径一致")
 
-# ---- 验收 10：检索来源报告、429 重试与 Crossref 请求（打桩来源，不联网） ----
+# ---- 验收 10：网络搜索结果映射、来源报告与失败重试（打桩原始结果，不联网） ----
 import importlib as _importlib
-import urllib.error as _urlerr
 _importlib.reload(search)   # 验收 8 把 search.search 换成了打桩函数，这里恢复真函数再测
-_saved_sources, _saved_cache_path = search.SOURCES, search.CACHE_PATH
+_saved_raw, _saved_cache_path = search._ddgs_raw, search.CACHE_PATH
 search.CACHE_PATH = os.path.join(BASE, "lit_cache_test.json")
 if os.path.exists(search.CACHE_PATH):
     os.remove(search.CACHE_PATH)
-def _bad_src(query, limit):
-    raise RuntimeError("源故障")
-def _ok_src(query, limit):
-    return [{"标题": "T", "年份": 2020, "来源": "替身源", "摘要": None}]
-search.SOURCES = (_bad_src, _ok_src)
+# 结果映射：原始 {title, href, body} → 材料 {标题, 来源=网络搜索, 摘要=片段, 全文链接}，同链接去重
+search._ddgs_raw = lambda q, limit: [
+    {"title": "Reversals and Liquidity", "href": "https://x.org/a",
+     "body": "  reversal   profits\n compensate liquidity provision "},
+    {"title": "No Snippet Paper", "href": "https://x.org/b", "body": ""},
+    {"title": "Same Link Again", "href": "https://x.org/a", "body": "duplicate"}]
 _got = search.search("验收十检索词甲", limit=3)
-assert _got and _got[0]["标题"] == "T", "第一源失败应降级到第二源"
+assert len(_got) == 2, f"同链接重复结果应只留一条：{len(_got)} 条"
+assert _got[0]["标题"] == "Reversals and Liquidity" and _got[0]["来源"] == "网络搜索", \
+    "网络搜索结果来源应标注为网络搜索"
+assert _got[0]["摘要"] == "reversal profits compensate liquidity provision", \
+    f"摘要应取搜索片段并压空白：{_got[0]['摘要']}"
+assert _got[0]["全文链接"] == "https://x.org/a" and _got[0]["年份"] is None, \
+    "全文链接应取结果链接，年份缺失记 None"
+assert _got[1]["摘要"] is None, "片段为空时摘要应为 None（仅标题级材料）"
 _rep = search.last_report()
-assert _rep[0]["结果"] == "失败" and "源故障" in _rep[0]["错误"], f"来源报告应记失败原因：{_rep}"
-assert _rep[1]["结果"].startswith("返回"), f"来源报告应记成功条数：{_rep}"
+assert _rep[0]["来源"] == "网络搜索" and _rep[0]["结果"].startswith("返回"), \
+    f"来源报告应记网络搜索成功条数：{_rep}"
+# 失败入报告：两次都抛错 → 返回空、报告记失败与错误
+def _boom_raw(q, limit):
+    raise RuntimeError("网络故障")
+search._ddgs_raw = _boom_raw
+_got2 = search.search("验收十检索词乙", limit=3)
+assert _got2 == [], "网络搜索失败应返回空列表、不中断"
+_rep2 = search.last_report()
+assert _rep2[0]["来源"] == "网络搜索" and _rep2[0]["结果"] == "失败" \
+    and "网络故障" in _rep2[0]["错误"], f"来源报告应记失败原因：{_rep2}"
+# 抖动一次后成功：首次抛错、重试拿到结果，报告记重试成功
 _flaky = {"n": 0}
-def _flaky_src(query, limit):
+def _flaky_raw(q, limit):
     _flaky["n"] += 1
     if _flaky["n"] == 1:
-        raise _urlerr.HTTPError("https://x", 429, "Too Many", {}, None)
-    return [{"标题": "R", "年份": 2021, "来源": "替身源", "摘要": None}]
-search.SOURCES = (_flaky_src,)
-_got2 = search.search("验收十检索词乙", limit=3)
-assert _got2 and _got2[0]["标题"] == "R", "429 后应重试并拿到结果"
-assert "重试成功" in search.last_report()[0]["结果"], "来源报告应记 429 重试成功"
-_captured = {}
-_orig_get = search._get_json
-search._get_json = lambda url: (_captured.setdefault("url", url),
-                                {"message": {"items": [{"title": ["X"], "published": {"date-parts": [[2021]]},
-                                                         "abstract": "<jats:p>Some &amp; finding</jats:p>"}]}})[1]
-_out = search._crossref("q", 3)
-search._get_json = _orig_get
-assert "select=" not in _captured["url"], "Crossref 请求不应带 select 参数（无效字段会被整单拒绝）"
-assert _out[0]["标题"] == "X" and _out[0]["年份"] == 2021, "Crossref 返回应能解析标题与年份"
-assert _out[0]["摘要"] == "Some & finding", f"Crossref 摘要应去标签解实体：{_out[0]['摘要']}"
-_terms = search._arxiv_term_sets("idiosyncratic volatility change reversal noise trader arbitrage limits")
-assert _terms[0] == ["idiosyncratic", "volatility", "arbitrage"] and len(_terms[1]) == 2, \
-    f"arXiv 词组应为核心 3 词与降级 2 词：{_terms}"
-search.SOURCES, search.CACHE_PATH = _saved_sources, _saved_cache_path
+        raise RuntimeError("暂时超时")
+    return [{"title": "R", "href": "https://x.org/r", "body": "some snippet"}]
+search._ddgs_raw = _flaky_raw
+_got3 = search.search("验收十检索词丙", limit=3)
+assert _got3 and _got3[0]["标题"] == "R", "失败后应重试并拿到结果"
+assert "重试成功" in search.last_report()[0]["结果"], "来源报告应记重试成功"
+assert not hasattr(search, "SOURCES"), "旧四源清单 SOURCES 应已删除"
+search._ddgs_raw, search.CACHE_PATH = _saved_raw, _saved_cache_path
 if os.path.exists(os.path.join(BASE, "lit_cache_test.json")):
     os.remove(os.path.join(BASE, "lit_cache_test.json"))
-print("验收 10 通过：来源成败入报告、429 重试、Crossref 请求无无效参数")
+print("验收 10 通过：网络搜索映射（片段即摘要、同链接去重）、来源成败入报告、失败重试")
 
 # ---- 验收 11：文献三段流程——有摘要才筛选深读，无摘要跳过优化 ----
 _saved_search, _saved_fetch = search.search, search.fetch_fulltext
@@ -390,16 +395,16 @@ assert _out12 == {"ok": True} and _post_calls["n"] == 2, "网络断读应自动�
 agents.set_fake(_saved_fake)
 
 # 文献缓存：只有标题的不缓存、带摘要的缓存、无摘要的旧缓存不沿用
-_saved_attempt, _saved_cache_path = search._attempt, search.CACHE_PATH
+_saved_web, _saved_cache_path = search._web_search, search.CACHE_PATH
 _tmp_cache = _tf.mktemp(suffix=".json")
 search.CACHE_PATH = _tmp_cache
-_items_title = [{"标题": "T1", "年份": 2020, "来源": "替身", "摘要": None, "全文链接": None}]
-_items_abs = [{"标题": "T2", "年份": 2020, "来源": "替身", "摘要": "some abstract", "全文链接": None}]
+_items_title = [{"标题": "T1", "年份": None, "来源": "网络搜索", "摘要": None, "全文链接": None}]
+_items_abs = [{"标题": "T2", "年份": None, "来源": "网络搜索", "摘要": "some snippet", "全文链接": None}]
 _box = {"items": _items_title, "calls": 0}
-def _fake_attempt(fn, q, limit):
+def _fake_web(q, limit):
     _box["calls"] += 1
-    return list(_box["items"]), {"来源": "替身源", "结果": f"返回 {len(_box['items'])} 条"}
-search._attempt = _fake_attempt
+    return list(_box["items"])
+search._web_search = _fake_web
 search.search("q-title-only")
 _cache_now = search._load_cache()
 assert "q-title-only" not in _cache_now, "纯标题结果不应写入缓存"
@@ -415,7 +420,7 @@ with open(_tmp_cache, "w", encoding="utf-8") as _fh:
     _json.dump({"q-stale": _items_title}, _fh, ensure_ascii=False)
 search.search("q-stale")
 assert _box["calls"] > _calls_before, "只有标题的旧缓存不应沿用，应重新检索"
-search._attempt, search.CACHE_PATH = _saved_attempt, _saved_cache_path
+search._web_search, search.CACHE_PATH = _saved_web, _saved_cache_path
 print("验收 12 通过：提示硬化、带摘要才缓存、网络重试、预计算字段")
 
 # ---- 验收 13：搜索做实——refine 零引用零修改判假优化失败，正常 refine 照常采纳 ----
@@ -592,5 +597,39 @@ assert not hasattr(run, "can_issue"), "预算发放函数 can_issue 应已删除
 assert not hasattr(run, "run_direction"), "预算发放驱动 run_direction 应已删除"
 print("验收 15 通过：新假设循环两轮成链（轮次/父假设）、次轮带反馈包、无改进停止、"
       "裁决三路（改假设/改因子/终止）分流正确、旧模式已删除")
+
+# ---- 验收 16：普通网络搜索接入——片段材料走通筛选→优化链路，轨迹来源标注网络搜索 ----
+_saved_search, _saved_fetch = search.search, search.fetch_fulltext
+_saved_report = list(search.LAST_REPORT)
+state["refine_mode"] = "采纳"
+def _web_fake_search(query, limit=5):
+    search.LAST_REPORT = [{"来源": "网络搜索", "结果": "返回 2 条"}]
+    return [
+        {"标题": "Reversals and the Returns to Liquidity Provision", "年份": None,
+         "来源": "网络搜索",
+         "摘要": "different aspects of liquidity impact the performance of short-run reversals",
+         "全文链接": "https://example.org/rev"},
+        {"标题": "Short-Term Reversal and Liquidity", "年份": None, "来源": "网络搜索",
+         "摘要": "reversal profits are related to liquidity provision",
+         "全文链接": "https://example.org/full"}]
+search.search = _web_fake_search
+search.fetch_fulltext = lambda item: {"节选": "FULLTEXT-EXCERPT", "字数": 5000}
+hyp16 = dict(HYP)
+hyp16["search_queries"] = ["short-term reversal liquidity provision"]
+state["pick_payload"] = None
+_refine_before16 = state["refine_calls"]
+rec16, _, _, _ = run.process_hypothesis(hyp16, wide, classics, cap)
+assert state["pick_payload"] is not None, "带片段的网络搜索材料应先调用筛选"
+assert state["refine_calls"] > _refine_before16, "筛选后应调用优化（片段即摘要，链路照常）"
+assert state["refine_payload"]["lit"][0].get("全文节选") == "FULLTEXT-EXCERPT", \
+    "筛选选中篇目的全文节选应随材料交给优化"
+import json as _json16
+_ev16 = [e for e in run.read_jsonl(run.TRACE_PATH) if e["事件"] == "文献检索"]
+assert _ev16, "轨迹应记录文献检索事件"
+assert "网络搜索" in _json16.dumps(_ev16[-1].get("来源报告"), ensure_ascii=False), \
+    "轨迹检索事件的来源报告应标注网络搜索"
+search.search, search.fetch_fulltext = _saved_search, _saved_fetch
+search.LAST_REPORT = _saved_report
+print("验收 16 通过：网络搜索材料走通筛选→优化链路、轨迹检索事件来源标注为网络搜索")
 
 print("\n全部替身验收通过")
