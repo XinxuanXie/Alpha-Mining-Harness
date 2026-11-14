@@ -30,7 +30,7 @@ CORR_THRESHOLD = 0.8       # 基础判定：与经典因子最大相关上限
 COMPLEXITY_CAP = 20        # 复杂度上限：固定值（Ethan 2026-11-13 定），不再由经典库最大复杂度推导
 CONSISTENCY_MIN = 0.99     # 一致性检查：截面相关下限
 PRED_GAP = 0.005           # 预测兑现：两组 IC 差值线
-SUBPERIOD_T = 2.0          # 对抗检验：子时段反例的 |t| 线
+SUBPERIOD_T = 2.0          # 对抗检验：对称检验反例的 |t| 线
 COVERAGE_MIN = 0.5         # 覆盖率异常线（低于此值记数据层）
 EXP_LIMIT = 10             # 经验读入上限（条）
 FORMULA_REWRITE_MAX = 3    # 公式重写上限（一致性或可算性未过时，不计入尝试次数）
@@ -103,17 +103,10 @@ def validate_registration(hyp, exp_entries, rejected_keys, sectors=None, feedbac
         errs.append("关键预测必须恰有一条")
     for p in preds:
         dim, a, b = p.get("dim"), str(p.get("a")), str(p.get("b"))
-        if dim not in ("市值组", "持有期", "行业"):
+        if dim not in ("持有期",):
             errs.append(f"预测维度第一期不开放：{dim}")
-        elif dim == "市值组" and not (a in ("小", "中", "大") and b in ("小", "中", "大")):
-            errs.append(f"市值组预测的 a、b 只能取 小/中/大：{a} vs {b}")
         elif dim == "持有期" and not (a in ("1", "5", "10", "20", "60") and b in ("1", "5", "10", "20", "60")):
             errs.append(f"持有期预测的 a、b 只能取 1/5/10/20/60：{a} vs {b}")
-        elif dim == "行业":
-            if b != "整体":
-                errs.append(f"行业预测的 b 固定为“整体”：{b}")
-            if sectors is not None and a not in sectors:
-                errs.append(f"行业预测的 a 必须是真实行业名：{a}")
     if exp_entries and not hyp.get("exp_refs"):
         errs.append("未引用任何经验条目")
     if rejected_keys and not (hyp.get("diff_from_rejected") or "").strip():
@@ -125,7 +118,7 @@ def validate_registration(hyp, exp_entries, rejected_keys, sectors=None, feedbac
         if not resp:
             errs.append("有上次尝试反馈包，未写 feedback_response（须逐条回应未兑现预测）")
         elif feedback_dims and not any(DIM_KEYWORD.get(d, d) in resp for d in feedback_dims):
-            errs.append("feedback_response 未提及任何未兑现预测的维度（市值组/持有期/行业）")
+            errs.append("feedback_response 未提及任何未兑现预测的维度（持有期）")
     return errs
 
 def validate_clue(clue, existing_directions):
@@ -152,13 +145,8 @@ def check_predictions(hyp, metrics):
     for p in hyp["predictions"]:
         dim, a, b = p["dim"], str(p["a"]), str(p["b"])
         va = vb = None
-        if dim == "市值组":
-            va, vb = metrics["分市值组IC"].get(a), metrics["分市值组IC"].get(b)
-        elif dim == "持有期":
+        if dim == "持有期":
             va, vb = metrics["各持有期IC"].get(a), metrics["各持有期IC"].get(b)
-        elif dim == "行业":
-            va = metrics["分行业IC"].get(a)
-            vb = metrics["IC均值"]  # b 固定为“整体”
         ok = va is not None and vb is not None and (va - vb) >= PRED_GAP
         results.append({"dim": dim, "a": a, "b": b, "key": bool(p.get("key")),
                         "a值": va, "b值": vb, "兑现": bool(ok)})
@@ -168,15 +156,8 @@ def check_predictions(hyp, metrics):
 # 对抗检验（规格 2.3）：只找反例，只否决，不改因子
 # ============================================================
 def adversarial(hyp, factor, baseline_values, metrics, wide, classics):
-    adv = {"子时段反例": [], "对称检验": "不适用", "反例": False}
+    adv = {"对称检验": "不适用", "反例": False}
     full_ic = metrics["IC均值"]
-    if full_ic is not None:
-        for seg in metrics["分段IC"]:
-            if (seg["IC"] is not None and seg["t值"] is not None
-                    and (seg["IC"] > 0) != (full_ic > 0) and abs(seg["t值"]) >= SUBPERIOD_T):
-                adv["子时段反例"].append(seg["段"])
-        if adv["子时段反例"]:
-            adv["反例"] = True
     # 对称检验：机制对称的类别强制执行。做法为信号两端分组检验——
     # 按基准值符号把股票日分正负两组，分别算因子 IC；任一组方向与全期相反且显著，记反例。
     # 基准值无符号变化（如波动恒为正）时不适用。
@@ -526,7 +507,7 @@ def rejected_summaries(category, records):
 # 修改只能以新尝试出现，同一次尝试内仍不按回测或对抗改登记。
 # ============================================================
 TERRAIN_PATH = os.path.join(BASE, "..", "hidden_files", "scan_results.csv")
-DIM_KEYWORD = {"市值组": "市值", "持有期": "持有期", "行业": "行业"}
+DIM_KEYWORD = {"持有期": "持有期"}
 
 def load_terrain():
     """数据地形：扫描探针中已过噪声标尺的条件规律（pass 为真），格式化为短清单。
@@ -614,9 +595,6 @@ def build_revision_requirement(rec):
                 "实现登记的计算方式；只改组合方式，不改窗口与参照系。")
     m = rec["判定数字"] or {}
     adv = rec["对抗检验"] or {}
-    if adv.get("子时段反例"):
-        return (f"窗口：子时段 {'、'.join(adv['子时段反例'])} 的 IC 方向与全期相反且显著，"
-                "把构造窗口拉长做平滑，只改窗口长度，不改参照系与组合方式。")
     sym = adv.get("对称检验") or ""
     if "方向反转" in sym:
         return (f"符号与门控：{sym}——信号两端方向不一致，只保留与全期同向一端的门控"

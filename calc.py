@@ -27,9 +27,6 @@ FIELDS = ["open", "high", "low", "close", "volume", "mktcap", "mktret",
 JUDGE_H = 20               # 判定期限（日）
 MIN_STOCKS = 10            # 当日参与 IC 计算的股票少于此数，当日 IC 记缺失
 SECTOR_OF = {}             # permno（int）→ GICS 行业名；load_wide 时填充
-SUBPERIODS = [("2000-2005", "2000-01-01", "2005-12-31"),
-              ("2006-2010", "2006-01-01", "2010-12-31"),
-              ("2011-2016", "2011-01-01", "2016-12-31")]  # 对抗检验的子时段划分
 
 # ============================================================
 # 读数据：把行情表按字段拆成宽表（行=交易日，列=股票）
@@ -462,22 +459,6 @@ def compute_metrics(factor, wide, classic_values):
     by_h = {str(hh): (ic_mean if hh == JUDGE_H else _mean_or_none(_ic_series(factor, _label(close, hh))))
             for hh in (1, 5, 10, 20, 60)}
 
-    pct = wide["mktcap"].rank(axis=1, pct=True)
-    by_cap = {}
-    for name, m in (("小", pct <= 1 / 3), ("中", (pct > 1 / 3) & (pct <= 2 / 3)), ("大", pct > 2 / 3)):
-        by_cap[name] = _mean_or_none(_ic_series(factor.where(m), label))
-
-    by_sector = {}
-    if SECTOR_OF:
-        for name in sorted({SECTOR_OF.get(int(c)) for c in factor.columns} - {None}):
-            cols = [c for c in factor.columns if SECTOR_OF.get(int(c)) == name]
-            by_sector[name] = _mean_or_none(_ic_series(factor[cols], label[cols]))
-
-    subs = []
-    for name, s, e in SUBPERIODS:
-        seg = daily[(daily.index >= s) & (daily.index <= e)]
-        subs.append({"段": name, "IC": _mean_or_none(seg), "t值": _t_of(seg)})
-
     coverage = float((factor.notna() & close.notna()).sum().sum() / close.notna().sum().sum())
 
     classic_corr, classic_who = None, None
@@ -488,8 +469,8 @@ def compute_metrics(factor, wide, classic_values):
 
     return {
         "IC均值": ic_mean, "ICIR": icir, "t值": t_val,
-        "分市值组IC": by_cap, "各持有期IC": by_h, "分行业IC": by_sector,
-        "分段IC": subs, "覆盖率": coverage,
+        "各持有期IC": by_h,
+        "覆盖率": coverage,
         "与经典因子最大相关": classic_corr, "最大相关经典": classic_who,
     }
 

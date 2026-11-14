@@ -159,7 +159,7 @@ def expand_hypotheses(clue, exp_entries, rejected_same_category, sectors=None, f
                    + "\n".join(lines)
                    + "\n每条假设必须输出 feedback_response：逐条回应上次未兑现的预测"
                      "——本条假设改了什么、为什么；至少须点名一个未兑现预测的维度"
-                     "（市值组 / 持有期 / 行业）。未写或未点名维度，登记会被程序拒登。")
+                     "（持有期）。未写或未点名维度，登记会被程序拒登。")
     user = f"""线索：
 方向：{clue['direction']}
 现象：{clue['phenomenon']}
@@ -186,10 +186,9 @@ def expand_hypotheses(clue, exp_entries, rejected_same_category, sectors=None, f
 direction（方向名，与线索一致）、category（机制类别）、hypothesis（一句话陈述）、
 measure（计算方式的文字说明）、baseline_formula（用上述算子写出的基准公式，代表你声称要计算的量）、
 mechanism（机制与收益来源）、
-predictions（至少两条，每条 {{"dim": "市值组|持有期|行业", "a": "比较的一方", "b": "比较的另一方", "key": true/false}}，
-含义为"a 组的 IC 高于 b 组"；市值组的 a、b 取自 小/中/大；持有期的 a、b 取自 1/5/10/20/60（天）；
-行业的 a 只能取自下面的行业名清单、b 固定为 "整体"（a 写"整体"会被程序拒登）；恰有一条 key 为 true，即与机制直接对应的关键预测）、
-行业名清单（行业预测的 a 只能取自）：{', '.join(sorted(sectors)) if sectors else '（未提供）'}
+predictions（至少两条，每条 {{"dim": "持有期", "a": "比较的一方", "b": "比较的另一方", "key": true/false}}，
+含义为"a 组的 IC 高于 b 组"；持有期的 a、b 取自 1/5/10/20/60（天）；
+恰有一条 key 为 true，即与机制直接对应的关键预测）、
 falsify（否定条件）、exp_refs（引用的经验编号列表）、diff_from_rejected（与上述已否决方向的区别，无则空字符串）、
 feedback_response（给出上次尝试反馈时必填：逐条回应上次未兑现预测的修改与理由，至少点名一个未兑现维度；未给反馈时省略）、
 search_queries（1 至 2 条英文检索式，用于为这条假设检索学术资料，须具体到机制与现象，如 "short-term return reversal liquidity provision"）。
@@ -265,8 +264,7 @@ def refine_hypothesis(hyp, lit, sectors=None):
 
 依据资料优化登记五项：计算方式、基准公式、机制、条件预测、否定条件。
 重点：资料报告的典型构造、成立条件与已知失效条件，应反映到计算方式与条件预测中；
-条件预测的维度与取值规则同展开时一致（市值组 小/中/大；持有期 1/5/10/20/60；行业 a 为真实行业名、b 为"整体"）。
-行业名清单（行业预测的 a 只能取自）：{', '.join(sorted(sectors)) if sectors else '（未提供）'}
+条件预测的维度与取值规则同展开时一致（持有期 1/5/10/20/60）。
 资料与初稿无关或不足以支持修改时，返回初稿原文，changes 写"无修改"。
 
 输出 JSON：
@@ -316,8 +314,7 @@ def revise_after_attack(hyp, attack, sectors=None):
 依据对抗意见修订登记五项：计算方式、基准公式、机制、条件预测、否定条件。
 重点：换皮点名成立的，须改出与该经典因子的真实区别或换构造；预测注水的，改成可被数据证伪的预测；
 机制不自洽的，修通"赚谁的钱、对方为何持续付钱"；引用对不上的，修正机制表述或去掉不实引用。
-条件预测的维度与取值规则同展开时一致（市值组 小/中/大；持有期 1/5/10/20/60；行业 a 为真实行业名、b 为"整体"；至少两条、恰一条 key 为 true）。
-行业名清单（行业预测的 a 只能取自）：{', '.join(sorted(sectors)) if sectors else '（未提供）'}
+条件预测的维度与取值规则同展开时一致（持有期 1/5/10/20/60；至少两条、恰一条 key 为 true）。
 对抗意见均不成立时，返回原文，changes 写"无修改"。
 
 输出 JSON：
@@ -364,7 +361,7 @@ def write_formula(hyp, error=None, cap=None, revision=None):
 本轮为因子修订（假设已锁定，不得改假设）：上一版公式为 {revision.get('上一版公式')}，
 其回测数字：IC均值 {m.get('IC均值')}，ICIR {m.get('ICIR')}，
 与经典因子最大相关 {m.get('与经典因子最大相关')}，覆盖率 {m.get('覆盖率')}，
-分市值组IC {m.get('分市值组IC')}，各持有期IC {m.get('各持有期IC')}，分段IC {m.get('分段IC')}。
+各持有期IC {m.get('各持有期IC')}。
 逐条预测实际值：{json.dumps(revision.get('预测核对'), ensure_ascii=False)}
 程序给出的修改要求（只许改这一类，其余构造不变）：{revision.get('修改要求')}{memo_text}
 按修改要求改公式：公式允许偏离登记的基准公式，但计算的量仍须对应登记的计算方式，并遵守方向约定。
@@ -390,7 +387,7 @@ def write_review(hyp, metrics, pred_results, adv_results, verdict):
 
 判定数字（程序计算）：IC均值 {metrics['IC均值']}，ICIR {metrics['ICIR']}，
 与经典因子最大相关 {metrics['与经典因子最大相关']}，覆盖率 {metrics['覆盖率']}，
-分市值组IC {metrics['分市值组IC']}，各持有期IC {metrics['各持有期IC']}，分段IC {metrics['分段IC']}。
+各持有期IC {metrics['各持有期IC']}。
 条件预测核对：{json.dumps(pred_results, ensure_ascii=False)}
 对抗检验结果：{json.dumps(adv_results, ensure_ascii=False)}
 结论：{verdict}
@@ -470,8 +467,7 @@ def attack_results(hyp, metrics, pred_results, adv_results, verdict, gen_attack=
 
 判定数字（程序计算）：IC均值 {metrics['IC均值']}，ICIR {metrics['ICIR']}，
 与经典因子最大相关 {metrics['与经典因子最大相关']}（最大相关经典：{metrics.get('最大相关经典')}），覆盖率 {metrics['覆盖率']}，
-分市值组IC {metrics['分市值组IC']}，各持有期IC {metrics['各持有期IC']}，
-分行业IC {metrics['分行业IC']}，分段IC {metrics['分段IC']}。
+各持有期IC {metrics['各持有期IC']}。
 条件预测核对：{json.dumps(pred_results, ensure_ascii=False)}
 程序对抗检验结果：{json.dumps(adv_results, ensure_ascii=False)}
 程序结论：{verdict}
@@ -482,7 +478,7 @@ def attack_results(hyp, metrics, pred_results, adv_results, verdict, gen_attack=
 
 输出 JSON：
 {{"失效解释": "依据上述数字，这条假设最可能的死因（结论为通过时，写它最脆弱、最可能在样本外失效之处）",
-  "未覆盖的失效方式": "程序已执行的检验（子时段反例、信号两端分组、预测核对）覆盖不到的失效方式，无则写 无",
+  "未覆盖的失效方式": "程序已执行的检验（信号两端分组、预测核对）覆盖不到的失效方式，无则写 无",
   "备注": "换皮交叉核对的结论，以及其他值得后续研究注意的攻击点"}}"""
     return _dispatch("attack_res", payload, ATTACK_RES_SYSTEM, user)
 

@@ -4,7 +4,7 @@
 # 2) 讲评数字写错时被打回，重写正确后归档；始终写错时记“核对失败”；
 # 4) 过程轨迹 trace.jsonl 逐条落盘（只写不读，供实验结束后分析）；
 # 5) 两处模型对抗审查被调用并留痕、进经验，但不改变程序结论；对抗摘要随已否决摘要回流；
-# 6) 预测取值校验（行业 a 须为真实行业名、市值组/持有期取值在固定集合内）与线索自提校验；
+# 6) 预测取值校验（维度只开放持有期、取值在固定集合内）与线索自提校验；
 # 7) 主循环：无线索时自提→登记→处理→达总上限停止（打桩，不重复加载数据）。
 # 本测试只用训练段数据，不调用真实模型。运行：python test_fake.py
 
@@ -32,10 +32,10 @@ HYP = {
     "baseline_formula": "-(close / delay(close, 5) - 1)",
     "mechanism": "恐慌抛售过度，赚抛售者急于离场让出的价格",
     "predictions": [
-        {"dim": "市值组", "a": "小", "b": "大", "key": True},
-        {"dim": "持有期", "a": "20", "b": "5", "key": False},
+        {"dim": "持有期", "a": "20", "b": "5", "key": True},
+        {"dim": "持有期", "a": "60", "b": "20", "key": False},
     ],
-    "falsify": "小市值组 IC 不高于大市值组则不成立",
+    "falsify": "20 日 IC 不高于 5 日则不成立",
     "exp_refs": [], "diff_from_rejected": "",
 }
 
@@ -86,7 +86,7 @@ def fake(role, payload):
             # 优化稿只剩一条预测，过不了登记校验，应保留初稿
             return {"measure": HYP["measure"], "baseline_formula": HYP["baseline_formula"],
                     "mechanism": HYP["mechanism"],
-                    "predictions": [{"dim": "市值组", "a": "小", "b": "大", "key": True}],
+                    "predictions": [{"dim": "持有期", "a": "20", "b": "5", "key": True}],
                     "falsify": "x", "lit_refs": [], "changes": "删减预测"}
         if state["refine_mode"] == "空转":
             # 零引用零修改（changes 为空）却改了登记内容：假优化，应被硬校验判失败
@@ -193,18 +193,16 @@ assert any(c["结果"] == "通过" for c in checks), "轨迹应记下重写后�
 print(f"验收 4 通过：轨迹共 {len(events)} 条事件，关键节点齐全")
 
 # ---- 验收 6：预测取值校验 + 线索自提校验 ----
-sectors = set(calc.SECTOR_OF.values())
-assert sectors, "行业集合应已随数据加载"
 bad_hyp = dict(HYP)
-bad_hyp["predictions"] = [{"dim": "行业", "a": "整体", "b": "整体", "key": True},
-                          {"dim": "市值组", "a": "微", "b": "大", "key": False}]
-errs = run.validate_registration(bad_hyp, [], [], sectors=sectors)
-assert any("真实行业名" in e for e in errs), f"行业 a=整体 应被拒登：{errs}"
-assert any("小/中/大" in e for e in errs), f"市值组取值越界应被拒登：{errs}"
+bad_hyp["predictions"] = [{"dim": "市值组", "a": "小", "b": "大", "key": True},
+                          {"dim": "持有期", "a": "99", "b": "5", "key": False}]
+errs = run.validate_registration(bad_hyp, [], [])
+assert any("不开放" in e for e in errs), f"市值组维度已关闭应被拒登：{errs}"
+assert any("1/5/10/20/60" in e for e in errs), f"持有期取值越界应被拒登：{errs}"
 good_hyp = dict(HYP)
-good_hyp["predictions"] = [{"dim": "行业", "a": sorted(sectors)[0], "b": "整体", "key": True},
-                           {"dim": "市值组", "a": "小", "b": "大", "key": False}]
-assert run.validate_registration(good_hyp, [], [], sectors=sectors) == [], "合法预测应通过校验"
+good_hyp["predictions"] = [{"dim": "持有期", "a": "20", "b": "5", "key": True},
+                           {"dim": "持有期", "a": "60", "b": "20", "key": False}]
+assert run.validate_registration(good_hyp, [], []) == [], "合法预测应通过校验"
 new_clues = agents.propose_clues(["超跌反弹"], [], [])
 assert new_clues and new_clues[0]["direction"] == "量缩反弹", "线索自提应返回候选"
 assert run.validate_clue(new_clues[0], {"超跌反弹"}) == [], "自提线索应通过校验"
