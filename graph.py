@@ -467,7 +467,10 @@ def build_graph(checkpointer=None):
     g.add_node("write_card", node_write_card)
 
     g.add_edge(START, "draw_materials")
-    g.add_edge("draw_materials", "propose")
+    # 种子入口：初始状态已带公式（来自交互层或人工指定）时跳过提出，直接检查；
+    # 材料照常抽取，供检查不合格回 propose 重写时使用
+    g.add_conditional_edges("draw_materials", _after_draw,
+                            {"propose": "propose", "validate": "validate"})
     g.add_edge("propose", "validate")
     g.add_conditional_edges("validate", route_validate,
                             {"backtest": "backtest", "propose": "propose",
@@ -484,6 +487,9 @@ def build_graph(checkpointer=None):
     g.add_conditional_edges("write_card", dispatch_entry,
                             {"dispatch": "dispatch", "__end__": END})
     return g.compile(checkpointer=checkpointer)
+
+def _after_draw(state):
+    return "validate" if state.get("formula") else "propose"
 
 def _route_after_dispatch(state):
     return "validate" if state.get("has_next") else "__end__"
