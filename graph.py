@@ -148,41 +148,9 @@ def test_wide():
 # ============================================================
 # 成绩单（15 项）与判定（两门）
 # ============================================================
-def build_scorecard(fac, wide, classics):
-    m = calc.compute_metrics(fac, wide, classics)
-    label = calc._label(wide["close"], calc.JUDGE_H)
-    daily_ic = calc._ic_series(fac, label)
-    prev = fac.shift(1)
-    both = fac.notna() & prev.notna()
-    ac = []
-    for i in range(fac.shape[0]):
-        mask = both.iloc[i]
-        if mask.sum() >= 30:
-            a = fac.iloc[i][mask]
-            b = prev.iloc[i][mask]
-            if a.std() > 0 and b.std() > 0:
-                ac.append(np.corrcoef(a, b)[0, 1])
-    autocorr = float(np.nanmean(ac)) if ac else None
-    fr = fac.rank(axis=1, pct=True)
-    lab = label.where(fac.notna())
-    q_means = []
-    for qi in range(5):
-        lo, hi = qi / 5, (qi + 1) / 5
-        mask = (fr > lo) & (fr <= hi) if qi else (fr >= 0) & (fr <= hi)
-        q_means.append(lab.where(mask).mean(axis=1))
-    qdf = pd.DataFrame(q_means).T
-    q_avg = [float(x) for x in qdf.mean()]
-    mono = float(np.corrcoef(np.arange(1, 6), pd.Series(q_avg).rank())[0, 1])
-    spread = qdf[4] - qdf[0]
-    return {
-        "IC均值": m["IC均值"], "ICIR": m["ICIR"], "t值": m["t值"],
-        "覆盖率": m["覆盖率"], "因子自相关": autocorr,
-        "各持有期IC": m["各持有期IC"],
-        "五组收益": q_avg, "分组单调性": mono,
-        "多空价差": float(spread.mean()), "多空胜率": float((spread > 0).mean()),
-        "方向一致率": float((daily_ic > 0).mean()),
-        "与经典因子最大相关": m["与经典因子最大相关"], "最大相关经典": m["最大相关经典"],
-    }
+def build_scorecard(fac, wide):
+    """成绩单组装已收回 calc.scorecard，本函数仅作转发。"""
+    return calc.scorecard(fac, wide)
 
 def judge(scorecard):
     ic, icir = scorecard.get("IC均值"), scorecard.get("ICIR")
@@ -197,22 +165,20 @@ def scorecard_text(sc):
         f"总判：20日IC {r(sc['IC均值'])}，ICIR {r(sc['ICIR'], 3)}，t {r(sc['t值'], 2)}，覆盖率 {r(sc['覆盖率'], 3)}，因子自相关 {r(sc['因子自相关'], 3)}",
         f"持有期IC：{ {k: r(v) for k, v in sc['各持有期IC'].items()} }",
         f"五组收益：{[round(x * 100, 2) for x in sc['五组收益']]}%，单调性 {r(sc['分组单调性'], 2)}，多空价差 {round(sc['多空价差'] * 100, 2)}%，多空胜率 {r(sc['多空胜率'], 3)}，方向一致率 {r(sc['方向一致率'], 3)}",
-        f"参考（不作判定）：与经典因子最大相关 {r(sc['与经典因子最大相关'], 2)}（{sc['最大相关经典']}）",
     ])
 
 def run_backtest(formula):
     """训练段回测：返回成绩单。验收时可被替身替换（见 test_graph_fake.py）。"""
     wide = train_wide()
-    classics = calc.load_classics(wide)
     fac = calc.eval_formula(formula, wide)
-    return build_scorecard(fac, wide, classics)
+    return build_scorecard(fac, wide)
 
 def run_test_verdict(formula):
     """测试段裁决：返回成绩单（仅 IC/ICIR/t/持有期用于裁决口径展示）。"""
     wide = test_wide()
     fac = calc.eval_formula(formula, wide)
     test = fac[(fac.index >= TEST_START) & (fac.index <= TEST_END)]
-    return calc.compute_metrics(test, wide, [])
+    return calc.compute_metrics(test, wide)
 
 # ============================================================
 # 材料：家族条目原文与索引

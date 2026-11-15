@@ -14,12 +14,12 @@ import pandas as pd
 import calc
 
 # ============================================================
-# 数据段（与三个回测脚本同一口径：加载止日、统计区间、段名、是否算经典相关）
+# 数据段（与三个回测脚本同一口径：加载止日、统计区间、段名）
 # ============================================================
 SEGMENTS = {
-    "train": ("2016-12-31", "2000-01-01", "2016-12-31", "训练段", True),
-    "test": ("2020-04-30", "2017-01-01", "2019-12-31", "测试段", False),
-    "verify": ("2026-09-30", "2020-01-01", "2026-09-30", "验证段", False),
+    "train": ("2016-12-31", "2000-01-01", "2016-12-31", "训练段"),
+    "test": ("2020-04-30", "2017-01-01", "2019-12-31", "测试段"),
+    "verify": ("2026-09-30", "2020-01-01", "2026-09-30", "验证段"),
 }
 
 # ============================================================
@@ -62,7 +62,7 @@ def main():
     ap.add_argument("--segment", choices=list(SEGMENTS), default="train")
     ap.add_argument("--out", default=None)
     a = ap.parse_args()
-    load_end, seg_start, seg_end, seg_name, with_classics = SEGMENTS[a.segment]
+    load_end, seg_start, seg_end, seg_name = SEGMENTS[a.segment]
     ok, bad = calc.check_whitelist(a.formula)
     if not ok:
         print("公式错误：" + "、".join(bad) + " 不在清单内")
@@ -75,8 +75,7 @@ def main():
         print(f"计算失败：{e}")
         return 1
     fac = fac[(fac.index >= seg_start) & (fac.index <= seg_end)]
-    classics = calc.load_classics(wide) if with_classics else []
-    sc = calc.scorecard(fac, wide, classics)
+    sc = calc.scorecard(fac, wide)
 
     # 多空组合日收益：当日五分位最高组减最低组（1 日收益），逐日复利成累计曲线
     qd1 = calc.quintile_daily(fac, wide, h=1)
@@ -127,7 +126,6 @@ td:first-child, th:first-child {{ text-align: left; }}
 <div class="chip">ICIR<b>{fmt(sc['ICIR'], 3)}</b></div>
 <div class="chip">t值<b>{fmt(sc['t值'], 2)}</b></div>
 <div class="chip">多空价差（20日）<b>{fmt(sc['多空价差'] * 100, 2)}%</b></div>
-<div class="chip">与经典最大相关<b>{fmt(sc['与经典因子最大相关'], 2) if sc['与经典因子最大相关'] is not None else '—'}</b></div>
 </div>
 
 <h2>多空组合累计收益</h2>

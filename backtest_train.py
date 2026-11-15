@@ -11,7 +11,6 @@ import calc
 # ============================================================
 LOAD_END = "2016-12-31"                          # 数据加载到哪天为止
 SEG_START, SEG_END = "2000-01-01", "2016-12-31"  # 成绩单统计哪一段的因子值
-WITH_CLASSICS = True                             # 经典值表只覆盖训练段，仅本脚本算最大相关
 
 # ============================================================
 # 主流程：公式（文字）→ 检查 → 求值 → 切段 → 成绩单（数字）
@@ -30,8 +29,7 @@ def main():
     try:
         fac = calc.eval_formula(formula, wide)
         fac = fac[(fac.index >= SEG_START) & (fac.index <= SEG_END)]
-        classics = calc.load_classics(wide) if WITH_CLASSICS else []
-        print(calc.scorecard_text(calc.scorecard(fac, wide, classics)))
+        print(calc.scorecard_text(calc.scorecard(fac, wide)))
     except Exception as e:
         print(f"计算失败：{e}")
         return 1

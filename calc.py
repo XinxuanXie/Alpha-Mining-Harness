@@ -17,7 +17,6 @@ DATA_PATH = os.path.join(BASE, "data", "panel.parquet")
 SEC_PATH = os.path.join(BASE, "data", "securities.parquet")
 MEMB_PATH = os.path.join(BASE, "data", "membership_intervals.parquet")
 BENCH_PATH = os.path.join(BASE, "data", "spy_benchmark.parquet")
-CLASSIC_PATH = os.path.join(BASE, "data", "classic_values.parquet")
 PRECOMP_PATH = os.path.join(BASE, "data", "precomp_fields.parquet")
 TRAIN_END = "2016-12-31"   # 只加载训练段；测试段与验证段不加载
 ID_COL = "permno"          # 股票标识列
@@ -366,7 +365,7 @@ def complexity(expr):
     return n
 
 # ============================================================
-# 经典因子：17 条，公式只存于程序一侧，作相关性参照与复杂度上限来源
+# 经典因子：17 条，公式只存于程序一侧，作复杂度上限来源
 # ============================================================
 CLASSIC_FORMULAS = [
     "-(close / delay(close, 20) - 1)",
@@ -391,19 +390,6 @@ CLASSIC_FORMULAS = [
 def classic_complexity_cap():
     """复杂度上限 = 17 条经典因子复杂度的最大值。"""
     return max(complexity(f) for f in CLASSIC_FORMULAS)
-
-def load_classics(wide):
-    """返回 17 条经典因子的宽表列表；值表不存在时按公式算一次并存表。"""
-    if not os.path.exists(CLASSIC_PATH):
-        frames = [eval_formula(f, wide) for f in CLASSIC_FORMULAS]
-        long = pd.concat({f"C{i + 1:02d}": fr.stack() for i, fr in enumerate(frames)}, axis=1)
-        long.index.names = ["date", ID_COL]
-        long.astype("float32").reset_index().to_parquet(CLASSIC_PATH)
-        return frames
-    t = pd.read_parquet(CLASSIC_PATH).set_index(["date", ID_COL])
-    return [t[f"C{i + 1:02d}"].unstack().reindex(index=wide["close"].index,
-                                                 columns=wide["close"].columns).astype("float64")
-            for i in range(len(CLASSIC_FORMULAS))]
 
 # ============================================================
 # 算指标：基础量为日 IC（截面 Spearman 相关）
@@ -446,7 +432,7 @@ def consistency_corr(values_a, values_b):
     """一致性检查：两份因子值的日截面 Spearman 相关取均值。"""
     return _mean_or_none(_ic_series(values_a, values_b))
 
-def compute_metrics(factor, wide, classic_values):
+def compute_metrics(factor, wide):
     """一次算出规格的全部指标（判定期限 20 日），返回字典；算不出的记 None。"""
     close = wide["close"]
     label = _label(close, JUDGE_H)
@@ -461,27 +447,18 @@ def compute_metrics(factor, wide, classic_values):
 
     coverage = float((factor.notna() & close.notna()).sum().sum() / close.notna().sum().sum())
 
-    classic_corr, classic_who = None, None
-    for i, cv in enumerate(classic_values):
-        c = _mean_or_none(_ic_series(factor, cv))
-        if c is not None and (classic_corr is None or abs(c) > classic_corr):
-            classic_corr, classic_who = abs(c), f"C{i + 1:02d}"
-
     return {
         "IC均值": ic_mean, "ICIR": icir, "t值": t_val,
         "各持有期IC": by_h,
         "覆盖率": coverage,
-        "与经典因子最大相关": classic_corr, "最大相关经典": classic_who,
     }
 
-def base_judge(m, ic_threshold=0.02, icir_threshold=0.2, corr_threshold=0.8):
-    """基础判定：Rank IC、ICIR、与经典因子最大相关三道门同时满足才通过。"""
-    ic, icir, corr = m.get("IC均值"), m.get("ICIR"), m.get("与经典因子最大相关")
+def base_judge(m, ic_threshold=0.02, icir_threshold=0.2):
+    """基础判定：Rank IC 与 ICIR 两道门同时满足才通过。"""
+    ic, icir = m.get("IC均值"), m.get("ICIR")
     if ic is None or ic < ic_threshold:
         return False
     if icir is None or icir < icir_threshold:
-        return False
-    if corr is not None and corr >= corr_threshold:
         return False
     return True
 
@@ -505,11 +482,11 @@ def quintile_daily(factor, wide, h=JUDGE_H):
     return pd.DataFrame(cols, index=["Q1", "Q2", "Q3", "Q4", "Q5"]).T
 
 # ============================================================
-# 成绩单：15 项指标一次算齐（总判 5＋持有期 5＋分组 5），附与经典最大相关
+# 成绩单：15 项指标一次算齐（总判 5＋持有期 5＋分组 5）
 # 只算不判：本节只产出数字，过不过门由调用方看数字决定
 # ============================================================
-def scorecard(factor, wide, classic_values):
-    m = compute_metrics(factor, wide, classic_values)
+def scorecard(factor, wide):
+    m = compute_metrics(factor, wide)
     daily_ic = daily_ic_series(factor, wide)
     # 因子自相关：逐日截面 Pearson(fac_t, fac_{t-1}) 取均值（当日重合股票 ≥30 才计入）
     prev = factor.shift(1)
@@ -535,7 +512,6 @@ def scorecard(factor, wide, classic_values):
         "五组收益": q_avg, "分组单调性": mono,
         "多空价差": float(spread.mean()), "多空胜率": float((spread > 0).mean()),
         "方向一致率": float((daily_ic > 0).mean()),
-        "与经典因子最大相关": m["与经典因子最大相关"], "最大相关经典": m["最大相关经典"],
     }
 
 def scorecard_text(sc):
@@ -555,8 +531,6 @@ def scorecard_text(sc):
         f"多空胜率 {r(sc['多空胜率'], 3)}",
         f"方向一致率 {r(sc['方向一致率'], 3)}",
     ]
-    if sc["与经典因子最大相关"] is not None:
-        lines.append(f"与经典最大相关 {r(sc['与经典因子最大相关'], 2)}（{sc['最大相关经典']}）")
     return "\n".join(lines)
 
 # ============================================================
@@ -569,9 +543,8 @@ if __name__ == "__main__":
 
     expr = "-(close / delay(close, 5) - 1)"  # 手写示例：5 日反转
     fac = eval_formula(expr, wide)
-    classics = load_classics(wide)
-    m1 = compute_metrics(fac, wide, classics)
-    m2 = compute_metrics(eval_formula(expr, wide), wide, classics)
+    m1 = compute_metrics(fac, wide)
+    m2 = compute_metrics(eval_formula(expr, wide), wide)
     print("重复运行一致:", m1["IC均值"] == m2["IC均值"], "| IC均值:", m1["IC均值"], "| ICIR:", m1["ICIR"])
 
     # 截断检验：把数据截到 2010 年底重算因子值，该日及以前应与全量计算一致
