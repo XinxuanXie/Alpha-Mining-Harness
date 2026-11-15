@@ -1,7 +1,6 @@
-# calc.py — 计算程序
-# 职责：读数据（只读训练段）、按表达式算因子值、算判定与分组指标、做程序检查。
-# 本文件不调用模型、不写账本。运行顺序自上而下：参数 → 读数据 → 算公式 → 检查 → 算指标 → 自检。
-# 依据：《因子挖掘系统新计划》与《第一期实现规格》。
+# calc.py — 计算引擎
+# 职责：读数据、按公式算因子值、算回测指标、做公式检查。只算不判。
+# 本文件不调用模型。运行顺序自上而下：参数 → 读数据 → 算公式 → 检查 → 算指标 → 自检。
 
 import ast
 import os
@@ -18,9 +17,8 @@ SEC_PATH = os.path.join(BASE, "data", "securities.parquet")
 MEMB_PATH = os.path.join(BASE, "data", "membership_intervals.parquet")
 BENCH_PATH = os.path.join(BASE, "data", "spy_benchmark.parquet")
 PRECOMP_PATH = os.path.join(BASE, "data", "precomp_fields.parquet")
-TRAIN_END = "2016-12-31"   # 只加载训练段；测试段与验证段不加载
+TRAIN_END = "2016-12-31"   # 数据加载截止日（回测脚本按数据段改这个值）
 ID_COL = "permno"          # 股票标识列
-TOOLING_VERSION = "v3-ops"  # 工具版本：字段集或算子集变更时递增；旧版本下产生的实现层失败不计入停发计数
 FIELDS = ["open", "high", "low", "close", "volume", "mktcap", "mktret",
           "ivol20", "resid_ret"]  # 公式可用字段（mktret 为市场收益；ivol20、resid_ret 为程序预计算的市场模型残差类字段，窗口固定 20 日）
 JUDGE_H = 20               # 判定期限（日）
@@ -102,7 +100,7 @@ def _precomp_fields(close, mktret):
     return ivol, resid
 
 # ============================================================
-# 算公式：表达式只能用算子清单中的算子与七个字段
+# 算公式：表达式只能用算子清单中的算子与九个字段
 # 缺失规则：任一算子所需位置输入缺失，输出缺失；时序窗口缺一日，输出缺失
 # ============================================================
 def _rank_cs(x):
@@ -332,7 +330,7 @@ def eval_formula(expr, wide):
     return out
 
 # ============================================================
-# 程序检查：白名单、复杂度、一致性
+# 程序检查：白名单
 # ============================================================
 def check_whitelist(expr):
     """公式用到的算子与字段必须全部在清单内。返回 (是否通过, 超清单的名单)。"""
@@ -353,44 +351,6 @@ def check_whitelist(expr):
                 bad.append(f"字段 {node.id}")
     return (len(bad) == 0), bad
 
-def complexity(expr):
-    """复杂度 = 公式中算子调用与字段引用的总个数。"""
-    tree = ast.parse(expr, mode="eval")
-    n = 0
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Call):
-            n += 1
-        elif isinstance(node, ast.Name) and node.id in FIELDS:
-            n += 1
-    return n
-
-# ============================================================
-# 经典因子：17 条，公式只存于程序一侧，作复杂度上限来源
-# ============================================================
-CLASSIC_FORMULAS = [
-    "-(close / delay(close, 20) - 1)",
-    "-(close / delay(close, 756) - 1)",
-    "delay(close, 21) / delay(close, 252) - 1",
-    "close / ts_max(close, 252)",
-    "abs(close / delay(close, 252) - 1) * (ts_mean(gt(close / delay(close, 1) - 1, 0), 252) - ts_mean(gt(0, close / delay(close, 1) - 1), 252))",
-    "ts_mean(volume, 5) / ts_mean(volume, 60)",
-    "(delay(close, 21) / delay(close, 252) - 1) * (1 - rank(ts_mean(volume * close / mktcap, 60)))",
-    "neg(ts_std(close / delay(close, 1) - 1, 60))",
-    "neg(ts_max(close / delay(close, 1) - 1, 20))",
-    "neg(ts_corr(close / delay(close, 1) - 1, mktret, 252) * ts_std(close / delay(close, 1) - 1, 252) / ts_std(mktret, 252))",
-    "ts_mean(abs(close / delay(close, 1) - 1) / (close * volume), 20)",
-    "neg(ts_mean(volume * close / mktcap, 60))",
-    "ts_sum(open / delay(close, 1) - 1, 20)",
-    "neg(ts_sum(close / open - 1, 20))",
-    "neg(log(mktcap))",
-    "delay(close, 232) / delay(close, 252) - 1",
-    "ts_sum(sector_mean(close / delay(close, 1) - 1), 126)",
-]
-
-def classic_complexity_cap():
-    """复杂度上限 = 17 条经典因子复杂度的最大值。"""
-    return max(complexity(f) for f in CLASSIC_FORMULAS)
-
 # ============================================================
 # 算指标：基础量为日 IC（截面 Spearman 相关）
 # 标签：close(t+1+h)/close(t+1)-1，即从次日起算的 h 日收益
@@ -399,8 +359,7 @@ def _label(close, h):
     return close.shift(-(1 + h)) / close.shift(-1) - 1
 
 def _ic_series(factor, label):
-    """逐日截面 Spearman 相关，返回去掉缺失日的日 IC 序列。
-    label 也可以是另一条因子的值，此时算的是两条因子的截面相关（供相关性判定与一致性检查）。"""
+    """逐日截面 Spearman 相关，返回去掉缺失日的日 IC 序列。"""
     fr = factor.rank(axis=1, method="average")
     lr = label.rank(axis=1, method="average")
     mask = fr.notna() & lr.notna()
@@ -428,12 +387,8 @@ def _t_of(series):
         return None
     return float(series.mean() / (sd / np.sqrt(len(series))))
 
-def consistency_corr(values_a, values_b):
-    """一致性检查：两份因子值的日截面 Spearman 相关取均值。"""
-    return _mean_or_none(_ic_series(values_a, values_b))
-
 def compute_metrics(factor, wide):
-    """一次算出规格的全部指标（判定期限 20 日），返回字典；算不出的记 None。"""
+    """算 IC 均值、ICIR、t 值、各持有期 IC 与覆盖率（判定期限 20 日），返回字典；算不出的记 None。"""
     close = wide["close"]
     label = _label(close, JUDGE_H)
     daily = _ic_series(factor, label)
@@ -452,15 +407,6 @@ def compute_metrics(factor, wide):
         "各持有期IC": by_h,
         "覆盖率": coverage,
     }
-
-def base_judge(m, ic_threshold=0.02, icir_threshold=0.2):
-    """基础判定：Rank IC 与 ICIR 两道门同时满足才通过。"""
-    ic, icir = m.get("IC均值"), m.get("ICIR")
-    if ic is None or ic < ic_threshold:
-        return False
-    if icir is None or icir < icir_threshold:
-        return False
-    return True
 
 # ============================================================
 # 序列：日 IC 与五组日收益（成绩单与报告共用同一份计算，不重复实现）
@@ -539,7 +485,6 @@ def scorecard_text(sc):
 if __name__ == "__main__":
     wide = load_wide()
     print("宽表 close 形状:", wide["close"].shape, "| 日期", wide["close"].index.min().date(), "→", wide["close"].index.max().date())
-    print("复杂度上限（经典最大值）:", classic_complexity_cap())
 
     expr = "-(close / delay(close, 5) - 1)"  # 手写示例：5 日反转
     fac = eval_formula(expr, wide)
@@ -553,11 +498,6 @@ if __name__ == "__main__":
     same = fac_cut.equals(fac[fac.index <= "2010-12-31"])
     print("截断检验（无未来数据）:", same)
 
-    # 白名单与复杂度
-    print("白名单通过:", check_whitelist(expr)[0], "| 复杂度:", complexity(expr))
+    # 白名单
+    print("白名单通过:", check_whitelist(expr)[0])
     print("白名单拒绝:", check_whitelist("foo(close) + bogus")[0] is False)
-
-    # 一致性：同一公式对拍自己应为 1.0；换成成交量构造应明显低于 0.99
-    print("一致性自对拍:", consistency_corr(fac, fac))
-    other = eval_formula("ts_mean(volume, 5) / ts_mean(volume, 60)", wide)
-    print("一致性异量对拍:", consistency_corr(fac, other))
