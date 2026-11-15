@@ -2,19 +2,19 @@
 
 单日价格形态：影线、实体、区间位置与日内路径。构造以开高低收之间的相对关系为主。
 
-- **C81 WQ#18 价差与开收相关**：`-1 * rank(ts_std(abs(close - open), 5) + (close - open) + ts_corr(close, open, 10))`
-- **C105 WQ#54 日内力量比**：`(-1 * ((low - close) * open^5)) / ((low - high) * close^5)`（原文式）
-- **C132 实体涨幅 KMID**：`(close - open) / open`，当日实体涨跌幅
-- **C133 振幅 KLEN**：`(high - low) / open`，当日振幅
-- **C134 实体占比 KMID2**：`(close - open) / (high - low)`，实体占振幅之比
-- **C135 上影 KUP**：`(high - max(open, close)) / open`，上影线长度
-- **C136 上影占比 KUP2**：`(high - max(open, close)) / (high - low)`，上影占振幅之比
-- **C137 下影 KLOW**：`(min(open, close) - low) / open`，下影线长度
-- **C138 下影占比 KLOW2**：`(min(open, close) - low) / (high - low)`，下影占振幅之比
-- **C139 收盘偏移 KSFT**：`(2 * close - high - low) / open`，收盘相对区间中点偏移
-- **C140 收盘偏移占比 KSFT2**：`(2 * close - high - low) / (high - low)`，同上按振幅归一
-- **C141 开盘比 OPEN0**：`open / close`，当日开盘相对收盘
-- **C142 最高比 HIGH0**：`high / close`，当日最高相对收盘
-- **C143 最低比 LOW0**：`low / close`，当日最低相对收盘
-- **C185 移动便利 EMV**：`((high + low) / 2 - delay((high + low) / 2, 1)) / (volume / (high - low))` 的 14 日均值（Arms 1989；程序自算），单位量推动的价格位移
-- **C187 多头力量**：`high - EMA(close, 13)`（Elder 1993），最高价相对趋势均线的超出
+- **C81 WQ#18 价差与开收相关**：`-1 * rank(ts_std(abs(close - open), 5) + (close - open) + ts_corr(close, open, 10))`，经济意义：日内价差波动与开收关系的复合，刻画日内价格压力的方向。
+- **C105 WQ#54 日内力量比**：`(-1 * ((low - close) * open^5)) / ((low - high) * close^5)`（原文式），经济意义：收盘在日内区间的位置经幂次加权，度量日内多空力量对比。
+- **C132 实体涨幅 KMID**：`(close - open) / open`，当日实体涨跌幅，经济意义：当日实体涨跌幅，度量日内多空力量的净方向。
+- **C133 振幅 KLEN**：`(high - low) / open`，当日振幅，经济意义：当日振幅，度量日内波动幅度与多空分歧程度。
+- **C134 实体占比 KMID2**：`(close - open) / (high - low)`，实体占振幅之比，经济意义：实体占振幅之比，度量日内方向运动的效率。
+- **C135 上影 KUP**：`(high - max(open, close)) / open`，上影线长度，经济意义：上影线长度，度量高位卖压与冲高回落的价格压力。
+- **C136 上影占比 KUP2**：`(high - max(open, close)) / (high - low)`，上影占振幅之比，经济意义：上影占振幅之比，度量上方卖压的相对权重。
+- **C137 下影 KLOW**：`(min(open, close) - low) / open`，下影线长度，经济意义：下影线长度，度量低位承接与探底回升的买盘力量。
+- **C138 下影占比 KLOW2**：`(min(open, close) - low) / (high - low)`，下影占振幅之比，经济意义：下影占振幅之比，度量下方支撑的相对权重。
+- **C139 收盘偏移 KSFT**：`(2 * close - high - low) / open`，收盘相对区间中点偏移，经济意义：收盘相对区间中点的偏移，度量日内多空力量的强弱。
+- **C140 收盘偏移占比 KSFT2**：`(2 * close - high - low) / (high - low)`，同上按振幅归一，经济意义：收盘在日内区间中的相对位置，度量收盘强弱。
+- **C141 开盘比 OPEN0**：`open / close`，当日开盘相对收盘，经济意义：开盘相对收盘之比，度量日内涨跌的净方向与幅度。
+- **C142 最高比 HIGH0**：`high / close`，当日最高相对收盘，经济意义：最高价相对收盘的超出，度量日内冲高回落的幅度。
+- **C143 最低比 LOW0**：`low / close`，当日最低相对收盘，经济意义：最低价相对收盘的折让，度量日内探底回升的幅度。
+- **C185 移动便利 EMV**：`((high + low) / 2 - delay((high + low) / 2, 1)) / (volume / (high - low))` 的 14 日均值（程序自算），单位量推动的价格位移，经济意义：单位成交量推动的价格位移，度量价格运动的量价效率。
+- **C187 多头力量**：`high - EMA(close, 13)`，最高价相对趋势均线的超出，经济意义：最高价相对趋势均线的超出，度量多头上攻力量。

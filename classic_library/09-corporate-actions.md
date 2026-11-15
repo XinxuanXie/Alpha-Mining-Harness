@@ -2,6 +2,6 @@
 
 股本变动所反映的公司融资行为。构造以股本增长率为主，股本由市值与价格拆分得到。
 
-- **C64 一年净增发**：`neg(winsorize(delta(log(mktcap / close), 250)))`，股本的约 12 个月增长率取负（Pontiff & Woodgate 2008；OSAP: ShareIss1Y）
-- **C65 五年净增发**：`neg(delta(log(mktcap / close), 1260))`，股本的 5 年增长率取负（Daniel & Titman 2006；OSAP: ShareIss5Y）
-- **C66 综合权益发行**：`neg(delta(log(mktcap), 1260) - delta(log(close), 1260))`，5 年市值增长率减去 5 年股价涨幅（Daniel & Titman 2006；OSAP: CompEquIss）
+- **C64 一年净增发**：`neg(winsorize(delta(log(mktcap / close), 250)))`，股本的约 12 个月增长率取负，经济意义：净增发反映管理层在股价高估时融资的市场择时行为，增发预示后续低收益。
+- **C65 五年净增发**：`neg(delta(log(mktcap / close), 1260))`，股本的 5 年增长率取负，经济意义：长期净增发属外部融资异象，反映发行择时与投资者对增发的过度乐观定价。
+- **C66 综合权益发行**：`neg(delta(log(mktcap), 1260) - delta(log(close), 1260))`，5 年市值增长率减去 5 年股价涨幅，经济意义：综合权益发行度量管理层主动融资决策，发行强度高者后续收益低，属外部融资异象。
