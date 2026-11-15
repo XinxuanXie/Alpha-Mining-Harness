@@ -12,7 +12,8 @@ After `opencode` works with DeepSeek, paste this whole prompt:
 You are installing the Alpha-Mining-Harness factor research skill.
 
 Do the following, then print a checklist table (OK / FAIL):
-1) Ensure git and python (>=3.10) exist, with pandas, numpy, pyarrow installed.
+1) Ensure git and python (>=3.10) exist. Install the Python packages:
+   pip install -r requirements.txt
 2) Clone or update the repo into the working folder:
    git clone https://github.com/sun97956/Alpha-Mining-Harness.git
    (if it already exists, git pull instead)
@@ -30,7 +31,7 @@ Do the following, then print a checklist table (OK / FAIL):
 Print versions and pass/fail for each step. Stop after the checklist.
 ```
 
-Manual fallback: clone the repo, do step 3 and 4 by hand, run the quick check in step 5.
+Manual fallback: clone the repo, run `pip install -r requirements.txt`, do step 3 and 4 by hand, run the quick check in step 5.
 
 ## Data
 
@@ -65,5 +66,6 @@ Manual fallback: clone the repo, do step 3 and 4 by hand, run the quick check in
 | `engine.py` | 计算引擎：读数据、公式求值（33 个算子）、白名单检查 |
 | `backtest_train.py` / `backtest_test.py` / `backtest_verify.py` | 三个回测脚本，各管一段，指标在脚本内计算，结果存入 `results/` |
 | `report.py` | 单文件 HTML 报告：多空累计收益图、指标表、分年表 |
+| `requirements.txt` | Python 依赖清单（pandas、numpy、pyarrow），`pip install -r requirements.txt` 安装 |
 | `classic_library.md` + `classic_library/` | 经典因子库索引与原文：200 条，13 个家族 |
 | `data/` | 数据文件（见上 Data 一节，从 Release 下载，不在仓库内） |
