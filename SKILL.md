@@ -1,0 +1,55 @@
+---
+name: factor-research
+description: 本项目的总说明书。进入项目开始因子研究工作前先读本文件：这里说明任务、环境（数据、算子、经典库）、工具与纪律；具体的生成与修改流程在 skills/ 下的两个 skill 里。
+---
+
+# 因子研究说明书
+
+## 任务
+
+在本项目中协助做单因子研究：根据指令生成因子、修改因子、运行回测、解读成绩单并给出建议。生成因子按 `skills/generate-factor/SKILL.md` 执行，修改因子按 `skills/modify-factor/SKILL.md` 执行。
+
+## 环境
+
+### 数据
+
+- 行情面板 `data/panel.parquet`：1,195 只标普 500 历史成分股，2000-01-03 至 2026-09-30，日频。每只股票每天有开、高、低、收、成交量、总市值。价格为拆股调整后价格。
+- 股票档案 `data/securities.parquet`：每只股票的 GICS 行业分类，供行业内排名与行业均值使用。
+- 成分区间 `data/membership_intervals.parquet`：每只股票进出标普 500 的起止日期。加载时按它过滤，股票只在成分期内有值。
+- 市场基准 `data/spy_benchmark.parquet`：每日市场收益，公式中的 mktret 来自这里。
+- 程序自算字段：ivol20（20 日特质波动）、resid_ret（当日残差收益），加载时由 calc.py 算出。
+
+公式可用的字段共 9 个：open、high、low、close、volume、mktcap、mktret、ivol20、resid_ret。
+
+数据分三段：训练段 2000–2016、测试段 2017–2019、验证段 2020–2026。
+
+### 算子
+
+共 33 个，另有四则运算。以 `calc.py` 中的算子集为准。
+
+- 时序（17）：delay、delta、ts_mean、ts_sum、ts_std、ts_min、ts_max、ts_rank、ts_median、ts_skew、ts_kurt、ts_decay、ts_count、ts_argmax、ts_argmin、ts_corr、ts_beta
+- 截面（6）：rank、rank_sector、sector_mean、zscore、winsorize、resid
+- 变换（8）：neg、abs、log、sign、sqrt、inverse、power、signed_power
+- 条件（2）：gt、where
+
+### 经典库
+
+200 条经典因子，13 个家族。索引在 `classic_library.md`，条目原文在 `classic_library/` 下，一家族一文件。
+
+### 回测存档
+
+每次回测的成绩单自动存一份 JSON 到 `results/` 目录，文件名含数据段与时间，内容为公式与 15 项成绩单数字。查阅历史结果、做新旧对比时从那里取。
+
+## 工具
+
+| 脚本 | 用途 |
+|---|---|
+| `python backtest_train.py "<公式>"` | 训练段回测，输出 15 项成绩单并存档 |
+| `python backtest_test.py "<公式>"` | 测试段回测，同上 |
+| `python backtest_verify.py "<公式>"` | 验证段回测，同上（见纪律） |
+| `python report.py "<公式>" --segment train` | 生成 HTML 报告：多空累计收益图、成绩单表、分年表 |
+
+## 纪律
+
+- 判定参考线：20 日 IC ≥ 0.02、ICIR ≥ 0.2。
+- 日常研究只跑训练段。测试段须经人确认后才跑。验证段封存，未经明确指令不运行 `backtest_verify.py`。
