@@ -5,7 +5,7 @@
 
 ## Install with opencode (recommended)
 
-opencode 本体不在本仓库内，需先装好（二选一）：全局安装 `npm install -g opencode-ai`，之后任意目录运行 `opencode`；或在项目文件夹内安装 `npm install opencode-ai`，之后在该文件夹用 `npx opencode` 运行。装好并连上模型（如 DeepSeek）后，把下面整段粘贴给它：
+opencode 本体不在本仓库内，需先安装：有 Node.js 的环境（Windows / macOS / Linux 通用）运行 `npm install -g opencode-ai`；也可以用各系统的包管理器（Windows 的 scoop / choco、macOS 的 brew）。装好并连上模型（如 DeepSeek）后，把下面整段粘贴给它：
 
 ```
 You are installing the Alpha-Mining-Harness factor research skill.
