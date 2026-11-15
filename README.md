@@ -2,7 +2,6 @@
 
 一套给通用 Agent 用的因子研究环境：说明书（SKILL）＋两个 skill（生成因子、修改因子）＋回测工具，在标普 500 历史成分股的日频价量数据上做单因子研究。Agent 负责提出假设、写公式、解读成绩单；脚本只负责计算，不做判定。
 
-**Repo:** https://github.com/sun97956/Alpha-Mining-Harness
 
 ## Install with opencode (recommended)
 
