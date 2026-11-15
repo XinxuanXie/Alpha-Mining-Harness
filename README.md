@@ -21,7 +21,7 @@ Do the following, then print a checklist table (OK / FAIL):
    - Copy skills/generate-factor and skills/modify-factor into .opencode/skills/
      so each sits at .opencode/skills/<name>/SKILL.md.
 4) Data is NOT in the git repo. Download the four parquet files from the repo's
-   Release (tag: data-v1) into data/: panel.parquet, securities.parquet,
+   Release (tag: data) into data/: panel.parquet, securities.parquet,
    membership_intervals.parquet, spy_benchmark.parquet. See the Data section below.
 5) Quick check (training segment only):
    python backtest_train.py "-(close / delay(close, 20) - 1)"
@@ -34,7 +34,7 @@ Manual fallback: clone the repo, do step 3 and 4 by hand, run the quick check in
 
 ## Data
 
-数据文件不进 git 仓库，以 Release 附件分发：到仓库的 Releases 页下载 tag `data-v1` 的四个文件，放进项目根目录的 `data/` 文件夹。
+数据文件不进 git 仓库，以 Release 附件分发：到仓库的 Releases 页下载 tag `data` 的四个文件，放进项目根目录的 `data/` 文件夹。
 
 | 文件 | 内容与用途 |
 |---|---|
