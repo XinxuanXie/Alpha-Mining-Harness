@@ -486,13 +486,31 @@ def base_judge(m, ic_threshold=0.02, icir_threshold=0.2, corr_threshold=0.8):
     return True
 
 # ============================================================
+# 序列：日 IC 与五组日收益（成绩单与报告共用同一份计算，不重复实现）
+# ============================================================
+def daily_ic_series(factor, wide, h=JUDGE_H):
+    """逐日截面 Rank IC 序列（h 日标签）。"""
+    return _ic_series(factor, _label(wide["close"], h))
+
+def quintile_daily(factor, wide, h=JUDGE_H):
+    """按因子截面分位分五组，返回每日五组平均标签收益（行=日期，列=Q1..Q5）。"""
+    label = _label(wide["close"], h)
+    fr = factor.rank(axis=1, pct=True)
+    lab = label.where(factor.notna())
+    cols = []
+    for qi in range(5):
+        lo, hi = qi / 5, (qi + 1) / 5
+        mask = (fr > lo) & (fr <= hi) if qi else (fr >= 0) & (fr <= hi)
+        cols.append(lab.where(mask).mean(axis=1))
+    return pd.DataFrame(cols, index=["Q1", "Q2", "Q3", "Q4", "Q5"]).T
+
+# ============================================================
 # 成绩单：15 项指标一次算齐（总判 5＋持有期 5＋分组 5），附与经典最大相关
 # 只算不判：本节只产出数字，过不过门由调用方看数字决定
 # ============================================================
 def scorecard(factor, wide, classic_values):
     m = compute_metrics(factor, wide, classic_values)
-    label = _label(wide["close"], JUDGE_H)
-    daily_ic = _ic_series(factor, label)
+    daily_ic = daily_ic_series(factor, wide)
     # 因子自相关：逐日截面 Pearson(fac_t, fac_{t-1}) 取均值（当日重合股票 ≥30 才计入）
     prev = factor.shift(1)
     both = factor.notna() & prev.notna()
@@ -505,18 +523,11 @@ def scorecard(factor, wide, classic_values):
             if a.std() > 0 and b.std() > 0:
                 ac.append(np.corrcoef(a, b)[0, 1])
     autocorr = float(np.nanmean(ac)) if ac else None
-    # 分组：按因子截面分位分五组，各组 20 日标签收益均值
-    fr = factor.rank(axis=1, pct=True)
-    lab = label.where(factor.notna())
-    q_means = []
-    for qi in range(5):
-        lo, hi = qi / 5, (qi + 1) / 5
-        mask = (fr > lo) & (fr <= hi) if qi else (fr >= 0) & (fr <= hi)
-        q_means.append(lab.where(mask).mean(axis=1))
-    qdf = pd.DataFrame(q_means).T
+    # 分组：五组日收益取全段均值；单调性、多空价差由此派生
+    qdf = quintile_daily(factor, wide)
     q_avg = [float(x) for x in qdf.mean()]
     mono = float(np.corrcoef(np.arange(1, 6), pd.Series(q_avg).rank())[0, 1])
-    spread = qdf[4] - qdf[0]
+    spread = qdf["Q5"] - qdf["Q1"]
     return {
         "IC均值": m["IC均值"], "ICIR": m["ICIR"], "t值": m["t值"],
         "覆盖率": m["覆盖率"], "因子自相关": autocorr,
