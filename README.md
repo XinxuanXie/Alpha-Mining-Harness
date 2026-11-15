@@ -46,8 +46,8 @@ Manual fallback: clone the repo, do step 3 and 4 by hand, run the quick check in
 | `SKILL.md` | 总说明书：任务、环境、工具、纪律 |
 | `skills/generate-factor/SKILL.md` | 生成因子：读资料 → 假设 → 公式 → 回测 → 建议 |
 | `skills/modify-factor/SKILL.md` | 修改因子：诊断 → 选一种方法 → 改一条 → 新旧对比 |
-| `calc.py` | 计算引擎：公式求值（33 个算子）与回测指标计算 |
-| `backtest_train.py` / `backtest_test.py` / `backtest_verify.py` | 三段回测入口：只定数据段并调用 calc 计算，结果存入 `results/` |
+| `engine.py` | 计算引擎：读数据、公式求值（33 个算子）、白名单检查 |
+| `backtest_train.py` / `backtest_test.py` / `backtest_verify.py` | 三个回测脚本，各管一段，指标在脚本内计算，结果存入 `results/` |
 | `report.py` | 单文件 HTML 报告：多空累计收益图、指标表、分年表 |
 | `classic_library.md` + `classic_library/` | 经典因子库索引与原文：200 条，13 个家族 |
 | `data/` | 行情面板、股票档案、成分区间、市场基准（不在仓库内） |

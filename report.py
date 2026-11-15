@@ -1,7 +1,7 @@
 """单因子回测报告：输入公式与数据段，生成一个自包含 HTML 文件（零外部依赖，离线可看）。
 形态参照 WorldQuant BRAIN 结果页：一张多空累计收益主图、一张成绩单表、一张分年表。
 用法：python report.py "neg(close / delay(close, 20) - 1)" --segment train --out report.html
-只呈现不判定：报告只有数字与图。计算全部由 calc.py 完成。"""
+只呈现不判定：报告只有数字与图。公式求值由 engine.py 完成，指标由回测脚本完成。"""
 
 import argparse
 import html
@@ -11,10 +11,11 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 
-import calc
+import engine
+from backtest_train import daily_ic_series, quintile_daily, scorecard  # 指标函数与三个回测脚本同一份实现
 
 # ============================================================
-# 数据段（与三个回测脚本同一口径：加载止日、统计区间、段名）
+# 数据段（与回测脚本同一口径：加载止日、统计区间、段名）
 # ============================================================
 SEGMENTS = {
     "train": ("2016-12-31", "2000-01-01", "2016-12-31", "训练段"),
@@ -63,22 +64,22 @@ def main():
     ap.add_argument("--out", default=None)
     a = ap.parse_args()
     load_end, seg_start, seg_end, seg_name = SEGMENTS[a.segment]
-    ok, bad = calc.check_whitelist(a.formula)
+    ok, bad = engine.check_whitelist(a.formula)
     if not ok:
         print("公式错误：" + "、".join(bad) + " 不在清单内")
         return 1
-    calc.TRAIN_END = load_end
-    wide = calc.load_wide()
+    engine.TRAIN_END = load_end
+    wide = engine.load_wide()
     try:
-        fac = calc.eval_formula(a.formula, wide)
+        fac = engine.eval_formula(a.formula, wide)
     except Exception as e:
         print(f"计算失败：{e}")
         return 1
     fac = fac[(fac.index >= seg_start) & (fac.index <= seg_end)]
-    sc = calc.scorecard(fac, wide)
+    sc = scorecard(fac, wide)
 
     # 多空组合日收益：当日五分位最高组减最低组（1 日收益），逐日复利成累计曲线
-    qd1 = calc.quintile_daily(fac, wide, h=1)
+    qd1 = quintile_daily(fac, wide, h=1)
     ls = (qd1["Q5"] - qd1["Q1"]).dropna()
     curve = (1 + ls).cumprod()
     ann = float(ls.mean() * 252)
@@ -86,8 +87,8 @@ def main():
     mdd = float((curve / curve.cummax() - 1).min())
 
     # 分年表：与成绩单同一口径（20 日 IC 与 20 日多空价差）
-    ic = calc.daily_ic_series(fac, wide)
-    qd = calc.quintile_daily(fac, wide)
+    ic = daily_ic_series(fac, wide)
+    qd = quintile_daily(fac, wide)
     spread = qd["Q5"] - qd["Q1"]
     year_rows = []
     for yr in sorted(set(ic.index.year)):

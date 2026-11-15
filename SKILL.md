@@ -17,7 +17,7 @@ description: 本项目的总说明书。进入项目开始因子研究工作前�
 - 股票档案 `data/securities.parquet`：每只股票的 GICS 行业分类，供行业内排名与行业均值使用。
 - 成分区间 `data/membership_intervals.parquet`：每只股票进出标普 500 的起止日期。加载时按它过滤，股票只在成分期内有值。
 - 市场基准 `data/spy_benchmark.parquet`：每日市场收益，公式中的 mktret 来自这里。
-- 程序自算字段：ivol20（20 日特质波动）、resid_ret（当日残差收益），加载时由 calc.py 算出。
+- 程序自算字段：ivol20（20 日特质波动）、resid_ret（当日残差收益），加载时由 engine.py 算出。
 
 公式可用的字段共 9 个：open、high、low、close、volume、mktcap、mktret、ivol20、resid_ret。
 
@@ -25,7 +25,7 @@ description: 本项目的总说明书。进入项目开始因子研究工作前�
 
 ### 算子
 
-共 33 个，另有四则运算。以 `calc.py` 中的算子集为准。
+共 33 个，另有四则运算。以 `engine.py` 中的算子集为准。
 
 - 时序（17）：delay、delta、ts_mean、ts_sum、ts_std、ts_min、ts_max、ts_rank、ts_median、ts_skew、ts_kurt、ts_decay、ts_count、ts_argmax、ts_argmin、ts_corr、ts_beta
 - 截面（6）：rank、rank_sector、sector_mean、zscore、winsorize、resid
@@ -44,7 +44,7 @@ description: 本项目的总说明书。进入项目开始因子研究工作前�
 
 | 脚本 | 用途 |
 |---|---|
-| `python backtest_train.py "<公式>"` | 训练段回测，输出 15 项成绩单并存档 |
+| `python backtest_train.py "<公式>"` | 训练段回测，输出 15 项指标并存档 |
 | `python backtest_test.py "<公式>"` | 测试段回测，同上 |
 | `python backtest_verify.py "<公式>"` | 验证段回测，同上（见纪律） |
 | `python report.py "<公式>" --segment train` | 生成 HTML 报告：多空累计收益图、成绩单表、分年表 |
