@@ -5,7 +5,7 @@
 
 ## Install with opencode (recommended)
 
-After `opencode` works with DeepSeek, paste this whole prompt:
+opencode 本体不在本仓库内，需先装好（二选一）：全局安装 `npm install -g opencode-ai`，之后任意目录运行 `opencode`；或在项目文件夹内安装 `npm install opencode-ai`，之后在该文件夹用 `npx opencode` 运行。装好并连上模型（如 DeepSeek）后，把下面整段粘贴给它：
 
 ```
 You are installing the Alpha-Mining-Harness factor research skill.
