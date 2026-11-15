@@ -25,7 +25,7 @@ description: 本项目的总说明书。进入项目开始因子研究工作前�
 
 ### 算子
 
-共 33 个，另有四则运算。以 `engine.py` 中的算子集为准。
+共 33 个，另有四则运算。公式只能用下面列出的算子与上面的 9 个字段。
 
 - 时序（17）：delay、delta、ts_mean、ts_sum、ts_std、ts_min、ts_max、ts_rank、ts_median、ts_skew、ts_kurt、ts_decay、ts_count、ts_argmax、ts_argmin、ts_corr、ts_beta
 - 截面（6）：rank、rank_sector、sector_mean、zscore、winsorize、resid
@@ -48,6 +48,8 @@ description: 本项目的总说明书。进入项目开始因子研究工作前�
 | `python backtest_test.py "<公式>"` | 测试段回测，同上 |
 | `python backtest_verify.py "<公式>"` | 验证段回测，同上（见纪律） |
 | `python report.py "<公式>" --segment train` | 生成 HTML 报告：多空累计收益图、成绩单表、分年表 |
+
+以上脚本与 `engine.py` 都是黑盒工具：按表中用法调用即可，不读它们的源码；字段与算子清单以本说明书环境一节为准。
 
 ## 纪律
 
