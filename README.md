@@ -18,7 +18,7 @@ Do the following, then print a checklist table (OK / FAIL):
    (if it already exists, git pull instead)
 3) Arrange the files for opencode:
    - Copy SKILL.md to AGENTS.md in the project root (always-on instructions).
-   - Copy skills/generate-factor and skills/modify-factor into .opencode/skills/
+   - Copy skills/generate-factor, skills/modify-factor and skills/test-factor into .opencode/skills/
      so each sits at .opencode/skills/<name>/SKILL.md.
 4) Data is NOT in the git repo. Download the four parquet files from the repo's
    Release (tag: data) into data/: panel.parquet, securities.parquet,
@@ -61,7 +61,8 @@ Manual fallback: clone the repo, run `pip install -r requirements.txt`, do step 
 |---|---|
 | `SKILL.md` | 总说明书：任务、环境、工具、纪律 |
 | `skills/generate-factor/SKILL.md` | 生成因子：读资料 → 假设 → 公式 → 回测 → 建议 |
-| `skills/modify-factor/SKILL.md` | 修改因子：诊断 → 选一种方法 → 改一条 → 新旧对比 |
+| `skills/modify-factor/SKILL.md` | 修改因子：诊断 → 至多五种方法各改一条 → 全测挑最优 → 新旧对比 |
+| `skills/test-factor/SKILL.md` | 测试段验证：回测一次 → 测试段报告 → 训练与测试对比（仅用户明确要求时） |
 | `engine.py` | 计算引擎：读数据、公式求值（33 个算子）、白名单检查 |
 | `backtest_train.py` / `backtest_test.py` / `backtest_verify.py` | 三个回测脚本，各管一段，指标在脚本内计算，结果存入 `results/` |
 | `report.py` | 单文件 HTML 报告：多空累计收益图、指标表、分年表 |

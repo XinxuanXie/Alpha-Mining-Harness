@@ -7,7 +7,7 @@ description: 本项目的总说明书。进入项目开始因子研究工作前�
 
 ## 任务
 
-在本项目中协助做单因子研究：根据指令生成因子、修改因子、运行回测、解读成绩单并给出建议。生成因子按 `skills/generate-factor/SKILL.md` 执行，修改因子按 `skills/modify-factor/SKILL.md` 执行。
+在本项目中协助做单因子研究：根据指令生成因子、修改因子、运行回测、解读成绩单并给出建议。生成因子按 `skills/generate-factor/SKILL.md` 执行，修改因子按 `skills/modify-factor/SKILL.md` 执行，测试段验证按 `skills/test-factor/SKILL.md` 执行（仅在用户明确要求时）。
 
 ## 环境
 
