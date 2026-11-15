@@ -486,6 +486,69 @@ def base_judge(m, ic_threshold=0.02, icir_threshold=0.2, corr_threshold=0.8):
     return True
 
 # ============================================================
+# 成绩单：15 项指标一次算齐（总判 5＋持有期 5＋分组 5），附与经典最大相关
+# 只算不判：本节只产出数字，过不过门由调用方看数字决定
+# ============================================================
+def scorecard(factor, wide, classic_values):
+    m = compute_metrics(factor, wide, classic_values)
+    label = _label(wide["close"], JUDGE_H)
+    daily_ic = _ic_series(factor, label)
+    # 因子自相关：逐日截面 Pearson(fac_t, fac_{t-1}) 取均值（当日重合股票 ≥30 才计入）
+    prev = factor.shift(1)
+    both = factor.notna() & prev.notna()
+    ac = []
+    for i in range(factor.shape[0]):
+        mask = both.iloc[i]
+        if mask.sum() >= 30:
+            a = factor.iloc[i][mask]
+            b = prev.iloc[i][mask]
+            if a.std() > 0 and b.std() > 0:
+                ac.append(np.corrcoef(a, b)[0, 1])
+    autocorr = float(np.nanmean(ac)) if ac else None
+    # 分组：按因子截面分位分五组，各组 20 日标签收益均值
+    fr = factor.rank(axis=1, pct=True)
+    lab = label.where(factor.notna())
+    q_means = []
+    for qi in range(5):
+        lo, hi = qi / 5, (qi + 1) / 5
+        mask = (fr > lo) & (fr <= hi) if qi else (fr >= 0) & (fr <= hi)
+        q_means.append(lab.where(mask).mean(axis=1))
+    qdf = pd.DataFrame(q_means).T
+    q_avg = [float(x) for x in qdf.mean()]
+    mono = float(np.corrcoef(np.arange(1, 6), pd.Series(q_avg).rank())[0, 1])
+    spread = qdf[4] - qdf[0]
+    return {
+        "IC均值": m["IC均值"], "ICIR": m["ICIR"], "t值": m["t值"],
+        "覆盖率": m["覆盖率"], "因子自相关": autocorr,
+        "各持有期IC": m["各持有期IC"],
+        "五组收益": q_avg, "分组单调性": mono,
+        "多空价差": float(spread.mean()), "多空胜率": float((spread > 0).mean()),
+        "方向一致率": float((daily_ic > 0).mean()),
+        "与经典因子最大相关": m["与经典因子最大相关"], "最大相关经典": m["最大相关经典"],
+    }
+
+def scorecard_text(sc):
+    """成绩单的固定文本格式：只有数字，不含判定。"""
+    def r(x, n=4):
+        return None if x is None else round(x, n)
+    lines = [
+        f"20日IC {r(sc['IC均值'])}",
+        f"ICIR {r(sc['ICIR'], 3)}",
+        f"t值 {r(sc['t值'], 2)}",
+        f"覆盖率 {r(sc['覆盖率'], 3)}",
+        f"因子自相关 {r(sc['因子自相关'], 3)}",
+        "持有期IC " + " ".join(f"{k}日 {r(v)}" for k, v in sc["各持有期IC"].items()),
+        "五组收益% " + " ".join(str(round(x * 100, 2)) for x in sc["五组收益"]),
+        f"分组单调性 {r(sc['分组单调性'], 2)}",
+        f"多空价差% {round(sc['多空价差'] * 100, 2)}",
+        f"多空胜率 {r(sc['多空胜率'], 3)}",
+        f"方向一致率 {r(sc['方向一致率'], 3)}",
+    ]
+    if sc["与经典因子最大相关"] is not None:
+        lines.append(f"与经典最大相关 {r(sc['与经典因子最大相关'], 2)}（{sc['最大相关经典']}）")
+    return "\n".join(lines)
+
+# ============================================================
 # 自检：直接运行本文件时执行（对拍、截断、重复运行）
 # ============================================================
 if __name__ == "__main__":
