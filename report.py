@@ -4,8 +4,11 @@
 只呈现不判定：报告只有数字与图。公式求值由 engine.py 完成，指标由回测脚本完成。"""
 
 import argparse
+import glob
 import html
+import json
 import math
+import os
 from datetime import datetime
 
 import numpy as np
@@ -56,6 +59,22 @@ def svg_curve(series, width=920, height=300):
 # ============================================================
 def fmt(x, n=4):
     return "—" if x is None or (isinstance(x, float) and math.isnan(x)) else f"{x:.{n}f}"
+
+# 报告默认与成绩单 JSON 同名：在 results/ 里找同段、同公式的最新一份 JSON，报告取它的文件名（换成 .html）存同一目录
+def default_out(segment, formula):
+    best = None
+    for p in glob.glob(os.path.join("results", f"{segment}_*.json")):
+        try:
+            with open(p, encoding="utf-8") as f:
+                d = json.load(f)
+        except Exception:
+            continue
+        if d.get("公式") == formula and (best is None or p > best):
+            best = p
+    if best:
+        return os.path.splitext(best)[0] + ".html"
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    return os.path.join("results", f"report_{segment}_{stamp}.html")
 
 def main():
     ap = argparse.ArgumentParser()
@@ -149,7 +168,7 @@ td:first-child, th:first-child {{ text-align: left; }}
 {''.join(year_rows)}
 </table>
 </body></html>"""
-    out = a.out or f"report_{a.segment}.html"
+    out = a.out or default_out(a.segment, a.formula)
     with open(out, "w", encoding="utf-8") as f:
         f.write(page)
     print(f"报告已生成：{out}")
