@@ -173,7 +173,12 @@ def main():
         card = scorecard(fac, wide)
         print(scorecard_text(card))
         os.makedirs("results", exist_ok=True)
-        path = f"results/{SEGMENT}_{datetime.now():%Y%m%d_%H%M%S}.json"
+        now = datetime.now()
+        path = f"results/{SEGMENT}_{now:%Y%m%d_%H%M%S}_{now.microsecond // 1000:03d}.json"
+        n = 1
+        while os.path.exists(path):
+            path = f"results/{SEGMENT}_{now:%Y%m%d_%H%M%S}_{now.microsecond // 1000:03d}_{n}.json"
+            n += 1
         record = {"公式": formula, "数据段": SEGMENT, "统计区间": [SEG_START, SEG_END],
                   "生成时间": datetime.now().isoformat(timespec="seconds"), "成绩单": card}
         with open(path, "w", encoding="utf-8") as f:

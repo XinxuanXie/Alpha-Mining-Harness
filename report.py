@@ -73,7 +73,8 @@ def default_out(segment, formula):
             best = p
     if best:
         return os.path.splitext(best)[0] + ".html"
-    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    now = datetime.now()
+    stamp = f"{now:%Y%m%d_%H%M%S}_{now.microsecond // 1000:03d}"
     return os.path.join("results", f"report_{segment}_{stamp}.html")
 
 def main():
