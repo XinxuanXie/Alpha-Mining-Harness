@@ -70,7 +70,9 @@ def compute_metrics(factor, wide):
     by_h = {str(hh): (ic_mean if hh == JUDGE_H else _mean_or_none(_ic_series(factor, _label(close, hh))))
             for hh in (1, 5, 10, 20, 60)}
 
-    coverage = float((factor.notna() & close.notna()).sum().sum() / close.notna().sum().sum())
+    # 覆盖率只在因子所在段内算：分母是段内有价格的股票日数，不含加载窗口的其余日期
+    close_in = close.reindex(factor.index)
+    coverage = float((factor.notna() & close_in.notna()).sum().sum() / close_in.notna().sum().sum())
 
     return {
         "IC均值": ic_mean, "ICIR": icir, "t值": t_val,
@@ -126,7 +128,7 @@ def scorecard(factor, wide):
         "覆盖率": m["覆盖率"], "因子自相关": autocorr,
         "各持有期IC": m["各持有期IC"],
         "五组收益": q_avg, "分组单调性": mono,
-        "多空价差": float(spread.mean()), "多空胜率": float((spread > 0).mean()),
+        "多空价差": float(spread.mean()), "多空胜率": float((spread.dropna() > 0).mean()),
         "方向一致率": float((daily_ic > 0).mean()),
     }
 
