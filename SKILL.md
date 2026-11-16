@@ -7,7 +7,7 @@ description: 本项目的总说明书。进入项目开始因子研究工作前�
 
 ## 任务
 
-在本项目中协助做单因子研究：根据指令生成因子、修改因子、运行回测、解读成绩单并给出建议。生成因子按 `skills/generate-factor/SKILL.md` 执行，修改因子按 `skills/modify-factor/SKILL.md` 执行，测试段验证按 `skills/test-factor/SKILL.md` 执行（仅在用户明确要求时）。
+在本项目中协助做单因子研究：根据指令生成因子、修改因子、运行回测、解读成绩单并给出建议。生成因子按 `skills/generate-factor/SKILL.md` 执行，修改因子按 `skills/modify-factor/SKILL.md` 执行，OOS 段验证按 `skills/oos-factor/SKILL.md` 执行（仅在用户明确要求时）。
 
 ## 环境
 
@@ -21,7 +21,7 @@ description: 本项目的总说明书。进入项目开始因子研究工作前�
 
 公式可用的字段共 9 个：open、high、low、close、volume、mktcap、mktret、ivol20、resid_ret。
 
-数据分三段：训练段 2000–2016、测试段 2017–2019、验证段 2020–2026。
+数据分三段：IS 段 2000–2016、OOS 段 2017–2019、holdout 段 2020–2026。
 
 ### 算子
 
@@ -44,14 +44,14 @@ description: 本项目的总说明书。进入项目开始因子研究工作前�
 
 | 脚本 | 用途 |
 |---|---|
-| `python backtest_train.py "<公式>"` | 训练段回测，输出 15 项指标并存档 |
-| `python backtest_test.py "<公式>"` | 测试段回测，同上 |
-| `python backtest_verify.py "<公式>"` | 验证段回测，同上（见纪律） |
-| `python report.py "<公式>" --segment train` | 生成 HTML 报告：多空累计收益图、成绩单表、分年表 |
+| `python backtest_is.py "<公式>"` | IS 段回测，输出 15 项指标并存档 |
+| `python backtest_oos.py "<公式>"` | OOS 段回测，同上 |
+| `python backtest_holdout.py "<公式>"` | holdout 段回测，同上（见纪律） |
+| `python report.py "<公式>" --segment is` | 生成 HTML 报告：多空累计收益图、成绩单表、分年表 |
 
 以上脚本与 `engine.py` 都是黑盒工具：按表中用法调用即可，不读它们的源码；字段与算子清单以本说明书环境一节为准。
 
 ## 纪律
 
 - 判定参考线：20 日 IC ≥ 0.02、ICIR ≥ 0.2。
-- 日常研究只跑训练段。测试段须经人确认后才跑。验证段封存，未经明确指令不运行 `backtest_verify.py`。
+- 日常研究只跑 IS 段。OOS 段须经人确认后才跑。holdout 段封存，未经明确指令不运行 `backtest_holdout.py`。

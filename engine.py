@@ -17,7 +17,7 @@ SEC_PATH = os.path.join(BASE, "data", "securities.parquet")
 MEMB_PATH = os.path.join(BASE, "data", "membership_intervals.parquet")
 BENCH_PATH = os.path.join(BASE, "data", "spy_benchmark.parquet")
 PRECOMP_PATH = os.path.join(BASE, "data", "precomp_fields.parquet")
-TRAIN_END = "2016-12-31"   # 数据加载截止日（回测脚本按数据段改这个值）
+LOAD_END = "2016-12-31"   # 数据加载截止日（回测脚本按数据段改这个值）
 ID_COL = "permno"          # 股票标识列
 FIELDS = ["open", "high", "low", "close", "volume", "mktcap", "mktret",
           "ivol20", "resid_ret"]  # 公式可用字段（mktret 为市场收益；ivol20、resid_ret 为程序预计算的市场模型残差类字段，窗口固定 20 日）
@@ -29,7 +29,7 @@ SECTOR_OF = {}             # permno（int）→ GICS 行业名；load_wide 时�
 # 成分口径：只保留落在 S&P 500 成分区间内的股票-日，区间外置缺失
 # ============================================================
 def load_wide():
-    df = pd.read_parquet(DATA_PATH, filters=[("date", "<=", pd.Timestamp(TRAIN_END))])
+    df = pd.read_parquet(DATA_PATH, filters=[("date", "<=", pd.Timestamp(LOAD_END))])
     df = df.sort_values(["date", ID_COL])
     wide = {}
     for f in ("open", "high", "low", "close", "volume", "mktcap"):
@@ -49,7 +49,7 @@ def load_wide():
         mask[col] = inside
     for f in ("open", "high", "low", "close", "volume", "mktcap"):
         wide[f] = wide[f].where(mask)
-    bench = pd.read_parquet(BENCH_PATH, filters=[("date", "<=", pd.Timestamp(TRAIN_END))])
+    bench = pd.read_parquet(BENCH_PATH, filters=[("date", "<=", pd.Timestamp(LOAD_END))])
     mkt = bench.set_index("date")["vwretd"].reindex(close.index)
     wide["mktret"] = pd.DataFrame(
         np.repeat(mkt.to_numpy()[:, None], len(close.columns), axis=1),

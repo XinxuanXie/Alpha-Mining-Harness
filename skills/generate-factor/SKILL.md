@@ -32,10 +32,10 @@ description: 需要生成一个新因子时使用。按本文件走完一整套�
 
 ## 第四步：回测
 
-逐条运行训练段回测，等待成绩单输出：
+逐条运行 IS 段回测，等待成绩单输出：
 
 ```
-python backtest_train.py "<公式>"
+python backtest_is.py "<公式>"
 ```
 
 成绩单会打印出来，并自动存一份 JSON 到 `results/` 目录（文件名含数据段与时间，内容为公式与 15 项数字），后续查阅、对比从那里取。
@@ -43,7 +43,7 @@ python backtest_train.py "<公式>"
 全部变体测完后，挑出最好的一条（以 20 日 IC、ICIR 为主），为它生成报告：
 
 ```
-python report.py "<挑中的公式>" --segment train
+python report.py "<挑中的公式>" --segment is
 ```
 
 公式报错时按报错信息修正公式（清单外算子、表达式结构不支持等），不要绕过。

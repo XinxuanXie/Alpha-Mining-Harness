@@ -1,6 +1,6 @@
 """单因子回测报告：输入公式与数据段，生成一个自包含 HTML 文件（零外部依赖，离线可看）。
 形态参照 WorldQuant BRAIN 结果页：一张多空累计收益主图、一张成绩单表、一张分年表。
-用法：python report.py "neg(close / delay(close, 20) - 1)" --segment train --out report.html
+用法：python report.py "neg(close / delay(close, 20) - 1)" --segment is --out report.html
 只呈现不判定：报告只有数字与图。公式求值由 engine.py 完成，指标由回测脚本完成。"""
 
 import argparse
@@ -15,15 +15,15 @@ import numpy as np
 import pandas as pd
 
 import engine
-from backtest_train import daily_ic_series, quintile_daily, scorecard  # 指标函数与三个回测脚本同一份实现
+from backtest_is import daily_ic_series, quintile_daily, scorecard  # 指标函数与三个回测脚本同一份实现
 
 # ============================================================
 # 数据段（与回测脚本同一口径：加载止日、统计区间、段名）
 # ============================================================
 SEGMENTS = {
-    "train": ("2016-12-31", "2000-01-01", "2016-12-31", "训练段"),
-    "test": ("2020-04-30", "2017-01-01", "2019-12-31", "测试段"),
-    "verify": ("2026-09-30", "2020-01-01", "2026-09-30", "验证段"),
+    "is": ("2016-12-31", "2000-01-01", "2016-12-31", "IS 段"),
+    "oos": ("2020-04-30", "2017-01-01", "2019-12-31", "OOS 段"),
+    "holdout": ("2026-09-30", "2020-01-01", "2026-09-30", "holdout 段"),
 }
 
 # ============================================================
@@ -79,7 +79,7 @@ def default_out(segment, formula):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("formula")
-    ap.add_argument("--segment", choices=list(SEGMENTS), default="train")
+    ap.add_argument("--segment", choices=list(SEGMENTS), default="is")
     ap.add_argument("--out", default=None)
     a = ap.parse_args()
     load_end, seg_start, seg_end, seg_name = SEGMENTS[a.segment]
@@ -87,7 +87,7 @@ def main():
     if not ok:
         print("公式错误：" + "、".join(bad) + " 不在清单内")
         return 1
-    engine.TRAIN_END = load_end
+    engine.LOAD_END = load_end
     wide = engine.load_wide()
     try:
         fac = engine.eval_formula(a.formula, wide)
