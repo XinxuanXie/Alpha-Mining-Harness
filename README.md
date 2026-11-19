@@ -1,14 +1,45 @@
 # Alpha-Mining-Harness — 单因子研究
 
-一套给通用 Agent 用的因子研究环境：主说明书（SKILL）＋五个 subagent 定义＋回测工具，在标普 500 历史成分股的日频价量数据上做单因子研究。主 agent 调度，生成、辩论、排序、复盘各由专职 subagent 执行，假设—因子对在假设池中流转；脚本只负责计算，不做判定。
+一套给通用 Agent 用的因子研究环境，在标普 500 历史成分股的日频价量数据上做单因子研究。
 
+主 agent（Supervisor）负责调度、盘点与仲裁；生成、辩论、排序、复盘各由专职 subagent 执行。研究单位是「假设—因子对」，对子在假设池中流转：生成入池 → 辩论修改 → Rank 打分排名 → 每轮收尾复盘，跨轮反馈写进共享记忆。脚本只负责计算，不做判定。
+
+![因子研究系统 v3 架构图](docs/architecture-v3.svg)
+
+## 一轮怎么跑
+
+1. **任务下达**：研究者给出研究方向，主 agent 记入共享记忆的研究计划并派活。
+2. **生成**：生成 agent 先读共享记忆反馈、文献笔记与假设池，缺的材料自行检索，要点记入笔记；再翻经典库产出假设—因子对（一次最多 10 对），输出前自查新颖性。对子入池建档。
+3. **辩论修改**：辩护 agent 先立论，把假设展开成机制链；质疑 agent 逐环攻击假设、构造与对应关系；辩护逐条答辩，最多 3 轮。分歧由主 agent 仲裁，按结论修改，产出最终版；辩论全程记录另存。
+4. **排序（Rank）**：Rank agent 按逻辑、构造、新颖性逐条打分（各 1–5 分），总分即排名。实质重复或公式不可表达的，给淘汰建议。
+5. **复盘（Meta-review）**：本批对子全部走到终态后，复盘 agent 汇总本轮反复出现的问题，写成定性反馈记入共享记忆，供下一轮所有 agent 开工前读。
+
+回测暂未接入本流程，衔接方式后续再定；回测工具与纪律保留在下方。
+
+## 文件结构
+
+| 路径 | 内容 |
+|---|---|
+| `SKILL.md` | 总说明书（主 agent）：班子分工、一轮流程、池子纪律、环境、工具 |
+| `.opencode/agent/` | 五个 subagent 定义：factor-generator（生成）、factor-defender（辩护）、factor-challenger（质疑）、factor-ranker（排序）、meta-reviewer（复盘） |
+| `research/hypothesis_pool.md` | 假设池：对子档案、状态与分数，主 agent 维护 |
+| `research/shared_memory.md` | 共享记忆：研究计划、试验登记、运行统计、Meta-review 反馈 |
+| `research/literature_notes.md` | 文献笔记：检索读到的论文要点 |
+| `research/debate/` | 辩论记录：一对一文件，按编号命名 |
+| `classic_library.md` + `classic_library/` | 经典因子库索引与原文：200 条，13 个家族 |
+| `engine.py` | 计算引擎：读数据、公式求值（33 个算子）、白名单检查 |
+| `tools/backtest/` | 三个回测脚本，各管一段（IS / OOS / holdout），结果存入 `results/` |
+| `tools/search/` | 文献检索脚本：openalex.py、core.py、arxiv.py |
+| `report.py` | 单文件 HTML 报告：多空累计收益图、指标表、分年表 |
+| `requirements.txt` | Python 依赖清单（pandas、numpy、pyarrow） |
+| `data/` | 数据文件（见下方 Data 一节，从 Release 下载，不在仓库内） |
 
 ## Install with opencode (recommended)
 
 opencode 本体不在本仓库内，需先安装：有 Node.js 的环境（Windows / macOS / Linux 通用）运行 `npm install -g opencode-ai`；也可以用各系统的包管理器（Windows 的 scoop / choco、macOS 的 brew）。装好并连上模型（如 DeepSeek）后，把下面整段粘贴给它：
 
 ```
-You are installing the Alpha-Mining-Harness factor research skill.
+You are installing the Alpha-Mining-Harness factor research system.
 
 Do the following, then print a checklist table (OK / FAIL):
 1) Ensure git and python (>=3.10) exist. Install the Python packages:
@@ -19,17 +50,20 @@ Do the following, then print a checklist table (OK / FAIL):
 3) Arrange the files for opencode:
    - Copy SKILL.md to AGENTS.md in the project root (always-on instructions).
    - The subagent definitions under .opencode/agent/ are already in the repo; nothing to copy.
-4) Data is NOT in the git repo. Download the four parquet files from the repo's
+4) API keys for the literature search scripts: copy .env.example to .env in the
+   project root and fill in OPENALEX_API_KEY and CORE_API_KEY
+   (environment variables work too and take precedence).
+5) Data is NOT in the git repo. Download the four parquet files from the repo's
    Release (tag: data) into data/: panel.parquet, securities.parquet,
    membership_intervals.parquet, spy_benchmark.parquet. See the Data section below.
-5) Quick check (IS segment only):
+6) Quick check (IS segment only):
    python tools/backtest/backtest_is.py "-(close / delay(close, 20) - 1)"
    Expected: 20日IC 0.0115, ICIR 0.075, and a JSON saved under results/.
 
 Print versions and pass/fail for each step. Stop after the checklist.
 ```
 
-Manual fallback: clone the repo, run `pip install -r requirements.txt`, do step 3 and 4 by hand, run the quick check in step 5.
+Manual fallback: clone the repo, run `pip install -r requirements.txt`, do step 3 to 5 by hand, run the quick check in step 6.
 
 ## Data
 
@@ -53,20 +87,3 @@ Manual fallback: clone the repo, run `pip install -r requirements.txt`, do step 
 - OOS 段（`tools/backtest/backtest_oos.py`）须经人确认后才跑。
 - holdout 段封存：未经明确指令，不运行 `tools/backtest/backtest_holdout.py`。
 - 判定参考线：20 日 IC ≥ 0.02、ICIR ≥ 0.2。
-
-## Files
-
-| File | Role |
-|---|---|
-| `SKILL.md` | 总说明书（主 agent）：班子分工、一轮流程、池子纪律、环境、工具 |
-| `.opencode/agent/` | 五个 subagent 定义：factor-generator（生成）、factor-defender（辩护）、factor-challenger（质疑）、factor-ranker（排序）、meta-reviewer（复盘） |
-| `research/hypothesis_pool.md` | 假设池：对子档案、状态与分数，主 agent 维护 |
-| `research/shared_memory.md` | 共享记忆：研究计划、试验登记、运行统计、Meta-review 反馈 |
-| `research/literature_notes.md` | 文献笔记：检索读到的论文要点 |
-| `research/debate/` | 辩论记录：一对一文件，按编号命名 |
-| `engine.py` | 计算引擎：读数据、公式求值（33 个算子）、白名单检查 |
-| `tools/backtest/backtest_is.py` / `tools/backtest/backtest_oos.py` / `tools/backtest/backtest_holdout.py` | 三个回测脚本，各管一段，指标在脚本内计算，结果存入 `results/` |
-| `report.py` | 单文件 HTML 报告：多空累计收益图、指标表、分年表 |
-| `requirements.txt` | Python 依赖清单（pandas、numpy、pyarrow），`pip install -r requirements.txt` 安装 |
-| `classic_library.md` + `classic_library/` | 经典因子库索引与原文：200 条，13 个家族 |
-| `data/` | 数据文件（见上 Data 一节，从 Release 下载，不在仓库内） |
