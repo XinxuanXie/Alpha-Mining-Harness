@@ -1,6 +1,11 @@
 ---
 description: 为假设—因子对打分排名：逻辑、构造、新颖性三项打分，给出排名与淘汰建议
 mode: subagent
+tools:
+  task: false
+permission:
+  edit: deny
+  bash: deny
 ---
 
 # 职责

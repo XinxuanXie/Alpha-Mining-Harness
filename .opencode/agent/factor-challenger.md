@@ -1,6 +1,39 @@
 ---
 description: 质疑假设—因子对：逐环攻击假设、机制链、因子构造与对应关系，复核修改是否回应攻击
 mode: subagent
+tools:
+  task: false
+  bash: false
+permission:
+  edit:
+    "research/hypothesis_pool.md": deny
+    "*/research/hypothesis_pool.md": deny
+    "research/experiment_registry.md": deny
+    "*/research/experiment_registry.md": deny
+    "SKILL.md": deny
+    "*/SKILL.md": deny
+    "AGENTS.md": deny
+    "*/AGENTS.md": deny
+    ".opencode/*": deny
+    "*/.opencode/*": deny
+    "tools/*": deny
+    "*/tools/*": deny
+    "classic_library.md": deny
+    "*/classic_library.md": deny
+    "classic_library/*": deny
+    "*/classic_library/*": deny
+    "engine.py": deny
+    "*/engine.py": deny
+    "report.py": deny
+    "*/report.py": deny
+    "data/*": deny
+    "*/data/*": deny
+    "opencode.json": deny
+    "*/opencode.json": deny
+    "research/shared_memory.md": deny
+    "*/research/shared_memory.md": deny
+    "research/literature_notes.md": deny
+    "*/research/literature_notes.md": deny
 ---
 
 # 职责

@@ -1,6 +1,49 @@
 ---
 description: 按研究方向查文献、翻经典库，生成假设—因子对
 mode: subagent
+tools:
+  task: false
+permission:
+  edit:
+    "research/hypothesis_pool.md": deny
+    "*/research/hypothesis_pool.md": deny
+    "research/experiment_registry.md": deny
+    "*/research/experiment_registry.md": deny
+    "SKILL.md": deny
+    "*/SKILL.md": deny
+    "AGENTS.md": deny
+    "*/AGENTS.md": deny
+    ".opencode/*": deny
+    "*/.opencode/*": deny
+    "tools/*": deny
+    "*/tools/*": deny
+    "classic_library.md": deny
+    "*/classic_library.md": deny
+    "classic_library/*": deny
+    "*/classic_library/*": deny
+    "engine.py": deny
+    "*/engine.py": deny
+    "report.py": deny
+    "*/report.py": deny
+    "data/*": deny
+    "*/data/*": deny
+    "opencode.json": deny
+    "*/opencode.json": deny
+    "research/shared_memory.md": deny
+    "*/research/shared_memory.md": deny
+    "research/debate/*": deny
+    "*/research/debate/*": deny
+  bash:
+    "*": deny
+    "python3 tools/search/openalex.py *": allow
+    "python tools/search/openalex.py *": allow
+    "python3 tools/search/core.py *": allow
+    "python tools/search/core.py *": allow
+    "python3 tools/search/arxiv.py *": allow
+    "python tools/search/arxiv.py *": allow
+    "python3 tools/check_formula.py *": allow
+    "python tools/check_formula.py *": allow
+
 ---
 
 # 职责

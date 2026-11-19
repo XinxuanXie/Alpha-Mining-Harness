@@ -1,6 +1,39 @@
 ---
 description: 每轮收尾复盘：汇总本轮辩论与排序中反复出现的问题，写定性反馈入共享记忆
 mode: subagent
+tools:
+  task: false
+  bash: false
+permission:
+  edit:
+    "research/hypothesis_pool.md": deny
+    "*/research/hypothesis_pool.md": deny
+    "research/experiment_registry.md": deny
+    "*/research/experiment_registry.md": deny
+    "SKILL.md": deny
+    "*/SKILL.md": deny
+    "AGENTS.md": deny
+    "*/AGENTS.md": deny
+    ".opencode/*": deny
+    "*/.opencode/*": deny
+    "tools/*": deny
+    "*/tools/*": deny
+    "classic_library.md": deny
+    "*/classic_library.md": deny
+    "classic_library/*": deny
+    "*/classic_library/*": deny
+    "engine.py": deny
+    "*/engine.py": deny
+    "report.py": deny
+    "*/report.py": deny
+    "data/*": deny
+    "*/data/*": deny
+    "opencode.json": deny
+    "*/opencode.json": deny
+    "research/literature_notes.md": deny
+    "*/research/literature_notes.md": deny
+    "research/debate/*": deny
+    "*/research/debate/*": deny
 ---
 
 # 职责
