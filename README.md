@@ -28,6 +28,7 @@
 | `research/debate/` | 辩论记录：一对一文件，按编号命名 |
 | `classic_library.md` + `classic_library/` | 经典因子库索引与原文：200 条，13 个家族 |
 | `engine.py` | 计算引擎：读数据、公式求值（33 个算子）、白名单检查 |
+| `tools/check_formula.py` | 公式校验：结构、字段、算子合法性与算子计数，不接触数据 |
 | `tools/backtest/` | 三个回测脚本，各管一段（IS / OOS / holdout），结果存入 `results/` |
 | `tools/search/` | 文献检索脚本：openalex.py、core.py、arxiv.py |
 | `report.py` | 单文件 HTML 报告：多空累计收益图、指标表、分年表 |
@@ -83,6 +84,8 @@ Manual fallback: clone the repo, run `pip install -r requirements.txt`, do step 
 
 ## Discipline
 
+- 公式复杂度上限：算子调用总数不超过 14 个（经典库最大值），用 `tools/check_formula.py` 计数。
+- 流程内不接触数据：各 agent 只知道数据有哪些（字段、区间、口径），不读行情数值、不自算统计量；与数据有关的量只出自回测成绩单。
 - 日常研究只跑 IS 段（`tools/backtest/backtest_is.py`）。
 - OOS 段（`tools/backtest/backtest_oos.py`）须经人确认后才跑。
 - holdout 段封存：未经明确指令，不运行 `tools/backtest/backtest_holdout.py`。
