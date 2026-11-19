@@ -6,7 +6,7 @@
   python tools/search/core.py fulltext <CORE id 或 DOI>           # 取单篇全文（截断 30000 字符）
 
 设计说明:
-  - key 不写在脚本里，从环境变量 CORE_API_KEY 读；没有 key 能搜，但全文是锁的。
+  - key 不写在脚本里，从环境变量 CORE_API_KEY 读，环境变量没有就读项目根目录 .env；没有 key 能搜，但全文是锁的。
   - 输出是瘦身过的 JSON，不裸传 API 原始返回。
   - 备选方案：fulltext 时 CORE 里没有全文，自动降级到 Unpaywall 按 DOI 查免费
     全文地址（免 key），返回 best_oa_url；再没有，就明确报材料不足，不硬编。
@@ -26,6 +26,26 @@ EMAIL = "ysunfn@connect.ust.hk"  # Unpaywall 要求带邮箱参数，不是密�
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
 LOCKED = "Not available for public API users"
+
+
+def _load_dotenv():
+    """环境变量里没有的 key，去项目根目录的 .env 里找（只补缺失，不覆盖已有）。
+
+    .env 一行一个 名字=值，是放 key 的标准文件；它在 .gitignore 里，不进仓库。
+    """
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".env")
+    if not os.path.exists(path):
+        return
+    with open(path, encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            name, value = line.split("=", 1)
+            os.environ.setdefault(name.strip(), value.strip().strip('"').strip("'"))
+
+
+_load_dotenv()
 
 
 # ---------- 基础请求 ----------

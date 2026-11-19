@@ -7,7 +7,7 @@
   python tools/search/openalex.py references <work_id 或 DOI> [--limit 20]  # 它引用了谁
 
 设计说明:
-  - key 不写在脚本里，从环境变量 OPENALEX_API_KEY 读；没有 key 也能跑（走公共额度）。
+  - key 不写在脚本里，从环境变量 OPENALEX_API_KEY 读，环境变量没有就读项目根目录 .env；没有 key 也能跑（走公共额度）。
   - 输出是瘦身过的 JSON（标题、年份、被引、DOI、出处、摘要），不裸传 API 原始返回。
   - 备选方案：search 时 OpenAlex 调不通，自动降级到 Crossref 检索（免 key），
     返回记录带 "source": "crossref" 标明来源；引用追踪没有备选，失败就报错。
@@ -27,6 +27,26 @@ SELECT = ("id,display_name,publication_year,cited_by_count,doi,"
           "primary_location,abstract_inverted_index,referenced_works")
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
+
+
+def _load_dotenv():
+    """环境变量里没有的 key，去项目根目录的 .env 里找（只补缺失，不覆盖已有）。
+
+    .env 一行一个 名字=值，是放 key 的标准文件；它在 .gitignore 里，不进仓库。
+    """
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".env")
+    if not os.path.exists(path):
+        return
+    with open(path, encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            name, value = line.split("=", 1)
+            os.environ.setdefault(name.strip(), value.strip().strip('"').strip("'"))
+
+
+_load_dotenv()
 
 
 # ---------- 基础请求 ----------

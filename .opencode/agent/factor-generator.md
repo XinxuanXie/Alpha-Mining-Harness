@@ -28,7 +28,7 @@ mode: subagent
 
 经典库：200 条经典因子，13 个家族。索引在 `classic_library.md`，条目在 `classic_library/` 下，一家族一文件。
 
-文献检索脚本（在 `tools/search/` 下，key 从环境变量读）：
+文献检索脚本（在 `tools/search/` 下，key 从环境变量或根目录 .env 读）：
 
 - `openalex.py`：search 查论文，citing 查谁引用了它，references 查它引用了谁。
 - `core.py`：search 查论文，fulltext 取单篇全文。
