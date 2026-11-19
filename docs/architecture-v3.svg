@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg viewBox="0 0 1160 930" xmlns="http://www.w3.org/2000/svg">
-<rect x="0" y="0" width="1160" height="930" fill="#fbfcfe"/>
+<svg viewBox="0 0 1160 700" xmlns="http://www.w3.org/2000/svg">
+<rect x="0" y="0" width="1160" height="700" fill="#fbfcfe"/>
 <style>
   .box { fill: #ffffff; stroke: #3a5a9c; stroke-width: 1.6; }
   .box-title { font-size: 15px; font-weight: 700; fill: #16305e; font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif; }
@@ -13,108 +13,103 @@
 </style>
   <defs>
     <marker id="ah" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#3a5a9c"/></marker>
+    <marker id="ah-start" markerWidth="8" markerHeight="8" refX="1" refY="3" orient="auto-start-reverse"><path d="M0,0 L7,3 L0,6 Z" fill="#7a8199"/></marker>
     <marker id="ah-grey" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#7a8199"/></marker>
   </defs>
 
-  <text x="580" y="36" text-anchor="middle" class="zone-label">围着假设池持续运转 · 辩论按对并行</text>
+  <text x="480" y="84" text-anchor="middle" class="zone-label">围着假设池持续运转</text>
 
   <!-- 研究者 -->
-  <rect class="box" x="30" y="64" width="150" height="72" rx="8"/>
-  <text x="105" y="98" text-anchor="middle" class="box-title">研究者</text>
-  <text x="105" y="118" text-anchor="middle" class="box-sub">设定方向 · 审批</text>
+  <rect class="box" x="20" y="100" width="130" height="64" rx="8"/>
+  <text x="85" y="130" text-anchor="middle" class="box-title">研究者</text>
+  <text x="85" y="150" text-anchor="middle" class="box-sub">设定方向 · 审批</text>
 
   <!-- 主 agent -->
-  <rect class="box" x="400" y="64" width="360" height="72" rx="8"/>
-  <text x="580" y="92" text-anchor="middle" class="box-title">主 agent</text>
-  <text x="580" y="110" text-anchor="middle" class="box-sub">Supervisor · 调度 · 盘点 · 仲裁</text>
-  <text x="580" y="126" text-anchor="middle" class="box-exec">假设池唯一写者</text>
+  <rect class="box" x="300" y="100" width="300" height="64" rx="8"/>
+  <text x="450" y="130" text-anchor="middle" class="box-title">主 agent</text>
+  <text x="450" y="150" text-anchor="middle" class="box-sub">Supervisor · 调度 · 盘点 · 仲裁</text>
 
-  <!-- 运行记录 -->
-  <rect class="box" x="830" y="64" width="300" height="72" rx="8"/>
-  <text x="980" y="92" text-anchor="middle" class="box-title" style="font-size:13.5px;">运行记录 Traces</text>
-  <text x="980" y="110" text-anchor="middle" class="box-sub">主 agent 轮末导出全程 trace</text>
-  <text x="980" y="126" text-anchor="middle" class="box-sub">不进仓库</text>
+  <path class="arrow" d="M150,132 L294,132" marker-end="url(#ah)"/>
+  <text x="222" y="120" text-anchor="middle" class="arrow-label">研究方向</text>
 
-  <path class="arrow" d="M180,92 L394,92" marker-end="url(#ah)"/>
-  <text x="287" y="84" text-anchor="middle" class="arrow-label">研究方向</text>
-  <path class="arrow" d="M394,110 L186,110" marker-end="url(#ah)"/>
-  <text x="287" y="126" text-anchor="middle" class="arrow-label">本轮排名</text>
-  <path class="arrow" d="M766,100 L824,100" marker-end="url(#ah)"/>
-  <text x="795" y="92" text-anchor="middle" class="arrow-label">轮末导出</text>
+  <!-- Meta-review -->
+  <rect x="680" y="100" width="280" height="64" fill="#fff" stroke="#c0392b" stroke-width="1.6" stroke-dasharray="7 4" rx="8"/>
+  <text x="820" y="130" text-anchor="middle" class="box-title" style="fill:#8e2f24;">Meta-review（每轮复盘）</text>
+  <text x="820" y="150" text-anchor="middle" class="box-exec">独立 subagent · 每轮收尾触发</text>
 
-  <!-- 研究材料 -->
-  <rect class="box" x="30" y="190" width="230" height="76" rx="8" style="stroke:#7a8199"/>
-  <text x="145" y="216" text-anchor="middle" class="box-title" style="font-size:13.5px;">研究材料</text>
-  <text x="145" y="236" text-anchor="middle" class="box-sub">文献笔记（生成写）</text>
-  <text x="145" y="252" text-anchor="middle" class="box-sub">经典库 200 条（全员只读）· 检索脚本</text>
+  <!-- 派活 -->
+  <path class="arrow" d="M400,164 L297,249" marker-end="url(#ah)"/>
+  <text x="330" y="200" text-anchor="middle" class="arrow-label">派活</text>
+
+  <!-- 资源：文献笔记 -->
+  <rect class="box" x="15" y="244" width="140" height="52" rx="8" style="stroke:#7a8199"/>
+  <text x="85" y="268" text-anchor="middle" class="box-title" style="font-size:13.5px;">文献笔记</text>
+  <text x="85" y="286" text-anchor="middle" class="box-sub">生成写 · Literature Notes</text>
+
+  <!-- 资源：经典库 -->
+  <rect class="box" x="15" y="372" width="140" height="52" rx="8" style="stroke:#7a8199"/>
+  <text x="85" y="396" text-anchor="middle" class="box-title" style="font-size:13.5px;">经典库</text>
+  <text x="85" y="414" text-anchor="middle" class="box-sub">全员只读 · Classic Library</text>
+
+  <path d="M155,270 L179,270" stroke="#7a8199" stroke-width="1.8" fill="none" marker-start="url(#ah-start)" marker-end="url(#ah-grey)"/>
+
+  <!-- 资源：文献检索 -->
+  <rect class="box" x="15" y="308" width="140" height="52" rx="8" style="stroke:#7a8199"/>
+  <text x="85" y="332" text-anchor="middle" class="box-title" style="font-size:13.5px;">文献检索</text>
+  <text x="85" y="350" text-anchor="middle" class="box-sub">Literature Search</text>
+
+  <path class="arrow" d="M155,334 L181,318" style="stroke:#7a8199" marker-end="url(#ah-grey)"/>
+  <path class="arrow" d="M155,382 L188,328" style="stroke:#7a8199" marker-end="url(#ah-grey)"/>
 
   <!-- 生成 -->
-  <rect class="box" x="400" y="190" width="360" height="76" rx="8"/>
-  <text x="580" y="216" text-anchor="middle" class="box-title">生成 Generation</text>
-  <text x="580" y="236" text-anchor="middle" class="box-sub">读反馈 · 查文献 · 翻经典库 · 产出假设—因子对</text>
-  <text x="580" y="254" text-anchor="middle" class="box-exec">subagent · 一次 ≤10 对</text>
+  <rect class="box" x="185" y="250" width="200" height="76" rx="8"/>
+  <text x="285" y="278" text-anchor="middle" class="box-title">生成 Generation</text>
+  <text x="285" y="297" text-anchor="middle" class="box-sub">读反馈·笔记·池子 · 查文献 · 翻经典库</text>
+  <text x="285" y="315" text-anchor="middle" class="box-exec">subagent</text>
 
-  <path class="arrow" d="M548,136 L548,184" marker-end="url(#ah)"/>
-  <text x="542" y="168" text-anchor="end" class="arrow-label">派活</text>
-  <path class="arrow" d="M612,184 L612,142" marker-end="url(#ah)"/>
-  <text x="620" y="168" class="arrow-label">交回对子</text>
-  <path class="arrow" d="M394,222 L266,222" marker-end="url(#ah)"/>
-  <text x="330" y="214" text-anchor="middle" class="arrow-label">写笔记 · 调检索</text>
-  <path d="M266,240 L394,240" stroke="#7a8199" stroke-width="1.6" stroke-dasharray="5 4" fill="none" marker-end="url(#ah-grey)"/>
-  <text x="330" y="254" text-anchor="middle" class="arrow-label" style="fill:#7a8199">读经典库</text>
+  <!-- 辩论修改（叠放示意多单元并行） -->
+  <rect x="486" y="234" width="210" height="76" fill="#ffffff" stroke="#3a5a9c" stroke-width="1.2" rx="8"/>
+  <rect x="478" y="242" width="210" height="76" fill="#ffffff" stroke="#3a5a9c" stroke-width="1.2" rx="8"/>
+  <rect class="box" x="470" y="250" width="210" height="76" rx="8"/>
+  <text x="575" y="278" text-anchor="middle" class="box-title">辩论修改 Debate &amp; Revise</text>
+  <text x="575" y="297" text-anchor="middle" class="box-sub">质疑 / 辩护两个 subagent · 全面质疑假设与构造</text>
+  <text x="575" y="315" text-anchor="middle" class="box-exec">subagent · 每对一个单元 · 并行</text>
+
+  <!-- 排序 -->
+  <rect class="box" x="770" y="250" width="210" height="76" rx="8"/>
+  <text x="875" y="278" text-anchor="middle" class="box-title">排序 Rank</text>
+  <text x="875" y="297" text-anchor="middle" class="box-sub">逻辑 · 构造 · 新颖性打分，即排名</text>
+  <text x="875" y="315" text-anchor="middle" class="box-exec">subagent · 只读池子</text>
+
+  <path class="arrow" d="M385,288 L464,288" marker-end="url(#ah)"/>
+  <path class="arrow" d="M680,288 L764,288" marker-end="url(#ah)"/>
+
+  <!-- 仲裁 -->
+  <path d="M575,232 L575,170" stroke="#3a5a9c" stroke-width="1.6" stroke-dasharray="5 4" fill="none" marker-end="url(#ah)"/>
+  <text x="586" y="215" style="font-size:11px; fill:#3a5a9c;">分歧仲裁</text>
+
+  <!-- 主 agent 对假设池的唯一写入 -->
+  <path class="arrow" d="M600,140 L640,140 L640,494" marker-end="url(#ah)"/>
+  <text x="648" y="345" class="arrow-label">唯一写入</text>
 
   <!-- 假设池 -->
-  <rect x="400" y="320" width="360" height="84" fill="#eef3fb" stroke="#3a5a9c" stroke-width="1.4" rx="10"/>
-  <text x="580" y="350" text-anchor="middle" class="box-title">假设池 Hypothesis Pool</text>
-  <text x="580" y="372" text-anchor="middle" class="box-sub">编号 · 四项正文 · 状态 · Rank 分数 · 版本链</text>
-  <text x="580" y="390" text-anchor="middle" class="box-exec">仅主 agent 可写</text>
+  <rect x="185" y="500" width="795" height="78" fill="#eef3fb" stroke="#3a5a9c" stroke-width="1.4" rx="10"/>
+  <text x="582" y="532" text-anchor="middle" class="box-title" style="font-size:14px;">假设池 Hypothesis Pool</text>
+  <text x="582" y="556" text-anchor="middle" style="font-size:12px; fill:#44506a;">每条对子一份档案：编号 · 四项正文 · 状态 · Rank 分数 · 版本链；辩论全程记录另存 debate/ 按编号引用</text>
 
-  <path class="arrow" d="M372,136 L372,314" marker-end="url(#ah)"/>
-  <text x="380" y="300" class="arrow-label">入池 · 定稿 · 状态</text>
-
-  <!-- 辩论（并行扇出：叠放三层示意多个单元） -->
-  <rect x="426" y="434" width="360" height="84" fill="#ffffff" stroke="#3a5a9c" stroke-width="1.2" rx="8"/>
-  <rect x="413" y="447" width="360" height="84" fill="#ffffff" stroke="#3a5a9c" stroke-width="1.2" rx="8"/>
-  <rect class="box" x="400" y="460" width="360" height="84" rx="8"/>
-  <text x="580" y="488" text-anchor="middle" class="box-title">辩论修改 Debate &amp; Revise</text>
-  <text x="580" y="508" text-anchor="middle" class="box-sub">质疑 / 辩护两个 subagent · 立论 · 攻击 · 答辩 · 复核</text>
-  <text x="580" y="526" text-anchor="middle" class="box-exec">每对一个单元 · 并行 · 记录存 debate/&lt;编号&gt;.md</text>
-
-  <path class="arrow" d="M470,404 L470,428" marker-end="url(#ah)"/>
-  <path class="arrow" d="M580,404 L580,428" marker-end="url(#ah)"/>
-  <path class="arrow" d="M690,404 L690,428" marker-end="url(#ah)"/>
-  <text x="700" y="424" class="arrow-label">逐对派出</text>
-
-  <path class="arrow" d="M800,460 L800,142" marker-end="url(#ah)"/>
-  <text x="792" y="575" text-anchor="end" class="arrow-label">定稿交回</text>
-
-  <!-- Rank -->
-  <rect class="box" x="400" y="600" width="360" height="76" rx="8"/>
-  <text x="580" y="626" text-anchor="middle" class="box-title">排序 Rank</text>
-  <text x="580" y="646" text-anchor="middle" class="box-sub">逻辑 · 构造 · 新颖性打分 · 只读池子</text>
-  <text x="580" y="662" text-anchor="middle" class="box-exec">subagent · 分数交回主 agent</text>
-
-  <path d="M388,404 L388,594" stroke="#3a5a9c" stroke-width="1.6" stroke-dasharray="5 4" fill="none" marker-end="url(#ah)"/>
-  <path class="arrow" d="M830,600 L830,142" marker-end="url(#ah)"/>
-  <text x="838" y="380" class="arrow-label">分数 · 淘汰建议</text>
+  <path d="M285,326 L285,497" stroke="#3a5a9c" stroke-width="1.2" stroke-dasharray="2 3" fill="none" marker-end="url(#ah)"/>
+  <path d="M575,326 L575,497" stroke="#3a5a9c" stroke-width="1.2" stroke-dasharray="2 3" fill="none" marker-end="url(#ah)"/>
+  <path d="M875,326 L875,497" stroke="#3a5a9c" stroke-width="1.2" stroke-dasharray="2 3" fill="none" marker-end="url(#ah)"/>
+  <text x="293" y="420" class="arrow-label">读</text>
+  <text x="583" y="420" class="arrow-label">读</text>
+  <text x="883" y="420" class="arrow-label">读</text>
 
   <!-- 回测（暂挂起） -->
-  <rect x="950" y="600" width="180" height="76" fill="#f4f4f6" stroke="#c9ccd6" stroke-dasharray="5 4" rx="8"/>
-  <text x="1040" y="628" text-anchor="middle" class="box-title" style="font-size:13.5px; fill:#7a8199;">回测 Backtest</text>
-  <text x="1040" y="650" text-anchor="middle" class="box-sub" style="fill:#7a8199">暂挂起 · 人触发</text>
-
-  <!-- 复盘（收尾执行） -->
-  <rect class="box" x="400" y="720" width="360" height="76" rx="8"/>
-  <text x="580" y="746" text-anchor="middle" class="box-title">复盘 Meta-review</text>
-  <text x="580" y="766" text-anchor="middle" class="box-sub">汇总反复出现的问题 · 只记定性模式</text>
-  <text x="580" y="782" text-anchor="middle" class="box-exec">独立 subagent · 每轮收尾</text>
-
-  <path class="arrow" d="M612,676 L612,714" marker-end="url(#ah)"/>
-  <text x="620" y="700" class="arrow-label">排名产出后 · 主 agent 触发</text>
-  <path class="arrow" d="M580,796 L580,850" marker-end="url(#ah)"/>
-  <text x="588" y="826" class="arrow-label">追加反馈</text>
+  <rect x="1000" y="500" width="145" height="78" fill="#f4f4f6" stroke="#c9ccd6" stroke-dasharray="5 4" rx="10"/>
+  <text x="1072" y="532" text-anchor="middle" class="box-title" style="font-size:13.5px; fill:#7a8199;">回测</text>
+  <text x="1072" y="556" text-anchor="middle" style="font-size:11.5px; fill:#7a8199;">暂挂起 · 后续再定</text>
 
   <!-- 共享记忆 -->
-  <rect x="185" y="856" width="795" height="48" fill="#ffffff" stroke="#3a5a9c" stroke-width="1.2" rx="10"/>
-  <text x="582" y="885" text-anchor="middle" style="font-size:12.5px; fill:#16305e;">共享记忆 Shared Memory（全员必读）：研究计划 · 试验登记 · 运行统计（主 agent 记） · Meta-review 反馈（复盘追加）</text>
+  <rect x="185" y="600" width="795" height="46" fill="#ffffff" stroke="#3a5a9c" stroke-width="1.2" rx="10"/>
+  <text x="582" y="628" text-anchor="middle" style="font-size:12.5px; fill:#16305e;">共享记忆（全局共享，所有 agent 必读）：研究计划 · 试验登记 · 运行统计 · Meta-review 反馈</text>
 </svg>
