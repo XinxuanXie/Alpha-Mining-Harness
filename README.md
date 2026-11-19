@@ -1,6 +1,6 @@
 # Alpha-Mining-Harness — 单因子研究
 
-一套给通用 Agent 用的因子研究环境：说明书（SKILL）＋两个 skill（生成因子、修改因子）＋回测工具，在标普 500 历史成分股的日频价量数据上做单因子研究。Agent 负责提出假设、写公式、解读成绩单；脚本只负责计算，不做判定。
+一套给通用 Agent 用的因子研究环境：主说明书（SKILL）＋五个 subagent 定义＋回测工具，在标普 500 历史成分股的日频价量数据上做单因子研究。主 agent 调度，生成、辩论、排序、复盘各由专职 subagent 执行，假设—因子对在假设池中流转；脚本只负责计算，不做判定。
 
 
 ## Install with opencode (recommended)
@@ -18,8 +18,7 @@ Do the following, then print a checklist table (OK / FAIL):
    (if it already exists, git pull instead)
 3) Arrange the files for opencode:
    - Copy SKILL.md to AGENTS.md in the project root (always-on instructions).
-   - Copy skills/generate-factor, skills/modify-factor and skills/oos-factor into .opencode/skills/
-     so each sits at .opencode/skills/<name>/SKILL.md.
+   - The subagent definitions under .opencode/agent/ are already in the repo; nothing to copy.
 4) Data is NOT in the git repo. Download the four parquet files from the repo's
    Release (tag: data) into data/: panel.parquet, securities.parquet,
    membership_intervals.parquet, spy_benchmark.parquet. See the Data section below.
@@ -59,10 +58,12 @@ Manual fallback: clone the repo, run `pip install -r requirements.txt`, do step 
 
 | File | Role |
 |---|---|
-| `SKILL.md` | 总说明书：任务、环境、工具、纪律 |
-| `skills/generate-factor/SKILL.md` | 生成因子：读资料 → 假设 → 公式 → 回测 → 建议 |
-| `skills/modify-factor/SKILL.md` | 修改因子：诊断 → 至多五种方法各改一条 → 全测挑最优 → 新旧对比 |
-| `skills/oos-factor/SKILL.md` | OOS 段验证：回测一次 → OOS 段报告 → 训练与测试对比（仅用户明确要求时） |
+| `SKILL.md` | 总说明书（主 agent）：班子分工、一轮流程、池子纪律、环境、工具 |
+| `.opencode/agent/` | 五个 subagent 定义：factor-generator（生成）、factor-defender（辩护）、factor-challenger（质疑）、factor-ranker（排序）、meta-reviewer（复盘） |
+| `research/hypothesis_pool.md` | 假设池：对子档案、状态与分数，主 agent 维护 |
+| `research/shared_memory.md` | 共享记忆：研究计划、试验登记、运行统计、Meta-review 反馈 |
+| `research/literature_notes.md` | 文献笔记：检索读到的论文要点 |
+| `research/debate/` | 辩论记录：一对一文件，按编号命名 |
 | `engine.py` | 计算引擎：读数据、公式求值（33 个算子）、白名单检查 |
 | `tools/backtest/backtest_is.py` / `tools/backtest/backtest_oos.py` / `tools/backtest/backtest_holdout.py` | 三个回测脚本，各管一段，指标在脚本内计算，结果存入 `results/` |
 | `report.py` | 单文件 HTML 报告：多空累计收益图、指标表、分年表 |
