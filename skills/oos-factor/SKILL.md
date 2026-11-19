@@ -14,7 +14,7 @@ OOS 段只做裁决，不做挑选：同一条公式在 OOS 段只跑一次，�
 ## 第一步：OOS 段回测与报告
 
 ```
-python tools/backtest_oos.py "<公式>"
+python tools/backtest/backtest_oos.py "<公式>"
 python report.py "<公式>" --segment oos
 ```
 

@@ -51,9 +51,9 @@ description: 本项目的总说明书。进入项目开始因子研究工作前�
 
 | 脚本 | 用途 |
 |---|---|
-| `python tools/backtest_is.py "<公式>"` | IS 段回测，输出 15 项指标并存档 |
-| `python tools/backtest_oos.py "<公式>"` | OOS 段回测，同上 |
-| `python tools/backtest_holdout.py "<公式>"` | holdout 段回测，同上（见纪律） |
+| `python tools/backtest/backtest_is.py "<公式>"` | IS 段回测，输出 15 项指标并存档 |
+| `python tools/backtest/backtest_oos.py "<公式>"` | OOS 段回测，同上 |
+| `python tools/backtest/backtest_holdout.py "<公式>"` | holdout 段回测，同上（见纪律） |
 | `python report.py "<公式>" --segment is` | 生成 HTML 报告：多空累计收益图、成绩单表、分年表 |
 
 以上脚本与 `engine.py` 都是黑盒工具：按表中用法调用即可，不读它们的源码；字段与算子清单以本说明书环境一节为准。
@@ -61,4 +61,4 @@ description: 本项目的总说明书。进入项目开始因子研究工作前�
 ## 纪律
 
 - 判定参考线：20 日 IC ≥ 0.02、ICIR ≥ 0.2。
-- 日常研究只跑 IS 段。OOS 段须经人确认后才跑。holdout 段封存，未经明确指令不运行 `tools/backtest_holdout.py`。
+- 日常研究只跑 IS 段。OOS 段须经人确认后才跑。holdout 段封存，未经明确指令不运行 `tools/backtest/backtest_holdout.py`。
