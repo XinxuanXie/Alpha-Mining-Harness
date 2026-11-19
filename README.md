@@ -24,7 +24,7 @@ Do the following, then print a checklist table (OK / FAIL):
    Release (tag: data) into data/: panel.parquet, securities.parquet,
    membership_intervals.parquet, spy_benchmark.parquet. See the Data section below.
 5) Quick check (IS segment only):
-   python backtest_is.py "-(close / delay(close, 20) - 1)"
+   python tools/backtest_is.py "-(close / delay(close, 20) - 1)"
    Expected: 20日IC 0.0115, ICIR 0.075, and a JSON saved under results/.
 
 Print versions and pass/fail for each step. Stop after the checklist.
@@ -50,9 +50,9 @@ Manual fallback: clone the repo, run `pip install -r requirements.txt`, do step 
 
 ## Discipline
 
-- 日常研究只跑 IS 段（`backtest_is.py`）。
-- OOS 段（`backtest_oos.py`）须经人确认后才跑。
-- holdout 段封存：未经明确指令，不运行 `backtest_holdout.py`。
+- 日常研究只跑 IS 段（`tools/backtest_is.py`）。
+- OOS 段（`tools/backtest_oos.py`）须经人确认后才跑。
+- holdout 段封存：未经明确指令，不运行 `tools/backtest_holdout.py`。
 - 判定参考线：20 日 IC ≥ 0.02、ICIR ≥ 0.2。
 
 ## Files
@@ -64,7 +64,7 @@ Manual fallback: clone the repo, run `pip install -r requirements.txt`, do step 
 | `skills/modify-factor/SKILL.md` | 修改因子：诊断 → 至多五种方法各改一条 → 全测挑最优 → 新旧对比 |
 | `skills/oos-factor/SKILL.md` | OOS 段验证：回测一次 → OOS 段报告 → 训练与测试对比（仅用户明确要求时） |
 | `engine.py` | 计算引擎：读数据、公式求值（33 个算子）、白名单检查 |
-| `backtest_is.py` / `backtest_oos.py` / `backtest_holdout.py` | 三个回测脚本，各管一段，指标在脚本内计算，结果存入 `results/` |
+| `tools/backtest_is.py` / `tools/backtest_oos.py` / `tools/backtest_holdout.py` | 三个回测脚本，各管一段，指标在脚本内计算，结果存入 `results/` |
 | `report.py` | 单文件 HTML 报告：多空累计收益图、指标表、分年表 |
 | `requirements.txt` | Python 依赖清单（pandas、numpy、pyarrow），`pip install -r requirements.txt` 安装 |
 | `classic_library.md` + `classic_library/` | 经典因子库索引与原文：200 条，13 个家族 |

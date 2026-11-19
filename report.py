@@ -9,12 +9,15 @@ import html
 import json
 import math
 import os
+import sys
 from datetime import datetime
 
 import numpy as np
 import pandas as pd
 
 import engine
+# 回测脚本在 tools/ 下：把 tools/ 加进模块搜索路径，才能借用它的指标函数
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools"))
 from backtest_is import daily_ic_series, quintile_daily, scorecard  # 指标函数与三个回测脚本同一份实现
 
 # ============================================================

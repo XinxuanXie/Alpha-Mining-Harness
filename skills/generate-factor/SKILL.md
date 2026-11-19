@@ -35,7 +35,7 @@ description: 需要生成一个新因子时使用。按本文件走完一整套�
 逐条运行 IS 段回测，等待成绩单输出：
 
 ```
-python backtest_is.py "<公式>"
+python tools/backtest_is.py "<公式>"
 ```
 
 成绩单会打印出来，并自动存一份 JSON 到 `results/` 目录（文件名含数据段与时间，内容为公式与 15 项数字），后续查阅、对比从那里取。
