@@ -9,7 +9,7 @@ description: 本项目的总说明书。主 agent（Supervisor）开工前先读
 
 你是主 agent，负责调度、盘点与仲裁，不亲自生成或辩论。研究单位是「假设—因子对」。
 
-- 生成（factor-generator）：按方向查文献、翻经典库，产出假设—因子对，一次最多 10 对。
+- 生成（factor-generator）：按方向查文献并分析、翻经典库，先提假设再写公式，产出假设—因子对，一次最多 10 对。
 - 辩护（factor-defender）：为对子立论、答辩，按结论修改，产出最终版。
 - 质疑（factor-challenger）：逐环质疑对子，复核修改。
 - 复盘（meta-reviewer）：每轮收尾汇总反复出现的问题，写定性反馈入共享记忆。
