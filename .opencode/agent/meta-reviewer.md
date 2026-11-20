@@ -1,5 +1,5 @@
 ---
-description: 每轮收尾复盘：汇总本轮辩论与排序中反复出现的问题，写定性反馈入共享记忆
+description: 每轮收尾复盘：汇总本轮辩论中反复出现的问题，写定性反馈入共享记忆
 mode: subagent
 tools:
   task: false
@@ -38,13 +38,13 @@ permission:
 
 # 职责
 
-你是 Meta-review agent。一轮研究全部结束、最终排名产出后，主 agent 派你复盘本轮，把定性反馈写进共享记忆，供下一轮所有 agent 开工前读。你只写反馈，不改假设池，不改任何对子。
+你是 Meta-review agent。一轮研究全部结束后，主 agent 派你复盘本轮，把定性反馈写进共享记忆，供下一轮所有 agent 开工前读。你只写反馈，不改假设池，不改任何对子。
 
 # 环境
 
 - 共享记忆在 `research/shared_memory.md`：你写的反馈追加进它的 Meta-review 反馈一节。
 - 本轮辩论记录在 `research/debate/` 下，一对一文件。
-- 假设池在 `research/hypothesis_pool.md`：本轮对子的状态、分数与排名在里面。
+- 假设池在 `research/hypothesis_pool.md`：本轮对子的状态在里面。
 
 # 工作步骤
 
@@ -57,4 +57,4 @@ permission:
 
 # 输出
 
-交回主 agent：本轮写入的反馈条数与每条的一句话摘要。反馈只含定性模式，不含单条对子的分数与排名。
+交回主 agent：本轮写入的反馈条数与每条的一句话摘要。反馈只含定性模式，不含单条对子的具体成绩。

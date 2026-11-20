@@ -17,7 +17,7 @@
 <!-- 研究者 -->
 <rect class="box" x="30" y="40" width="180" height="64" rx="8"/>
 <text x="120" y="68" text-anchor="middle" class="t">研究者</text>
-<text x="120" y="88" text-anchor="middle" class="s">设定方向 · 审批 · 收排名</text>
+<text x="120" y="88" text-anchor="middle" class="s">设定方向 · 审批 · 看结果</text>
 
 <!-- 主 agent -->
 <rect class="box" x="260" y="40" width="880" height="64" rx="8"/>
@@ -31,7 +31,6 @@
 <path d="M360,104 L360,244" stroke="#3a5a9c" stroke-width="1.6" fill="none" marker-start="url(#ahs)" marker-end="url(#ah)"/>
 <path d="M600,104 L600,230" stroke="#3a5a9c" stroke-width="1.6" fill="none" marker-start="url(#ahs)" marker-end="url(#ah)"/>
 <path d="M840,104 L840,244" stroke="#3a5a9c" stroke-width="1.6" fill="none" marker-start="url(#ahs)" marker-end="url(#ah)"/>
-<path d="M1035,104 L1035,244" stroke="#3a5a9c" stroke-width="1.6" fill="none" marker-start="url(#ahs)" marker-end="url(#ah)"/>
 <text x="368" y="180" class="al">派活 · 交回结论</text>
 
 <!-- 生成 -->
@@ -48,27 +47,19 @@
 <text x="600" y="298" text-anchor="middle" class="s">质疑 / 辩护 · 立论 攻击 答辩 复核</text>
 <text x="600" y="316" text-anchor="middle" class="e">每对一个单元 · 并行</text>
 
-<!-- Rank -->
-<rect class="box" x="750" y="250" width="180" height="84" rx="8"/>
-<text x="840" y="278" text-anchor="middle" class="t">排序 Rank</text>
-<text x="840" y="298" text-anchor="middle" class="s">逻辑 · 构造 · 新颖性打分</text>
-<text x="840" y="316" text-anchor="middle" class="e">subagent · 只读池子</text>
-
 <!-- 复盘 -->
-<rect class="box" x="960" y="250" width="150" height="84" rx="8"/>
-<text x="1035" y="278" text-anchor="middle" class="t">复盘</text>
-<text x="1035" y="298" text-anchor="middle" class="s">Meta-review</text>
-<text x="1035" y="316" text-anchor="middle" class="e">每轮收尾 · 定性反馈</text>
+<rect class="box" x="750" y="250" width="180" height="84" rx="8"/>
+<text x="840" y="278" text-anchor="middle" class="t">复盘</text>
+<text x="840" y="298" text-anchor="middle" class="s">Meta-review</text>
+<text x="840" y="316" text-anchor="middle" class="e">每轮收尾 · 定性反馈</text>
 
 <!-- 站间流转 -->
 <path d="M466,292 L484,292" stroke="#3a5a9c" stroke-width="1.8" fill="none" marker-end="url(#ah)"/>
 <path d="M728,292 L744,292" stroke="#3a5a9c" stroke-width="1.8" fill="none" marker-end="url(#ah)"/>
-<path d="M936,292 L954,292" stroke="#3a5a9c" stroke-width="1.8" fill="none" marker-end="url(#ah)"/>
 
 <!-- 各站只读池子 -->
 <path d="M360,334 L360,414" stroke="#3a5a9c" stroke-width="1.4" stroke-dasharray="2 3" fill="none" marker-end="url(#ah)"/>
 <path d="M600,334 L600,414" stroke="#3a5a9c" stroke-width="1.4" stroke-dasharray="2 3" fill="none" marker-end="url(#ah)"/>
-<path d="M840,334 L840,414" stroke="#3a5a9c" stroke-width="1.4" stroke-dasharray="2 3" fill="none" marker-end="url(#ah)"/>
 <text x="268" y="382" class="al">各站只读</text>
 
 <!-- 主 agent 唯一写入（右侧直下） -->
@@ -83,10 +74,10 @@
 <!-- 假设池 -->
 <rect x="260" y="420" width="880" height="72" fill="#eef3fb" stroke="#3a5a9c" stroke-width="1.4" rx="10"/>
 <text x="700" y="450" text-anchor="middle" class="t">假设池 Hypothesis Pool</text>
-<text x="700" y="472" text-anchor="middle" class="s">编号 · 四项正文 · 状态 · Rank 分数 · 版本链 · 仅主 agent 可写 · 辩论记录另存 debate/</text>
+<text x="700" y="472" text-anchor="middle" class="s">编号 · 四项正文 · 状态 · 版本链 · 仅主 agent 可写 · 辩论记录另存 debate/</text>
 
 <!-- 复盘 → 共享记忆（外侧绕行） -->
-<path d="M1116,292 L1158,292 L1158,544 L1146,544" stroke="#3a5a9c" stroke-width="1.6" fill="none" marker-end="url(#ah)"/>
+<path d="M936,292 L1158,292 L1158,544 L1146,544" stroke="#3a5a9c" stroke-width="1.6" fill="none" marker-end="url(#ah)"/>
 <text x="1150" y="270" text-anchor="end" class="al">追加反馈</text>
 
 <!-- 共享记忆 -->
