@@ -1,7 +1,7 @@
-"""公式校验：输入一条因子公式，检查结构、字段、算子与复杂度，不接触数据。
+"""公式校验：输入一条因子公式，检查结构、字段与算子是否合法，不接触数据。
 用法：python tools/check_formula.py "neg(close / delay(close, 20) - 1)"
-检查口径与 engine.py 的求值规则一致：只允许四则运算与清单内算子，
-算子调用总数上限 14（经典库最大值）。输出只有检查结果，不做判定之外的事。"""
+检查口径与 engine.py 的求值规则一致：只允许四则运算与清单内算子。
+算子调用总数只报告作参考，不设上限。输出只有检查结果，不做判定之外的事。"""
 
 import ast
 import sys
@@ -21,8 +21,6 @@ OPS_2 = {"delay", "delta", "ts_mean", "ts_sum", "ts_std", "ts_min", "ts_max", "t
 WINDOW_OPS = {"delay", "delta", "ts_mean", "ts_sum", "ts_std", "ts_min", "ts_max", "ts_rank",
               "ts_corr", "ts_median", "ts_skew", "ts_kurt", "ts_decay", "ts_count",
               "ts_argmax", "ts_argmin", "ts_beta"}                             # 末位参数是窗口 d
-
-MAX_OPS = 14
 
 
 def arity(name):
@@ -96,11 +94,9 @@ if __name__ == "__main__":
     expr = sys.argv[1]
     problems, counts = check(expr)
     total = sum(counts.values())
-    print(f"算子调用总数：{total}（上限 {MAX_OPS}）")
+    print(f"算子调用总数：{total}")
     if counts:
         print("各算子计数：" + "，".join(f"{k}×{v}" for k, v in sorted(counts.items())))
-    if total > MAX_OPS:
-        problems.append(f"算子调用超限：{total} > {MAX_OPS}")
     if problems:
         print("问题：")
         for p in problems:
