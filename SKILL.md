@@ -70,7 +70,7 @@ subagent 由你临时创建，在独立上下文中执行，只交回结论；su
 
 ## 运行记录
 
-每轮运行留全程 trace：一轮结束时，把本轮运行日志与全部会话（主会话与每个 subagent 会话）用 `opencode export <会话ID>` 导出，存入 `traces/<日期-轮次>/` 留档备查。traces/ 不进 git 仓库。
+每轮运行留全程 trace：一轮结束时，把本轮运行日志与全部会话（主会话与每个 subagent 会话）用 `opencode export <会话ID>` 导出，存入 `traces/<日期-轮次>/` 留档备查。导出时逐个会话重定向落盘为 .json 文件（Windows 先执行 `chcp 65001`），不经终端复制或编辑器另存，打包时用原始文件。traces/ 不进 git 仓库。
 
 ## 仲裁
 
