@@ -50,7 +50,7 @@
 <rect x="722" y="242" width="200" height="84" fill="#ffffff" stroke="#3a5a9c" stroke-width="1.2" rx="8"/>
 <rect class="box" x="714" y="250" width="200" height="84" rx="8"/>
 <text x="814" y="278" text-anchor="middle" class="t">辩论 Debate</text>
-<text x="814" y="298" text-anchor="middle" class="s">质疑 / 辩护 · 立论 攻击 修改 复核</text>
+<text x="814" y="298" text-anchor="middle" class="s">质疑 / 生成 · 立论 攻击 修改 复核</text>
 <text x="814" y="316" text-anchor="middle" class="e">逐对并行 · ≤2 轮 · 版本留档</text>
 
 <!-- 复盘 -->
