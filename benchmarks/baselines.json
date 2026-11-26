@@ -1,1 +1,85 @@
-{"baselines":[{"family":"二、反转","formula":"-(close / delay(close, 20) - 1)","id":"C01","name":"短期反转"},{"family":"一、动量","formula":"delay(close, 21) / delay(close, 147) - 1","id":"C19","name":"6 月动量"},{"family":"一、动量","formula":"delay(close, 21) / delay(close, 252) - 1","id":"C03","name":"中期动量"},{"family":"一、动量","formula":"ts_sum(sector_mean(close / delay(close, 1) - 1), 126)","id":"C17","name":"行业动量"},{"family":"四、波动与风险","formula":"neg(ts_std(resid_ret, 252))","id":"C41","name":"特质波动·1 年 CAPM","note":"库原文为文字描述（neg(过去 1 年日收益对市场收益回归的残差标准差)），未给出可算公式；此处用 252 日残差标准差取负作为可算近似（resid_ret 为 20 日滚动回归的日残差）。"},{"family":"一、动量","formula":"delay(close, 20) / close","id":"C144","name":"变化率 ROC"}],"created":"2026-11-26","note":"起始基线集：覆盖反转、动量、行业动量、低波动六个方向。零分布出来后刷新为每家族 IS 最强的一条；换基线须升版本并留记录，不许悄悄换。","version":"v1"}
+{
+  "baselines": [
+    {
+      "family": "一、动量",
+      "formula": "ts_min(low, 20) / close",
+      "id": "C151",
+      "name": "最低比 MIN"
+    },
+    {
+      "family": "二、反转",
+      "formula": "(-1 * sign((close - delay(close, 7)) + delta(close, 7))) * (1 + rank(1 + ts_sum(returns, 250)))",
+      "id": "C82",
+      "name": "WQ#19 周反转×年动量"
+    },
+    {
+      "family": "三、季节性",
+      "formula": "(delay(close, 1512) / delay(close, 1533) - 1 + delay(close, 1764) / delay(close, 1785) - 1 + delay(close, 2016) / delay(close, 2037) - 1 + delay(close, 2268) / delay(close, 2289) - 1 + delay(close, 2520) / delay(close, 2541) - 1) / 5",
+      "id": "C30",
+      "name": "同月收益·6–10 年"
+    },
+    {
+      "family": "四、波动与风险",
+      "formula": "ts_sum(power(min(returns, 0), 2), 20) / ts_sum(power(returns, 2), 20)",
+      "id": "C198",
+      "name": "下行半方差占比"
+    },
+    {
+      "family": "五、流动性与换手",
+      "formula": "neg(log(ts_mean(delay(close * volume, 42), 21)))",
+      "id": "C47",
+      "name": "成交额水平"
+    },
+    {
+      "family": "六、规模与价格水平",
+      "formula": "neg(log(close))",
+      "id": "C58",
+      "name": "价格水平"
+    },
+    {
+      "family": "七、隔夜与日内",
+      "formula": "neg(ts_sum(close / open - 1, 20))",
+      "id": "C14",
+      "name": "日内累积取负"
+    },
+    {
+      "family": "八、信息扩散与行业领先滞后",
+      "formula": "rank(ts_corr(delay(open - close, 1), close, 200)) + rank(open - close)",
+      "id": "C95",
+      "name": "WQ#37 隔夜日内相关＋日内"
+    },
+    {
+      "family": "九、公司行为",
+      "formula": "neg(delta(log(mktcap), 1260) - delta(log(close), 1260))",
+      "id": "C66",
+      "name": "综合权益发行"
+    },
+    {
+      "family": "十、量价相关",
+      "formula": "(-1 * rank(ts_std(high, 10))) * ts_corr(high, volume, 10)",
+      "id": "C97",
+      "name": "WQ#40 高价波动×量价相关"
+    },
+    {
+      "family": "十一、趋势与均线",
+      "formula": "(ts_argmax(high, 20) - ts_argmin(low, 20)) / 20",
+      "id": "C158",
+      "name": "高低点时差 IMXD"
+    },
+    {
+      "family": "十二、K线与日内形态",
+      "formula": "-1 * rank(ts_std(abs(close - open), 5) + (close - open) + ts_corr(close, open, 10))",
+      "id": "C81",
+      "name": "WQ#18 价差与开收相关"
+    },
+    {
+      "family": "十三、摆动与超买超卖",
+      "formula": "ts_sum(max(-delta(close, 1), 0), 20) / ts_sum(abs(delta(close, 1)), 20)",
+      "id": "C165",
+      "name": "下跌幅度占比 SUMN"
+    }
+  ],
+  "created": "2026-11-26",
+  "note": "v2：按设计刷新为每家族 IS 最强的一条（20 日 IC 最高，来源 benchmarks/is_null.json，2026-11-26 生成，119 条有有效 IC）。v1 的 6 条（C01/C19/C03/C17/C41/C144）全被换掉，无一是各自家族最强；13 条里只有 C58/C47/C81 的 20 日 IC 过 0.02。换基线已升版本并留记录。",
+  "version": "v2"
+}
