@@ -132,6 +132,7 @@ def main():
             "formula": combo_formula,
             "formula_hash": bt.formula_hash(combo_formula),
             "segment": args.segment,
+            "segment_range": [seg_start, seg_end],
             "scorecard_v2": card,
             "baselines": None,
             "percentile": pct,

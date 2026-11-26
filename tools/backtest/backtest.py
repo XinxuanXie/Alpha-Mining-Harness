@@ -376,9 +376,13 @@ def load_registry():
     return recs
 
 def append_registry(record):
-    """同一公式哈希 + 同一段已存在时不重复记，返回 (是否新增, 记录)。"""
+    """同一公式哈希 + 同一段 + 同一统计区间已存在时不重复记，返回 (是否新增, 记录)。
+    统计区间参与去重：段名相同但窗口改过（如 IS 2000–2016 改为 2010–2016）是不同实验，
+    须另记一行。旧记录没有 segment_range 字段，按“区间未知”处理，与任何带区间的记录都不判重复。"""
     for r in load_registry():
-        if r["formula_hash"] == record["formula_hash"] and r["segment"] == record["segment"]:
+        if (r["formula_hash"] == record["formula_hash"]
+                and r["segment"] == record["segment"]
+                and r.get("segment_range") == record.get("segment_range")):
             return False, r
     os.makedirs(os.path.dirname(REGISTRY_PATH), exist_ok=True)
     with open(REGISTRY_PATH, "a", encoding="utf-8") as f:
@@ -462,6 +466,7 @@ def run_one(formula, wide, seg, seg_start, seg_end, seg_name, args, null_doc):
             "formula": formula,
             "formula_hash": formula_hash(formula),
             "segment": seg,
+            "segment_range": [seg_start, seg_end],
             "scorecard_v2": card,
             "baselines": comp,
             "percentile": pct,

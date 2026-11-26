@@ -45,13 +45,15 @@ def render():
         "本文件由 `tools/backtest/render_registry.py` 从 `research/registry.jsonl` 生成，不要手工改表；"
         "改登记请跑回测入口，或改 jsonl 后重新生成。",
         "",
-        "| 版本 | 对子 | 公式哈希 | 方向 | 持有期 | 参数 | 20日IC | ICIR | 成本后多空 | 全库百分位 | IS 截止日 | OOS 规则 | 状态 |",
+        "| 版本 | 对子 | 公式哈希 | 方向 | 持有期 | 参数 | 20日IC | ICIR | 成本后多空 | 全库百分位 | IS 截止日 | 统计区间 | OOS 规则 | 状态 |",
         "|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for r in recs:
         sc = r.get("scorecard_v2") or {}
         pct = r.get("percentile") or {}
         version = "-".join(x for x in (r.get("hypothesis_id"), r.get("version")) if x) or "—"
+        rng = r.get("segment_range")
+        rng_s = f"{rng[0]}~{rng[1]}" if rng else "—"
         pct_s = f"{pct['percentile']}%（n={pct['n']}）" if pct.get("percentile") is not None else "—"
         ca = sc.get("成本后多空收益")
         lines.append("| " + " | ".join([
@@ -66,6 +68,7 @@ def render():
             f"{ca * 100:.2f}%" if ca is not None else "—",
             pct_s,
             r.get("is_end") or "—",
+            rng_s,
             r.get("oos_rule") or "—",
             r.get("status") or "—",
         ]) + " |")
