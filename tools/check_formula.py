@@ -10,7 +10,9 @@ from collections import Counter
 # ============================================================
 # 清单：与主说明书环境一节一致
 # ============================================================
-FIELDS = {"open", "high", "low", "close", "volume", "mktcap", "mktret", "ivol20", "resid_ret", "returns"}
+FIELDS = {"open", "high", "low", "close", "volume", "mktcap", "mktret", "ivol20", "resid_ret", "returns",
+          "revenue", "net_income", "total_assets", "book_equity", "rnd",
+          "op_income", "capex", "cash", "lt_debt", "shares_out"}
 
 OPS_1 = {"neg", "abs", "log", "sign", "sqrt", "inverse",
          "rank", "rank_sector", "sector_mean", "zscore", "winsorize"}          # 一元算子

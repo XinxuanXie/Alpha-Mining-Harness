@@ -17,10 +17,13 @@ SEC_PATH = os.path.join(BASE, "data", "securities.parquet")
 MEMB_PATH = os.path.join(BASE, "data", "membership_intervals.parquet")
 BENCH_PATH = os.path.join(BASE, "data", "spy_benchmark.parquet")
 PRECOMP_PATH = os.path.join(BASE, "data", "precomp_fields.parquet")
+FUND_PATH = os.path.join(BASE, "data", "fundamentals.parquet")
+FUND_FIELDS = ["revenue", "net_income", "total_assets", "book_equity", "rnd",
+               "op_income", "capex", "cash", "lt_debt", "shares_out"]  # EDGAR 基本面字段（季度财报数，见 _load_fundamentals）
 LOAD_END = "2016-12-31"   # 数据加载截止日（回测脚本按数据段改这个值）
 ID_COL = "permno"          # 股票标识列
 FIELDS = ["open", "high", "low", "close", "volume", "mktcap", "mktret",
-          "ivol20", "resid_ret", "returns"]  # 公式可用字段（mktret 为市场收益；ivol20、resid_ret 为程序预计算的市场模型残差类字段，窗口固定 20 日；returns 为日收益率 close/delay(close,1)-1，程序派生）
+          "ivol20", "resid_ret", "returns"] + FUND_FIELDS  # 公式可用字段（mktret 为市场收益；ivol20、resid_ret 为程序预计算的市场模型残差类字段，窗口固定 20 日；returns 为日收益率 close/delay(close,1)-1，程序派生；其余 10 个为 EDGAR 基本面字段）
 MIN_STOCKS = 10            # 当日参与 IC 计算的股票少于此数，当日 IC 记缺失
 SECTOR_OF = {}             # permno（int）→ GICS 行业名；load_wide 时填充
 
@@ -45,10 +48,13 @@ def load_wide():
         inside = pd.Series(False, index=close.index)
         for s, e in zip(g["start_date"], g["end_date"]):
             end = pd.Timestamp.max.normalize() if pd.isna(e) else e
-            inside |= (close.index >= s) & (close.index <= e)
+            inside |= (close.index >= s) & (close.index <= end)
         mask[col] = inside
     for f in ("open", "high", "low", "close", "volume", "mktcap"):
         wide[f] = wide[f].where(mask)
+    # 基本面字段：与行情字段同口径（成分期内才有值，服从 LOAD_END）
+    for f, w in _load_fundamentals(close, mask).items():
+        wide[f] = w
     # 派生字段：日收益率（以前一日收盘为基准；成分区间外的前一日记缺失，收益随之缺失）
     wide["returns"] = wide["close"] / wide["close"].shift(1) - 1
     bench = pd.read_parquet(BENCH_PATH, filters=[("date", "<=", pd.Timestamp(LOAD_END))])
@@ -64,6 +70,31 @@ def load_wide():
     ivol, resid = _precomp_fields(close, wide["mktret"])
     wide["ivol20"] = ivol.where(mask)
     wide["resid_ret"] = resid.where(mask)
+    return wide
+
+def _load_fundamentals(close, mask):
+    """读基本面长表（data/fundamentals.parquet）并转成宽表：
+    列为 date、permno、10 个基本面字段，外加 10 个 filed 日期列（此处忽略，只用数值列）。
+    值是季度财报数、对齐时已按 filed 披露日期往后填充；此处再按日历向前填充一次，
+    使稀疏的披露日行也能对齐到每个交易日（文件本身已是日频时填充无作用）。
+    口径与行情字段一致：只服从 LOAD_END（读时过滤），只在成分期内有值（mask 过滤）。
+    文件缺失时直接报错，不静默跳过——基本面字段一旦进公式清单就必须真实存在。"""
+    if not os.path.exists(FUND_PATH):
+        raise FileNotFoundError(
+            f"基本面数据缺失：{FUND_PATH} 不存在；含基本面字段的公式无法计算，"
+            "请先按 SKILL.md 环境一节生成 data/fundamentals.parquet")
+    fund = pd.read_parquet(FUND_PATH, filters=[("date", "<=", pd.Timestamp(LOAD_END))])
+    if ID_COL not in fund.columns:
+        raise ValueError(f"基本面数据缺列：{FUND_PATH} 缺少标识列 {ID_COL}")
+    missing = [f for f in FUND_FIELDS if f not in fund.columns]
+    if missing:
+        raise ValueError(f"基本面数据缺列：{FUND_PATH} 缺少字段 {missing}")
+    fund = fund.sort_values(["date", ID_COL])
+    wide = {}
+    for f in FUND_FIELDS:
+        w = fund.pivot(index="date", columns=ID_COL, values=f)
+        w = w.reindex(index=close.index, columns=close.columns).ffill()
+        wide[f] = w.where(mask)
     return wide
 
 def _precomp_fields(close, mktret):
@@ -101,7 +132,7 @@ def _precomp_fields(close, mktret):
     return ivol, resid
 
 # ============================================================
-# 算公式：表达式只能用算子清单中的算子与十个字段
+# 算公式：表达式只能用算子清单中的算子与二十个字段
 # 缺失规则：任一算子所需位置输入缺失，输出缺失；时序窗口缺一日，输出缺失
 # ============================================================
 def _rank_cs(x):

@@ -1,0 +1,767 @@
+The Romanian Economic Journal 
+ 
+Year XVI  no. 50                                                                                      December   2013 
+ 
+ 
+51 
+ 
+In present study, I explore the dynamics of the interday stock price reversals. 
+Employing intraday price data on thirty stocks currently making up the Dow Jones 
+Industrial Index, I document that stock returns in opening trading sessions tend to 
+be higher following days with relatively low (either negative, or lower than the same 
+day's average and median for the total sample of stocks) open-to-close returns. This 
+kind of price behavior seems to contradict stock market efficiency. Based on this 
+finding, I construct three portfolios based on the opening trading sessions and 
+involving a long position in the stocks on the days when their opening returns are 
+expected to be high and a short position in the stocks on the days when their 
+opening returns are expected to be low. All the portfolios are found to yield 
+significantly positive returns, providing an evidence for the practical applicability of 
+the "overnight reversals" pattern in stock prices. 
+ 
+Keywords: Investment Portfolios; Opening Returns; Open-to-Close Returns; 
+Overreaction; Stock Price Reversals; Stock Return Autocorrelations 
+JEL Classifications: G11, G14, G19 
+  
+ 
+                                                          
+1 Economics and Management Department, The Max Stern Yezreel Valley Academic 
+College, Emek Yezreel 19300, Israel, andreyk@yvc.ac.il 
+Think About Tomorrow 
+Morning: Opening Stock 
+Returns May Show Reversals 
+ 
+Andrey Kudryavtsev 1  
+     
+The Romanian Economic Journal 
+ 
+Year XVI  no. 50                                                                                      December   2013 
+ 
+ 
+52 
+Introduction 
+One of the most widely-documented facts in empirical finance is the 
+autocorrelation of stock returns at various time intervals (daily, weekly, 
+monthly). It presents a challenge to some of the most important 
+models in continuous-time finance, which are based on some form of 
+the random walk hypothesis. Consequently, there is an extensive 
+literature on stock return autocorrelation (see Campbell, Lo, and 
+MacKinlay (1997)). Most authors suggest explanations relying on non-
+synchronous trading as a possible cause of the positive return 
+autocorrelations observed across international stock markets (e.g., 
+Fisher (1966), Scholes and Williams (1977), Atchinson et al. (1987), 
+Ahn et al. (2002)). Kadlec and Patterson (1999) establish that non-
+synchronous trading can explain 85%, 52%, and 36% of daily 
+autocorrelations on portfolios of small, random, and large stocks, 
+respectively. Accordingly, since daily returns are usually calculated 
+based on a stock market index, the inclusion in the index of stocks 
+that are traded infrequently could potentially cause positive stock 
+return autocorrelations. However, bacause a significant level of 
+autocorrelation has been documented for common stock portfolios of 
+large and actively traded firms (e.g., Perry (1985), Safvenblad (2000)), 
+non-synchronous trading appears to be not the only cause of 
+correlation in daily market index returns. In this context, a number of 
+studies assume that the gradual incorporation of market-wide 
+information may lead to serial correlations in short-term stock returns 
+(e.g., Lo and MacKinlay (1990), Sias and Starks (1997), Chordia and 
+Swaminathan (2000)). Other potential explanations for stock return 
+autocorrelations include bid-ask bounce (e.g., Rhee and Wang (1997)); 
+partial price adjustment, i.e. the fact that a trade takes place at prices 
+that do not fully reflect the information available to traders (e.g., 
+Campbell, Lo, and MacKinlay (1997)); and the time-varying risk 
+premium (e.g., Anderson (2006)).  
+The Romanian Economic Journal 
+ 
+Year XVI  no. 50                                                                                      December   2013 
+ 
+ 
+53 
+In the recent years, as increasing computer power and new statistical 
+methods have permitted to analyze very large datasets of intraday data, 
+the focus has shifted to intraday patterns in stock returns and trading 
+volumes. Blandon (2007) shows that close-to-close stock returns are 
+highly autocorrelated, while daily returns calculated on an open-to-
+close basis do not exhibit significant levels of autocorrelation. Amihud 
+and Mendelson (1987) and Stoll and Whaley (1990) report that the 
+interday stock returns calculated using open-to-open prices have 
+greater variance and provide more evidence of reversals than 
+comparable returns computed based on close-to-close prices. They 
+attribute this result to differences in trading mechanisms between the 
+opening and closing trading sessions. Gerety and Mulherin (1994) 
+estimate intraday volatility throughout the trading day from hourly 
+Dow Jones sixty-five Composite price index data, and find that the 
+interday 24-hour volatilities continuously decline, reflecting 
+information processing. A wide literature on intraday stock price 
+patterns identifies a clear U-shaped pattern in stock returns and return 
+volatilities over the trading day (e.g., Wood et al. (1985), Harris (1986), 
+Jain and Joh (1988), Pagano et al. (2008)). That is, these studies 
+indicate that average stock returns and return volatilities are on 
+average higher at the beginning and end of the trading day. 
+Several recent studies detect interday correlations between different 
+intraday return measures. Kudryavtsev (2012) finds that daily returns 
+of given stocks tend to be higher following the days when the stocks' 
+upside volatility measures are higher than their downside volatility 
+measures. Kudryavtsev (2013) documents that daily stock returns tend 
+to be higher following the days with relatively large end-of-the-day 
+price decreases, and lower following the days with relatively large end-
+of-the-day price increases. These findings are interpreted as reversals 
+following stock price overreactions. 
+The concept of overreaction is widely-discussed in previous financial 
+literature. Since the pioneering studies by Shiller (1984) and De Bondt 
+The Romanian Economic Journal 
+ 
+Year XVI  no. 50                                                                                      December   2013 
+ 
+ 
+54 
+and Thaler (1985), a large number of theoretical and empirical studies 
+have analyzed the phenomenon of price overreaction in financial 
+markets, reflecting some form of market inefficiency. In most cases, 
+the literature closely connects price overreaction to stock price 
+forecastability, potentially allowing investors to earn above-average 
+returns. In order to distinguish stock price overreaction, resulting in 
+market inefficiency, from predictable changes in expected returns, 
+Lehman (1990) examines returns over short time intervals. Actually, 
+the focus on long-term dynamics in stock returns (e.g.,Shiller (1984) 
+and De Bondt and Thaler (1985)) is more recently moved to short-
+term stock price behavior, ranging over time periods from a few days 
+up to a month, in the major part of the subsequent literature (e.g., 
+Zarowin (1989), Atkins and Dyl (1990), Cox and Peterson (1994), Park 
+(1995), Bowman and Iverson (1998), Nam et al. (2001)). The main 
+goal of these studies is to identify potentially profitable contrarian 
+strategies based on a reverting behavior of stock prices in the short 
+run. For example, Lehmann (1990) and Jegadeesh (1990) demonstrate 
+that contrarian strategies that exploit the short-term return reversals in 
+individual stocks may provide abnormal returns of about 1.7% per 
+week and 2.5% per month, respectively. Importantly, Conrad et al. 
+(1994) document that reversal profitability increases with trading 
+activity. 
+The main goal of this study is to follow the line by Kudryavtsev (2012, 
+2013) and to establish if there also exist stock price reversals following 
+some "regular", rather than extreme, price changes. In this context, I 
+expect short-term stock price reversals to follow previous days' 
+tendencies. I analyze intraday price data on thirty stocks currently 
+making up the Dow Jones Industrial Index, and find supporting 
+evidence for my research hypothesis. Employing open-to-close stock 
+returns as a proxy for intraday stock price tendencies, and the next 
+trading day's opening returns, as a measure of potential interday 
+The Romanian Economic Journal 
+ 
+Year XVI  no. 50                                                                                      December   2013 
+ 
+ 
+55 
+reversals2, I document that opening returns tend to be higher 
+following the days with relatively low (either negative, or lower than 
+the same day's average and median for the total sample of stocks) 
+open-to-close returns. Based on these findings, I construct a number 
+of daily-adjusted portfolios involving a long (short) position in the 
+opening session in the stocks on the days when, according to the 
+findings, their opening returns are expected to be high (low), and 
+demonstrate that the returns on these portfolios are significantly 
+positive. 
+ 
+Data Description 
+For the purposes of present research, I employ daily opening and 
+closing prices of thirty stocks currently making up the Dow Jones 
+Industrial Index over the period from January 2, 2002 to September 
+30, 2011 (overall, 2456 trading days), as recorded at 
+www.finance.yahoo.com. I adjust the prices to dividend payments and 
+stock splits, by multiplying each actual price by the ratio of the 
+respective day's reported adjusted (by Yahoo finance) closing to actual 
+closing price. For each stock i in the sample and for each trading day t, 
+except for the first day of the sampling period, I calculate: 
+• Opening return ( itOR , ), as a price change from last day's closing 
+price to this day's opening price, and 
+• Open-to-close return ( itCOR ,− ), as a price change from this day's 
+opening price to this day's closing price3.  
+                                                          
+2
+ The focus on the next days' opening sessions as potential "reversal periods" is 
+motivated by the short-time nature of the reversals, in general, and by the observation 
+(e.g., Harris (1986)) that the predominant portion of stock price moves takes place 
+within the first minutes of trading 
+3
+ During the sampling period, the database on Yahoo Finance was missing only two 
+trading days for Kraft Foods stock and one trading day for The Travelers Companies 
+stock. I assumed the missing days' opening and closing prices to be equal to the 
+average of the previous and the next trading days' opening and closing prices, 
+respectively, for the respective stock 
+The Romanian Economic Journal 
+ 
+Year XVI  no. 50                                                                                      December   2013 
+ 
+ 
+56 
+Table 1 comprises the basic descriptive statistics of the two types of 
+returns for the thirty sample stocks. At this stage, we may note that for 
+18 out of 30 stocks, the mean opening returns are higher than the 
+mean open-to-close returns, 13 of the latter being negative, which 
+seems in line with the U-shaped pattern of intraday returns, or at least, 
+with the left-hand side of the "U". On the other hand, for all 30 
+stocks, the standard deviations of opening returns are lower than 
+those of open-to-close returns and of daily returns.  
+ 
+III. Research hypothesis and Results 
+1.    Effect of the open-to-close returns on the next day's opening 
+returns 
+Wide strand of financial literature deals with stock return 
+autocorrelations. Several studies explicitly concentrate on the effect of 
+the end-of-the-day stock price moves on the subsequent days' returns, 
+and document stock price reversals (e.g., Kudryavtsev (2012, 2013)). 
+In this study, I make an effort to establish if there also exist interday 
+stock price reversals following some "regular", rather than extreme, 
+price changes. Namely, I test the hypothesis that relatively high (low) 
+open-to-close returns may lead to relatively low (high) opening returns 
+on the next trading day. 
+ Table 1 
+Descriptive statistics of sample stocks' opening and open-to-
+close returns 
+Company (Ticker symbol) Opening return, % Open-to-close return, % 
+Mean St. Deviation Mean St. Deviation 
+Alcoa Inc. (AA) 
+American Express (AXP) 
+Boeing (BA) 
+Bank of America (BAC) 
+Caterpillar (CAT) 
+Cisco Systems (CSCO) 
+Chevron Corporation 
+(CVX) 
+E.I. Du Pont de Nemours 
+0.158 
+-0.008 
+0.033 
+0.104 
+0.086 
+0.026 
+0.032 
+0.039 
+-0.048 
+1.551 
+1.212 
+1.004 
+2.045 
+1.198 
+1.410 
+0.808 
+0.879 
+1.094 
+-0.164 
+0.060 
+0.013 
+-0.095 
+-0.009 
+-0.007 
+0.025 
+-0.010 
+0.086 
+2.303 
+2.240 
+1.667 
+2.884 
+1.838 
+1.883 
+1.489 
+1.636 
+1.688 
+The Romanian Economic Journal 
+ 
+Year XVI  no. 50                                                                                      December   2013 
+ 
+ 
+57 
+(DD) 
+Walt Disney (DIS) 
+General Electric (GE) 
+Home Depot Inc. (HD) 
+Hewlett-Packard (HPQ) 
+IBM (IBM) 
+Intel Corporation (INTC) 
+Johnson & Johnson (JNJ) 
+JP Morgan Chase & Co 
+(JPM) 
+Kraft Foods Inc. (KFT) 
+Coca-Cola (KO) 
+McDonald's Corporation 
+(MCD)  
+3M Company (MMM) 
+Merck & Company Inc. 
+(MRK) 
+Microsoft Corporation 
+(MSFT) 
+Pfizer Inc. (PFE) 
+Procter & Gamble (PG) 
+AT&T Inc. (T) 
+The Travelers Companies 
+(TRV) 
+United Technologies 
+Corp. (UTX) 
+Verizon Communications 
+(VZ) 
+Wal-Mart Stores Inc. 
+(WMT) 
+Exxon Mobil Corporation 
+(XOM) 
+0.086 
+0.001 
+-0.116 
+-0.061 
+0.038 
+0.005 
+0.043 
+-0.013 
+-0.009 
+0.007 
+0.017 
+-0.022 
+0.017 
+0.054 
+-0.043 
+0.053 
+0.042 
+0.042 
+0.035 
+0.018 
+-0.005 
+1.275 
+1.047 
+1.386 
+0.956 
+1.377 
+0.715 
+1.436 
+0.829 
+0.663 
+0.860 
+0.756 
+1.110 
+1.020 
+1.047 
+0.625 
+0.933 
+0.996 
+0.824 
+0.839 
+0.735 
+0.801 
+-0.089 
+0.011 
+0.148 
+0.094 
+-0.020 
+0.016 
+0.003 
+0.035 
+0.043 
+0.065 
+0.012 
+0.034 
+-0.002 
+-0.056 
+0.078 
+-0.030 
+-0.004 
+0.011 
+-0.011 
+-0.006 
+0.052 
+1.821 
+1.781 
+1.819 
+1.316 
+1.929 
+1.046 
+2.514 
+1.248 
+1.149 
+1.378 
+1.294 
+1.561 
+1.554 
+1.436 
+1.055 
+1.555 
+1.896 
+1.466 
+1.496 
+1.235 
+1.451 
+ 
+As the first and the most obvious proxy for the relatively high or low 
+open-to-close stock returns, I employ their sign. Table 2 compares, for 
+each of the sample stocks, mean opening returns following the days 
+with positive ( 0, >− itCOR ) and non-positive ( 0, ≤− itCOR  ) open-to-close 
+returns. 
+ 
+ 
+ 
+The Romanian Economic Journal 
+ 
+Year XVI  no. 50                                                                                      December   2013 
+ 
+ 
+58 
+Table 2 
+Opening stock returns following the days with positive and non-
+positive open-to-close returns 
+ 
+Company 
+Mean opening returns, %, for the days when: 
+01, >−− itCOR (No. 
+of days) 
+01, ≤−− itCOR  
+(No. of days) 
+Difference (t-
+statistic) 
+Alcoa Inc. (AA) 
+American Express (AXP) 
+Boeing (BA) 
+Bank of America (BAC) 
+Caterpillar (CAT) 
+Cisco Systems (CSCO) 
+Chevron Corporation (CVX) 
+E.I. Du Pont de Nemours 
+(DD) 
+Walt Disney (DIS) 
+General Electric (GE) 
+Home Depot Inc. (HD) 
+Hewlett-Packard (HPQ) 
+IBM (IBM) 
+Intel Corporation (INTC) 
+Johnson & Johnson (JNJ) 
+JP Morgan Chase & Co (JPM) 
+Kraft Foods Inc. (KFT) 
+Coca-Cola (KO) 
+McDonald's Corporation 
+(MCD)  
+3M Company (MMM) 
+Merck & Company Inc. (MRK) 
+Microsoft Corporation (MSFT) 
+Pfizer Inc. (PFE) 
+Procter & Gamble (PG) 
+AT&T Inc. (T) 
+The Travelers Companies 
+(TRV) 
+United Technologies Corp. 
+(UTX) 
+Verizon Communications (VZ) 
+Wal-Mart Stores Inc. (WMT) 
+Exxon Mobil Corporation 
+(XOM) 
+0.208 (1127) 
+-0.009 (1240) 
+ 0.026 (1221) 
+ 0.179 (1194) 
+ 0.129 (1207) 
+ 0.007 (1206) 
+ 0.043 (1277) 
+ 0.020 (1192) 
+-0.073 (1252) 
+ 0.108 (1136) 
+-0.017 (1203) 
+-0.104 (1323) 
+-0.097 (1311) 
+ 0.019 (1176) 
+ 0.003 (1225) 
+ 0.024 (1201) 
+-0.039 (1256) 
+-0.045 (1266) 
+-0.039 (1294) 
+-0.005 (1231) 
+-0.052 (1204) 
+-0.055 (1187) 
+ 0.008 (1152) 
+-0.094 (1316) 
+ 0.034 (1184) 
+ 0.043 (1184) 
+ 0.039 (1220) 
+ 0.013 (1193) 
+-0.021 (1175) 
+-0.039 (1281) 
+ 0.114 (1327) 
+-0.007 (1214) 
+ 0.039 (1233) 
+ 0.033 (1260) 
+ 0.044 (1247) 
+ 0.044 (1248) 
+ 0.020 (1177) 
+ 0.057 (1262) 
+-0.025 (1202) 
+ 0.069 (1318) 
+ 0.019 (1251) 
+-0.129 (1131) 
+-0.020 (1143) 
+ 0.054 (1278) 
+ 0.008 (1229) 
+ 0.061 (1253) 
+ 0.015 (1198) 
+ 0.028 (1188) 
+ 0.057(1160) 
+ 0.039 (1223) 
+ 0.006 (1250) 
+ 0.085 (1267) 
+ 0.094 (1302) 
+ 0.017 (1138) 
+ 0.071 (1270) 
+ 0.042 (1270) 
+ 0.045 (1234) 
+ 0.056 (1261) 
+ 0.054 (1279) 
+ 0.031 (1173) 
+       0.094 (1.50) 
+     -0.002 (-0.03) 
+     -0.013 (-0.32) 
+       0.146 (1.58) 
+       0.085 (1.48) 
+    -0.037 (-0.65) 
+       0.023 (0.69) 
+    -0.037 (-1.05) 
+    -0.048 (-1.09) 
+      0.039 (0.77) 
+    -0.036 (-0.83) 
+      0.025 (0.44) 
+**-0.077 (-1.98) 
+     -0.035 (-0.63) 
+     -0.005 (-0.15) 
+     -0.037 (-0.63) 
+     -0.054 (-1.60) 
+***-0.073 (-2.70) 
+***-0.096 (-2.75) 
+      -0.043 (-1.47) 
+      -0.058 (-1.28) 
+***-0.140 (-3.40) 
+  **-0.086 (-2.03) 
+***-0.111 (-4.43) 
+     -0.037 (-0.97) 
+       0.001 (0.05) 
+     -0.006 (-0.16) 
+     -0.043 (-1.28) 
+ **-0.075 (-2.54) 
+ **-0.070 (-2.15) 
+Asterisks denote two-tailed p-values: **p<0.05; ***p<0.01 
+ 
+The Romanian Economic Journal 
+ 
+Year XVI  no. 50                                                                                      December   2013 
+ 
+ 
+59 
+The results support the research hypothesis. For 23 out of 30 sample 
+stocks, mean opening returns are higher following the days with non-
+positive open-to-close returns, that is, following the days characterized 
+by price decreases. 8 of the respective negative mean return 
+differences are statistically significant at the 5% level, including 4 at the 
+1% level, while all the 7 positive differences are non-significant. Thus, 
+the results demonstrate that in opening trading sessions, stock prices 
+display a reverting behavior following previous day's price tendencies. 
+Such behavior may be regarded as "overnight reversals", and seems to 
+contradict market efficiency. 
+3. Portfolios based on reversals in opening returns 
+  In order to test for practical applicability of the above results, I 
+construct a number of portfolios based upon the idea of holding 
+during the opening sessions and daily adjusting a long position in the 
+stocks that according to the "overnight reversals" pattern are expected 
+to yield high opening returns, that is, the stocks that on the previous 
+trading day showed relatively low open-to-close returns, and a short 
+position in the stocks that according to "overnight reversals" pattern 
+are expected to yield low opening returns, that is, the stocks that on 
+the previous trading day showed relatively high open-to-close returns. 
+To get a proxy for the "relatively high (low)" open-to-close returns, 
+for each of the stocks and for each of the trading days, I first employ 
+their sign, as in the previous Subsection, and also compare them to the 
+respective mean and median open-to-close returns for the total sample 
+on the respective day. The total values of the long and the short 
+positions are supposed to be equal, that is, the total market value of 
+each portfolio is supposed to be zero4. 
+Portfolio N: Portfolio implying an equally-weighted long position for a 
+day's opening session in the stocks whose previous day's open-to-close 
+                                                          
+4
+ I construct portfolios based on actual closing prices, assuming that open-to-close 
+returns can be calculated and the transactions can be performed sufficiently close to 
+the market closing time 
+The Romanian Economic Journal 
+ 
+Year XVI  no. 50                                                                                      December   2013 
+ 
+ 
+60 
+returns were Non-positive, and an equally-weighted short position for 
+a day's opening session in the rest of the sample stocks. 
+Portfolio A: Portfolio implying an equally-weighted long position for a 
+day's opening session in the stocks whose previous day's open-to-close 
+returns were smaller than the sample Average, and an equally-weighted 
+short position for a day's opening session in the rest of the sample 
+stocks. 
+Portfolio M: Portfolio implying an equally-weighted long position for 
+a day's opening session in the stocks whose previous day's open-to-
+close returns were smaller than the sample Median, and an equally-
+weighted short position for a day's opening session in the rest of the 
+sample stocks. 
+Table 3 concentrates the portfolios' daily performance measures. 
+Strikingly, all the portfolios yield positive opening returns that are 
+highly significant. That is, opening stock returns are significantly 
+higher following the days with relatively low open-to-close returns. 
+From the practical point of view, at least if the trading commissions 
+are not a problem, the three portfolios represent potentially profitable 
+investment strategies, yielding annual returns of about 9-16% (recall 
+that the portfolios do not request any initial investments and yield 
+significantly positive returns). 
+Table 3 
+Historical performance measures of the portfolios based on the 
+"overnight reversals" stock price behavior 
+Daily-adjusted  
+portfolios 
+Daily portfolio over the sampling period 
+Mean, % Standard 
+Deviation, % 
+t-statistic 
+(Mean=0) 
+Portfolio N 0.059 0.485 ***5.96 
+Portfolio A 0.034 0.424 ***3.94 
+Portfolio M 0.037 0.374 ***4.92 
+Asterisks denote two-tailed p-values: ***p<0.01 
+ 
+The Romanian Economic Journal 
+ 
+Year XVI  no. 50                                                                                      December   2013 
+ 
+ 
+61 
+III Conclusion 
+This paper explores intraday and interday patterns in stock price 
+behavior. In particular, I  follow the line by Kudryavtsev (2012, 2013) 
+and try to shed light on correlations between stock returns in opening 
+trading sessions with the respective stocks' previous day's returns 
+following the opening sessions. 
+I employ daily opening and closing prices of thirty stocks currently 
+making up the Dow Jones Industrial Index, and document that stock 
+price tendencies, as reflected in open-to-close returns, tend to be 
+reversed during the opening session of the next trading day. That is, 
+relatively, with respect to the sample average or median for the 
+respective day, high (low) open-to-close returns appear to lead to 
+lower (higher) opening returns on the next trading day. Furthermore, I 
+construct a number of portfolios based upon the idea of holding 
+during the opening sessions and daily adjusting a long position in the 
+stocks that according to the "overnight reversals" pattern are expected 
+to yield high opening returns, that is, the stocks that on the previous 
+trading day showed relatively low open-to-close returns, and a short 
+position in the stocks that according to "overnight reversals" pattern 
+are expected to yield low opening returns, that is, the stocks that on 
+the previous trading day showed relatively high open-to-close returns. 
+All the portfolios yield significantly positive average returns, 
+demonstrating practical applicability of the results. 
+My findings amplify the results documented in the previous literature 
+with respect to short-term stock price reversals, by showing that 
+systematic interday stock price reversals may also be exhibited 
+following some "regular", rather than extreme, price changes. This 
+may prove a valuable result for both financial theoreticians in their 
+discussion about stock market efficiency, and practitioners in search of 
+potentially profitable investment strategies. An important potential 
+direction for further research may include analyzing additional stock 
+markets and greater samples of data. 
+The Romanian Economic Journal 
+ 
+Year XVI  no. 50                                                                                      December   2013 
+ 
+ 
+62 
+References 
+Ahn, D.H., J. Boudoukh, M.P. Richardson, and R.F. Whitelaw, 2002, 
+Partial Adjustment or Stale Prices? Implications from Stock Index and 
+Futures Return Autocorrelations, Review of Financial Studies, 15, 655-
+689. 
+Amihud, Y., and H. Mendelson, 1987, Trading Mechanisms and Stock 
+Returns: An Empirical Investigation, Journal of Finance, 42, 533 – 
+553. 
+Anderson, R.M., 2006, Time-Varying Risk Premia and Stock Return 
+Autocorrelation, Working Paper, University of California at Berkeley. 
+Atchison, M.D., K.C. Butler, and R.R. Simonds, 1987, 
+Nonsynchronous Security Trading and Market Index Autocorrelation, 
+Journal of Finance, 42, 533-553. 
+Atkins, A.B., and E.A. Dyl, 1990, Price Reversals, Bid-Ask Spreads, 
+and Market Efficiency, Journal of Financial and Quantitative Analysis, 
+25, 535–547. 
+Blandon, J.G., 2007, Return Autocorrelation Anomalies in Two 
+European Stock Markets, Journal of Economic Analysis, 22, 59-70. 
+Bowman, R.G., and D. Iverson, 1998, Short-Run Overreaction in the 
+New Zealand Stock Market, Pacific-Basin Finance Journal, 6, 475–
+491. 
+Campbell, J.Y., A.W. Lo, and A.C. MacKinlay, 1997, The 
+Econometrics of Financial Markets. Princeton University Press, 
+Princeton, NJ. 
+Chordia, T., and B. Swaminathan, 2000, Trading Volume and Cross-
+Autocorrelations in Stock Returns, Journal of Finance, 55, 913 – 935. 
+Conrad, J. S., A. Hameed, and C. Niden, 1994, Volume and 
+Autocovariances in Short-Horizon Individual Security Returns, 
+Journal of Finance 49, 1305–1329. 
+Cox, D.R., and D.R. Peterson, 1994, Stock Returns Following Large 
+One-Day Declines: Evidence on Short-Term Reversals and Longer-
+Term Performance, Journal of Finance, 49, 255–267. 
+The Romanian Economic Journal 
+ 
+Year XVI  no. 50                                                                                      December   2013 
+ 
+ 
+63 
+De Bondt, W., and R. Thaler, 1985, Does the Stock Market 
+Overreact? Journal of Finance, 40(3), 793–805. 
+Fisher, L., 1966, Some New Stock Market Indexes, Journal of 
+Business, 39, 191-225. 
+Gerety, M.S., and J.H. Mulherin, 1994, Price Formation on Stock 
+Exchanges: The Evolution of Trading within the Day, Review of 
+Financial Studies, 7, 609-629. 
+Harris, L., 1986, A Transaction Data Study of Weekly and Intraday 
+Patterns in Stock Returns, Journal of Financial Economy 16, 99-117. 
+Jain, P.C., and G.H. Joh, 1988, The Dependence between Hourly 
+Prices and Trading Volume, Journal of Financial and Quantitative 
+Analysis, 23, 269-283. 
+Jegadeesh, N., 1990, Evidence of Predictable Behavior of Security 
+Returns, Journal of Finance, 45, 881–898. 
+ 
+Kadlec, G.B., and D.M. Patterson, 1999, A Transactions Data Analysis 
+of Nonsynchronous Trading, Review of Financial Studies, 12, 609-
+630. 
+Kudryavtsev, A., 2012, Short-Term Stock Price Reversals May Be 
+Reversed, International Journal of Economic Sciences and Applied 
+Research, forthcoming. 
+Kudryavtsev, A., 2013, Stock Price Reversals Following End-of-the-
+Day Price Moves, Economics Letters, 118(1), 203-205. 
+Lehman, B.N., 1990, Fads, Martingales, and Market Efficiency, 
+Quarterly Journal of Economics, 105, 1–28. 
+Lo, A.W., and A.C. MacKinlay, 1990, An Econometric Analysis of 
+Nonsynchronous Trading, Journal of Econometrics, 45, 181-212. 
+Nam, K., C.S. Pyun, and S.L. Avard, 2001, Asymmetric Reverting 
+Behavior of Short-Horizon Stock Returns: An Evidence of Stock 
+Market Overreaction, Journal of Banking and Finance, 25, 807–824. 
+The Romanian Economic Journal 
+ 
+Year XVI  no. 50                                                                                      December   2013 
+ 
+ 
+64 
+Pagano, M.S., L. Peng, and R.A. Schwartz, 2008, The Quality of Price 
+Formation at Market Openings and Closings: Evidence from the 
+Nasdaq Stock Market, Working paper, Villanova University. 
+Park, J., 1995, A Market Microstructure Explanation for Predictable 
+Variations in Stock Returns following Large Price Changes, Journal of 
+Financial and Quantitative Analysis, 30, 241–256. 
+Perry, P., 1985, Portfolio Serial Correlation and Non-Synchronous 
+Trading, Journal of Financial and Quantitative Analysis, 20, 517-523. 
+Rhee, S.G., and C.J. Wang, 1997, The Bid-Ask Bounce Effect and the 
+Spread Size Effect: Evidence from the Taiwan Stock Market, Pacific-
+Basin Finance Journal, 5, 231-258. 
+Säfvenblad, P., 2000, Trading Volume and Autocorrelation: Empirical 
+Evidence from the Stockholm Stock Exchange, Journal of Banking 
+and Finance, 24, 1275-1287. 
+Scholes, M.S., and J. Williams, 1977, Estimating Betas from 
+Nonsynchronous Data, Journal of Financial Economics, 5, 309-328. 
+Shiller, R.J., 1984, Stock Prices and Social Dynamics, Brookings 
+Papers on Economic Activity, XII(2), 457–498. 
+Sias, R.W., and L.T. Starks, 1997, Return Autocorrelation and 
+Institutional Investors, Journal of Financial Economics, 46, 103 –131. 
+Stoll, H.R., and R.E. Whaley, 1990, Stock Market Structure and 
+Volatility, Review of Financial Studies, 3, 37-71. 
+Wood, R.A., T.H. McInish, and J.K. Ord, 1985, An Investigation of 
+Transactions Data for NYSE Stocks, Journal of Finance, 40, 723–739. 
+Zarowin, P., 1989, Short-Run Market Overreaction: Size and 
+Seasonality Effects, Journal of Portfolio Management, 15, 26–29. 

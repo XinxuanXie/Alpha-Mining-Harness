@@ -1,0 +1,452 @@
+Un
+ive
+rsi
+ty 
+of 
+Ca
+pe
+ To
+wn
+ 
+ 
+ 
+ 
+ 
+An Analysis of Candlestick Charting: the Predictive Power of the  
+Three-Outside-Up and Three-Outside-Down Candlestick Patterns in the Context 
+of Small Capitalization Stocks in the USA.   
+ 
+A research report submitted by 
+Simon Hutton 
+ 
+Presented to the Graduate School of Business 
+University of Cape Town 
+In partial fulfilment of the requirements for the MCom in Development Finance Degree 
+ 
+December 2015 
+ 
+Supervisor: Dr Sean Gossel 
+ 
+Un
+ive
+rsi
+ty 
+of 
+Ca
+pe
+ To
+wn
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+The copyright of this thesis vests in the author. No 
+quotation from it or information derived from it is to be 
+published without full acknowledgement of the source. 
+The thesis is to be used for private study or non-
+commercial research purposes only. 
+ 
+Published by the University of Cape Town (UCT) in terms 
+of the non-exclusive license granted to UCT by the author. 
+ 
+1 
+ 
+ 
+Abstract 
+This paper examines the predictive power of two Japanese Candlestick patterns for a 49-stock sample of small 
+capitalization stocks drawn from the S&P 600 for the period 1 June 2005 to 15 May 2015. Using the normal 
+approximation to the binomial for statistical testing and a dynamic holding period strategy to test the three-
+outside-up and three-outside-down patterns, this study contradicts earlier works that used dynamic holding period 
+strategies for large capitalization stocks and showed moderate levels of statistically significant predictive power. 
+This study finds no statistically significant evidence of the predictive power of the three-outside-up and three-
+outside-down patterns for the sample and time period considered. Hence, the findings imply that there is no 
+evidence to challenge the Efficient Market Hypothesis. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+2 
+Plagiarism Declaration 
+1. I know that plagiarism is wrong. Plagiarism is to use another’s work and pretend that it is one’s own.
+2. I have used convention for citation and referencing. Each contribution to, and quotation in this report from
+the work of other people has been attributed, and has been cited and referenced.
+3. This report is my own work.
+4. I have not allowed, and will not allow, anyone to copy my work with the intention of passing it off as his or
+her own work.
+Signed: 
+Simon Hutton 
+3 
+ 
+ 
+Acknowledgements 
+To my Supervisor, Dr. Sean Gossel, I am grateful for your professionalism and steadfast support in developing this 
+thesis. Your assistance has furthered my appreciation for what thorough analysis entails and has heightened my 
+attention to detail.   
+Thank you Jessica, for your infinite support and patience. Thank you to my Father, Mother and Sister for their 
+ongoing encouragement and positivity. All of you have helped me maintain the momentum and work ethic to 
+complete this work.   
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+4 
+ 
+Table of Contents  
+Abstract ....................................................................................................................... 1 
+Plagiarism Declaration ................................................................................................. 2 
+Acknowledgements ..................................................................................................... 3 
+Table of Contents ........................................................................................................ 4 
+Chapter 1 - Introduction .............................................................................................. 6 
+1.1 Background of the Study ................................................................................................................... 6 
+1.2 Problem Definition ............................................................................................................................ 9 
+1.3 Research Question, Objective and Scope ....................................................................................... 10 
+1.3.1 Research Question .................................................................................................................................. 10 
+1.3.2 Objective ................................................................................................................................................. 10 
+1.3.3 Scope ...................................................................................................................................................... 10 
+1.4 Justification of the Study ................................................................................................................. 11 
+1.5 Limitations and Assumptions .......................................................................................................... 11 
+1.5.1 Limitations .............................................................................................................................................. 11 
+1.5.2 Assumptions ........................................................................................................................................... 13 
+Chapter 2 - Literature Review ..................................................................................... 15 
+2.1 Theoretical Basis.............................................................................................................................. 15 
+2.1.1 The Efficient Market Hypothesis (EMH) ................................................................................................. 15 
+2.1.2 The Random Walk Hypothesis ................................................................................................................ 16 
+2.1.3 Behavioral Finance ................................................................................................................................. 17 
+2.2 Candlestick Analysis ........................................................................................................................ 18 
+2.2.1 General Candlestick Studies ................................................................................................................... 18 
+2.2.2 Candlestick Studies that Consider the TOU and TOD ............................................................................. 21 
+5 
+ 
+2.3 Conclusion ....................................................................................................................................... 25 
+Chapter 3 - Research Methodology ............................................................................. 27 
+3.1 Research Design .............................................................................................................................. 27 
+3.2 Data Collection & Sample ................................................................................................................ 27 
+3.2.1 Data Collection ....................................................................................................................................... 27 
+3.2.2 Sample .................................................................................................................................................... 27 
+3.2 Data Analysis Methods .................................................................................................................... 28 
+3.2.1 Data and Naming Conventions ............................................................................................................... 28 
+3.2.2 The Normal Approximation to the Binomial .......................................................................................... 29 
+3.2.3 Modeling the Normal Approximation to the Binomial........................................................................... 31 
+Chapter 4 - Research Findings & Analysis .................................................................... 35 
+4.1 TOU Event Findings and Analysis .................................................................................................... 35 
+4.2 TOD Event Findings and Analysis .................................................................................................... 38 
+Chapter 5 - Research Conclusions & Recommendations .............................................. 41 
+5.1 Research Conclusions ...................................................................................................................... 41 
+5.2 Recommendations for Future Research ......................................................................................... 42 
+References .................................................................................................................. 43 
+Appendix I .................................................................................................................. 47 
+ 
+ 
+ 
+ 
+6 
+ 
+Chapter 1 - Introduction  
+1.1 Background of the Study 
+"I absolutely believe that price patterns are being repeated. There are recurring patterns that appear over and 
+over, but with slight variations. This is because markets are driven by humans and human nature never changes.” 
+-Jesse Livermore   (Smitten & Livermore, 2001)   
+Technical analysis uses past prices to predict the future price movements of financial assets such as stocks, bonds, 
+currencies and commodities (Chiang, Ke, & Liang, 2012). Technical analysis involves quantitative and graphical 
+methods with a common set of basic principles and is the most common alternative to fundamental analysis (Fock, 
+Klein, & Zwergel, 2005). The methods of technical analysis are grounded on two key tenets: (i) that trends in prices 
+tend to persist and (ii) that market action is repetitive (Caginalp & Balenovich, 2003). These two tenets infer that 
+price movements in financial markets are neither efficient nor random.  
+A common tool used to conduct technical analysis is candlestick analysis. Candlestick analysis originated in the 
+1700’s when a wealthy rice farmer, Munehisa Honma, developed candlestick patterns as a means to analyze 
+forward contracts in the Japanese rice markets (Marshall, Young, & Rose, 2006). Honma developed a system in 
+which each candlestick displays information on market sentiment by expressing graphically the high, low, opening 
+and closing prices.   
+The principles of candlestick analysis were introduced to the Western financial markets in the early 1990’s by 
+Nison (1991) and Morris (1992) who provided investors with a new means to analyze and potentially profit from 
+technical analysis. Nison introduced more than 28 reversal and continuation patterns, while Morris introduced 
+over 50 different reversal and continuation patterns. They claim that, when plotted over time, the price patterns 
+formed by candlesticks can be used to help judge the sentiment of market demand and supply and indicate when 
+reversals or continuations in prices are probable.   
+Candlesticks are charted on an X-Y plane with time on the X-axis and price on the Y-axis. The ‘body’ of the 
+candlestick displays the price difference between the opening and closing price. If the closing price is higher than 
+the opening price as is the case in an ‘up’ day, then the body is white whereas if the opening price is higher than 
+the closing price, then the body is black (or a darker color), indicating a ‘down’ day. Above and below the 
+candlestick body are the ’shadows’, that indicate the high and the low prices of the trading day.  
+ 
+ 
+7 
+ 
+ 
+Figure 1 graphically illustrates the formation of a candlestick and Figure 2 shows an example of a six-month daily 
+interval candlestick chart for the S&P 500 Index exchange traded fund (ETF). 
+ 
+Figure 1: Candlestick Open-Close, High-Low  
+ 
+Source: (Fock et al., 2005) 
+ 
+ 
+ 
+ 
+ 
+Source: (Fock et al., 2005) 
+ 
+Figure 2: Six-Month Daily Interval Candlestick Chart for the S&P 500 index ETF 
+ 
+  
+ 
+ 
+ 
+ 
+Source: Bigcharts.com 
+Since being introduced to Western markets, candlestick charting has been used by financial traders and investors 
+as a part of their analytical toolkit. Despite its widespread use in practice, the empirical evidence on the efficacy 
+of candlestick charting as a tool for predictive analysis is mixed.    
+This study investigates the predictive power of two candlestick reversal patterns. Reversal patterns are intended 
+to indicate when there may be a change in the price trend. If prices were going up and a reversal pattern manifests, 
+it would be anticipated that prices would stop going up and reverse their direction, at least temporarily. Similarly, 
+8 
+ 
+if prices were going down and a reversal pattern manifests, then it would be anticipated that prices would stop 
+going down and reverse direction, at least temporarily.  
+The reversal patterns considered in this study are the three-outside-up (TOU) and three-outside-down (TOD) 
+reversal patterns.1  As the names imply, the three-outside-up (TOU) and three-outside-down (TOD) are three-day 
+patterns. They are both intended to signal a reversal of a trend. If the price of a stock is in a down trend and a TOU 
+manifests, then it is expected the price will reverse its trend course and go up. Conversely, if the price of a stock 
+is in an up trend and a TOD manifests, then it is expected the price will reverse course and decline. A TOU or TOD 
+is only confirmed in the context of a preceding trend. Hence, a TOU must be preceded by a down trend, while a 
+TOD must be preceded by an up trend.  As these patterns are identified in the context of a trend, they are referred 
+to as trend context patterns.2 
+Morris (1992) defines the following seven parameters for the TOU. The first day of a TOU is part of a down trend 
+(parameter 1) and is a down day (parameter 2). The second day engulfs the first day (parameter 3) and is an up 
+day (parameter 4), meaning it opens lower than the first days close and closes above the first days open. The third 
+day is an up day (parameter 5) where the open must be higher than the open of the second day (parameter 6) 
+and the close must be higher than the close on the second day (parameter 7).   
+The TOD is the inverse of the TOU. The first day of a TOD is part of an up trend and is an up day, meaning its closing 
+price is higher than its opening price. The second day engulfs the first day and is a down day, meaning it opens 
+higher than the first days close, but closes below the first days open. The third day is a down day where the open 
+must be lower than the open of the second day and the close must be lower than the close on the second day.   
+In the literature, the definition of the TOD and TOU is consistent and is usually defined using a series of inequalities 
+that mathematically define the descriptions of the patterns provided above. The meaning of the inequalities used 
+to define the TOU and TOD is consistent amongst the academic works that consider them.3   
+Figure 3(a) and 3(b) show the TOU and TOD as they would appear on a candlestick chart, with the three vertical 
+straight lines indicating the preceding trend and the candlesticks indicating the 3-day pattern.     
+ 
+                                                          
+1 The TOU and TOD patterns were first introduced to the western markets in 1992 by Greg Morris, in his influential book Candlepower, 
+advanced candlestick pattern recognition and filtering techniques for trading stocks and futures (Morris, 1992). The TOU and TOD patterns 
+have also been examined in the academic literature, but not exhaustively. The most notable studies have been published by Caginalp and 
+Laurent (1998), Horton (2009) and Lu et al. (2015) who make partly conflicting conclusions. Their studies are further explored in the 
+Literature Review. 
+2 This marks an important distinction between studies that use a trend as a precursor to pattern recognition and those that do not. This 
+distinction is consistent with how the TOU and TOD were originally defined and will be further discussed in the literature review. 
+3 See the Literature for a description of the key studies. 
+9 
+ 
+Figure 3(a): Three Outside Up (TOU)   Figure 3(b): Three Outside Down (TOD) 
+ 
+ 
+Source: Caginalp and Laurent (1998) 
+ 
+1.2 Problem Definition 
+The utility of candlestick analysis as an investment tool is an area of ongoing debate. In their seminal work on 
+candlestick reversal patterns Caginalp and Laurent (1998) highlight that, on the discussion of the utility of technical 
+analysis, there is a substantial rift between the opinions of academics and practitioners. According to the Efficient 
+Market Hypothesis (EMH) past price information is of no use for investment analysis and thus technical analysis 
+and candlestick charting have no value (Chiang et al., 2012; Fama, 1965). However, many finance professionals 
+believe that technical analysis is useful, with 60% of commodity traders and 30% - 40% of foreign exchange traders 
+depending on technical trading systems (Billingsley & Chance, 1996; Menkhoff, 1997).    
+Unfortunately for the study of candlestick analysis as a whole, the answer to the question of its efficacy is likely 
+to remain enigmatic. Candlestick analysis combines dozens of patterns and techniques.4 Consequently, 
+investigating the utility of candlestick analysis as a whole poses numerous challenges that relate to testing 
+techniques and generality (Park & Irwin, 2007).  Effort can be made however, to empirically analyze particular 
+patterns and thus this study considers the predictive power of two patterns that were examined in the early 
+seminal work of Caginalp and Laurent (1998), the TOU and TOD5.    
+ 
+                                                          
+4 According to Morris (1992) there are over 50 different candlestick patterns. 
+5 Caginalp and Laurent (1998) who were the first to publish a statistically robust analysis of candlestick charting, found that for four different 
+holding periods, the TOD generated profits more than 73% of the time and the TOU generated profits more than 53% of the time, for stocks 
+in the S&P 500 for the period 19 January 1992 to 14 June 1996.   
+10 
+ 
+1.3 Research Question, Objective and Scope  
+1.3.1 Research Question 
+This study investigates the following primary research question:   
+Do the TOU and TOD have predictive power for small capitalization stocks within the S&P 600 for the period 1 June 
+2005 to 15 May 2015 at a moderate level of statistical significance?   
+In addition, the analysis will also seek to answer the following sub-question: 
+Do the findings on the predictive power of the TOU and TOD for small capitalization stocks within the S&P 600 for 
+the period 1 June 2005 to 15 May 2015 support the Efficient Market Hypothesis at a moderate level of statistical 
+significance?   
+The decision to follow this line of enquiry is inspired by the current gap in the academic literature that indicates 
+neither small capitalization stocks, nor the time period highlighted above, have been investigated. Moreover, 
+results of testing the TOU and TOD have been published in the academic literature on only seven occasions. The 
+research questions are also inspired by the seminal work of Caginalp and Laurent (1998) who were the first to 
+pursue a scientifically robust study of the TOD and TOU.   
+1.3.2 Objective 
+The objective of this study is to empirically determine whether the TOU and TOD have predictive power for small 
+capitalization stocks within the S&P 600 for the period 1 June 2005 to 15 May 2015.        
+This objective will be achieved through a hypothesis test where the null hypothesis (H0) is that the TOD and TOU 
+do not have predictive power for small capitalization stocks within the S&P 600 for the period 1 June 2005 to 15 
+May 2015 at a moderate level of statistical significance, against the alternative hypothesis (H1) that the TOD and 
+TOU do have predictive power at a moderate level of statistical significance over the same period. 
+ 
+1.3.3 Scope  
+The scope of this study is limited to:  
+1. The time period of 1 June 2005 to 15 May 2015. This date range covers both bull and bear market 
+conditions thus avoiding market directional biases and provides a sufficient number of data points to 
+address the hypothesis.   
+11 
+ 
+ 
+2. The TOU and TOD candlestick patterns. The investigation of the TOU and TOD patterns affords a narrow 
+focus and offers a contribution to the academic community which has investigated the predictive power 
+of the TOU and TOD only seven times in aggregate and only two times for a period of investigation post 
+2005.  
+ 
+3. Considering the predictive power of a sample of 47 small-capitalization stocks drawn from the S&P 600 
+index. The focus on small capitalization stocks in the USA is driven by the gap in the literature. The 
+rationale for selecting 47 small-capitalization stocks from the S&P 600 is expanded upon in the Research 
+Methodology section. 
+ 
+1.4 Justification of the Study 
+The topic of this study has been selected due to its relevance to both financial theory and finance practitioners.  
+The theory of the EMH, which excludes technical analysis as a viable investment tool, has been a mainstay of 
+academia and technical finance education for more than four decades (The Institute of Chartered Financial 
+Analysts, 2012). However, more than half of the published academic literature dating back to 1966 suggests that 
+technical analysis is valid as a profitable investment tool (Park & Irwin, 2007). Thus the debate regarding the merits 
+of candlestick analysis is still ongoing.   
+ 
+1.5 Limitations and Assumptions 
+1.5.1 Limitations  
+1. Predictive Power: This study investigates the predictive power of the TOU and TOD, as will be defined by 
+the change in price of a stock following a TOU or TOD.  A mathematical definition of predictive power is 
+established and explained in the Research Methodology section. While this study will comment on 
+profitability of the TOU and TOD in the Research Findings and Analysis section, profitability is not 
+integrated into the hypothesis test. This decision has been informed by the variable profitability of a trade, 
+which is a direct function of ones cost of money, cost of commission, the magnitude of bid-ask spreads 
+upon entry and exit of trade execution, as well as regional taxes and or regulations, all of which vary 
+considerably among investors. Thus defining predictive power by way of estimating profitability is subject 
+to numerous variable elements and is prone to dilute the precision of the findings. 
+12 
+ 
+ 
+2. Results: While the results of this study may reinforce or undermine some tenets of the theory of random 
+walk, the goal of this study is limited to investigating the predictive power of the TOU and TOD and 
+considering how that predictive power, or lack thereof, supports the Efficient Market Hypothesis.   
+ 
+3. Generalization: Candlestick analysis is a subset of technical analysis, and the TOU and TOD are two of 
+many patterns that constitute candlestick analysis. Hence, the findings of this document cannot be used 
+to generalize support for, or negate technical analysis or candlestick analysis. Rather, the findings are 
+limited to providing insight into two components in the larger field of study of candlestick and technical 
+analysis. 
+ 
+4. Sample: It cannot be known if the sample used is truly representative of all the stocks in the S&P 600 or 
+small capitalization stocks in general. As such, there is a limitation in the representativeness of the sample 
+chosen. However, it is known that the sample provides insight into a specifically defined sample of stocks 
+that meet the selection criteria highlighted in the Research Methodology section. The sample may be 
+subject to a degree of selection bias as it may not represent companies across industries in the exact same 
+proportion as the S&P 600. Such a bias would however require that there was a relationship between 
+industries and the efficacy of candlestick analysis. To date there is no such evidence in the literature. 
+ 
+5. Model: This study employs the normal approximation to the binomial model to test the hypothesis. The 
+properties of this model are generally consistent with the realities of the experiment carried out. A 
+possible exception relates to the assumption that trials are independent, which means that the outcome 
+of one trial does not affect the outcome of any other trials (Anderson, Sweeney, & William, 1993). If the 
+EMH and the theory of random walk are assumed to be valid representations of market price action then 
+there is no conflict because they infer future price movements are independent of past prices, which is 
+consistent with the assumption of trial independence. If however, it is assumed prices are not random, 
+then there is a potential conflict with the independence of trials assumption. 
+The relationship between stocks in the sample may also challenge the assumption of independence 
+among trials. If it were case that there were strong correlations among the stocks in the sample, then it 
+would be expected that the TOU and TOD would each manifest on the same dates with the same outcome.  
+Of the 177 TOU patterns that manifested from the sample considered herein, there were 26 instances in 
+which the TOU occurred on the same date for more than one stock. Of those 26 instances, only ten 
+involved more than two stocks and in only one instance did the TOU occur for more than four stocks 
+13 
+ 
+simultaneously, out of the 47 stocks in the sample. Of the 221 TOD patterns that manifested, there were 
+33 instances in which the TOD occurred on the same date for more than one stock. Of those 33 instances, 
+only twelve involved more than two stocks and in only two instances did the TOD occur for more than 
+four stocks simultaneously, out of the 47 stocks in the sample. These instances of shared dates may be 
+attributed to stocks in the same sector having similar price tendencies over time. While an investigation 
+of the correlation among the sample stocks is beyond the scope of this thesis, the above results suggest 
+the correlation is limited. Nevertheless, the issue of independence among trials is the most likely to 
+challenge the validity of using the binomial model in the context of this study.   
+ 
+6. Literature Review: The literature review is limited to academic works that discuss the EMH, theory of 
+random walk, behavioral finance and studies that investigate the predictive power of candlestick patterns 
+using statistical testing. In reviewing academic works that investigate the predictive power of candlestick 
+patterns, the observations are limited to noting, comparing and contrasting the markets considered; the 
+dates over which the markets were evaluated; the holding strategy employed; the candlestick patterns 
+evaluated and the results of tests on the predictive power of those patterns.  In reviewing the academic 
+studies on candlestick analysis, several issues that, according to Park and Irwin (2007) can challenge 
+technical analysis testing, are omitted from the discussion. Issues of averaging results, where numerous 
+patterns are considered and only the aggregate average results are stated, are not discussed. Issues of 
+data snooping are also omitted. Data snooping can occur when by fluke or by direct intention, a certain 
+strategy or pattern is found to be valid for a particular set of data (Kilgallen, 2012). Data snooping can be 
+problematic because it can result in authors making broad inferences about new patterns based on only 
+one data set, with no out-of-sample testing (Sullivan, Timmermann, & White, 1999). Issues of 
+standardization are also omitted from discussion. A lack of standardization among testing procedures 
+within the academic literature compounds the challenge of longitudinal comparability and can make 
+definitive inferences about the validity of candlestick patterns difficult. While these concerns are present 
+(albeit scarcely) in the literature considered herein, they are omitted from discussion because they do not 
+directly relate to this thesis. 
+ 
+1.5.2 Assumptions  
+1. It is assumed that the reader has an intermediate knowledge of financial markets and financial markets 
+terminologies.  
+ 
+14 
+ 
+2. It should be assumed that ‘prices’ refers to the prices of publicly traded securities or assets. 
+ 
+3. It should be assumed that ‘assets’ refers to publicly traded securities that may include stocks, bonds, 
+currencies and commodities.  
+ 
+4. It is assumed that the normal approximation to the binomial model is an appropriate model to test the 
+hypothesis herein. This model was used in the seminal work of Caginalp and Laurent (1998) and is 
+uncontested in the literature that followed. It is assumed that the basic properties of the binomial model 
+hold6.         
+ 
+5. It is assumed that the sample selected, while subject to limitations noted in section 1.5.1, provides a 
+reasonable representation of small capitalization stocks that meet predefined criteria, as highlighted in 
+the Research Methodology section.   
+ 
+6. It is assumed that the time period investigated, by way of covering a date range that covers both bull and 
+bear market conditions, is not subject to biases that may come about from testing patterns in only one 
+market condition.    
+ 
+ 
+                                                          
+6 The basic properties of the binomial model can be summarized as follows (Anderson et al., 1993; Keller, 2009): A binomial experiment 
+consists of a fixed number of trials; on each trial there are two possible outcomes, success and failure; the probability of success is p, the 
+probability of failure is 1-p; the trials are independent, which means that the outcome of one trial does not affect the outcome of any other 
+trials; and the normal distribution may be used to approximate binomial probabilities when np ≥ 5, and when n(1-p)  ≥  5.  
+15 
+ 
+Chapter 2 - Literature Review  
+The purpose of this literature review is to examine the literature on candlestick analysis and the predictive power 
+of the TOU and TOD. The literat

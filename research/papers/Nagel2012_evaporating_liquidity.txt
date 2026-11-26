@@ -1,0 +1,1739 @@
+NBER WORKING PAPER SERIES
+EVAPORATING LIQUIDITY
+Stefan Nagel
+Working Paper 17653
+http://www.nber.org/papers/w17653
+NATIONAL BUREAU OF ECONOMIC RESEARCH
+1050 Massachusetts Avenue
+Cambridge, MA 02138
+December 2011
+I thank Miguel Ferreira, Terrence Hendershott, David Hirshleifer, Charles Jones, Ron Kaniel, Ian Martin,
+Konstantin Milbradt, Laura Starks, Dimitry Vayanos, an anonymous referee, and seminar participants
+at the University of Amsterdam, University of Arizona, University of British Columbia, Columbia
+University, Federal Reserve Bank of New York, University of Maastricht, Princeton, Rice, Stanford,
+the American Finance Association Meetings, the NBER Summer Institute, and the Gutmann Center
+Symposium at WU Vienna for useful comments. The views expressed herein are those of the author
+and do not necessarily reflect the views of the National Bureau of Economic Research.
+NBER working papers are circulated for discussion and comment purposes. They have not been peer-
+reviewed or been subject to the review by the NBER Board of Directors that accompanies official
+NBER publications.
+© 2011 by Stefan Nagel. All rights reserved. Short sections of text, not to exceed two paragraphs,
+may be quoted without explicit permission provided that full credit, including © notice, is given to
+the source.
+
+Evaporating Liquidity
+Stefan Nagel
+NBER Working Paper No. 17653
+December 2011
+JEL No. G12
+ABSTRACT
+The returns of short-term reversal strategies in equity markets can be interpreted as a proxy for the
+returns from liquidity provision. Analysis of reversal strategies shows that the expected return from
+liquidity provision is strongly time-varying and highly predictable with the VIX index. Expected returns
+and conditional Sharpe Ratios increase enormously along with the VIX during times of □nancial market
+turmoil, such as the □nancial crisis 2007-09. Even reversal strategies formed from industry portfolios
+(which do not yield high returns unconditionally) produce high rates of return and high Sharpe Ratios
+during times of high VIX. The results point to withdrawal of liquidity supply, and an associated increase
+in the expected returns from liquidity provision, as a main driver behind the evaporation of liquidity
+during times of □nancial market turmoil, consistent with theories of liquidity provision by □nancially
+constrained intermediaries.
+Stefan Nagel
+Stanford University
+Graduate School of Business
+518 Memorial Way
+Stanford, CA  94305
+and NBER
+nagel_stefan@gsb.stanford.edu
+
+1 Introduction
+Liquidity evaporated in many sectors of ﬁnancial markets du ring the ﬁnancial crisis 2007-09.
+In some markets, such as those for “toxic” asset-backed secu rities, trading activity reportedly
+came to a complete halt. 1 There are at least two possible explanations for this disapp earance
+of market liquidity. One is that the crisis ampliﬁed asymmet ric information problems. For
+example, Gorton and Metrick (2010) argue that large adverse shocks strongly increased the
+information sensitivity of securitized debt. According to this view, the reduction in liquidity
+is a symptom for aggravated adverse selection problems. An a lternative and complementary
+theory is that the market turmoil strained the inventory-ab sorption capacity of the market-
+making sector, either because of a surge in liquidity demand from the public, or because
+market makers reduced liquidity supply in response to eleva ted levels of risk, tighter funding
+constraints, and reduced competition. According to this se cond view, the conditions during
+the crisis raised the expected return from liquidity provis ion.
+This paper studies this second channel using data from equit y markets. The main objec-
+tive is to estimate the extent by which the expected return fr om liquidity provision rises in
+times of ﬁnancial market turmoil. The notion of “liquidity p roviders” adopted in this paper
+is broad and not restricted to designated market makers. Liq uidity provision in equity mar-
+kets is increasingly performed by algorithmic traders and o ther quantitative investors that
+perform, eﬀectively, a market-making role, but without bei ng oﬃcially designated as market
+makers (Hendershott, Jones, and Menkveld (2011)). Even ind ividual investors could perform
+a liquidity provision role to some extent (Kaniel, Saar, and Titman (2008)).
+To construct a proxy for the returns from liquidity provisio n, I examine reversal strategies
+that buy stocks that went down over the prior days, and sell st ocks that went up during the
+prior days, as in Lehman (1990) and Lo and MacKinlay (1990). T his pattern of buying and
+selling in reversal strategies resembles the trading of a ma rket maker who sells when the
+public buys (which tends to coincide with rising prices), an d who buys when the public sells
+1See Brunnermeier (2009) for a review.
+1
+(which tends to coincide with falling prices). Setting up a m odel in which the public trades
+for liquidity and informational reasons, and in which marke t makers have limited risk-bearing
+capacity, I show that reversal strategy returns closely tra ck the returns earned by liquidity
+providers. Eﬀectively, reversal strategies use lagged ret urns as a noisy proxy for unobserved
+market maker inventory imbalances. They proﬁt from the tran sitory price impact of order
+ﬂow and the negative serial correlation in price changes tha t arises from market makers’
+aversion to absorbing inventory. Price impact due to privat e information, in contrast, is
+permanent and does not induce negative serial correlation ( Glosten and Milgrom (1985)),
+which allows me to isolate the variation in the expected retu rns from liquidity provision from
+adverse selection eﬀects. 2
+The focus of this paper is to examine whether there is predict able time-variation in the
+returns from liquidity provision. Recent work on risk-taki ng of ﬁnancial intermediaries sug-
+gests that the VIX index of implied volatilities of S&P500 in dex options is a natural candidate
+predictor. The theories in Gromb and Vayanos (2002) and Brun nermeier and Pedersen (2009)
+predict that higher volatility tightens funding constrain ts of market makers and thereby re-
+duces their liquidity-provision capacity. Adrian and Shin (2010) argue that risk-management
+constraints reduce the risk appetite of ﬁnancial intermedi aries in times of high VIX. Ang,
+Gorovyy, and van Inwegen (2011) and Ben-David, Franzoni, an d Moussawi (2011) ﬁnd that
+hedge funds lose assets under management and reduce leverag e in times of market turmoil
+and high VIX. Motivating evidence also comes from a recent li terature that ﬁnds the VIX to
+be related to various asset-pricing phenomena that may be re lated to risk-taking of ﬁnancial
+intermediaries, such as corporate bond liquidity (Bao, Pan , and Wang (2011)), foreign ex-
+change carry trades (Brunnermeier, Nagel, and Pedersen (20 08)) or sovereign credit-default
+swaps (Longstaﬀ, Pan, Pedersen, and Singleton (2010)).
+Figure 1 illustrates some of the key ﬁndings of the paper. The solid line plots a three-
+2In Glosten and Milgrom’s model, greater adverse selection l eads to a wider bid-ask spread, but transaction
+prices always follow a martingale (i.e., there is no bid-ask bounce), and market makers, as well as reversal
+strategies, earn zero expected return.
+2
+Jan1998 Jan2000 Jan2002 Jan2004 Jan2006 Jan2008 Jan20100
+0.002
+0.004
+0.006
+0.008
+0.01
+Average return per day
+Jan1998 Jan2000 Jan2002 Jan2004 Jan2006 Jan2008 Jan2010 0
+15
+30
+45
+60
+75
+VIX
+ 
+ 
+VIX Reversal strategy return
+Figure 1: 3-month moving averages of daily return-reversal strategy returns and the CBOE
+S&P500 implied volatility index (VIX). Each day t, the reversal strategy returns are calcu-
+lated as the average of returns from ﬁve reversal strategies that weight stocks proportional to
+the negative of market-adjusted returns on days t − 1, t − 2, ..., t − 5, with weights scaled to
+add up to $1 short and $1 long. Returns are calculated from dai ly CRSP closing transaction
+prices, and returns are hedged against conditional market f actor exposure.
+month moving average of daily returns from a reversal strate gy that invests $1 of capital each
+day (with 50% margin for long and short positions) and weight s stocks based on their prior
+ﬁve days’ returns. Returns from the reversal strategy are cl ose to 1% per day during the
+LTCM crisis in 1998 and the Nasdaq decline in 2000/01. Subseq uently, until 2007, reversal
+strategy returns declined steadily to less than 0.2% per day , but then they virtually exploded
+during the ﬁnancial crisis, reaching levels that exceed tho se seen during the LTCM crisis.
+As the ﬁgure shows, this time-variation in the reversal stra tegy return is remarkably highly
+correlated with the VIX index shown as the dotted line in term s of a three-month moving
+average. Since the start of the ﬁnancial crisis in 2007, reve rsal strategy returns and the VIX
+track each other almost perfectly.
+3
+Predictive regressions conﬁrm that the correlation betwee n VIX and reversal strategy
+returns is predictive, i.e., VIX forecasts reversal strate gy returns. Both transaction-price
+and quote-midpoint returns of reversal strategies are high ly predictable with the VIX, but
+the association is particularly strong with transaction-p rice returns. The strong relation-
+ship between reversal strategy returns and VIX also persist s when reversal strategy returns
+are standardized by their conditional volatility, which eﬀ ectively shows that the conditional
+Sharpe Ratio of reversal strategies is positively related t o the VIX. Thus, not only does the
+level of expected return from liquidity provision rise with the VIX, but the risk premium
+earned by liquidity providers increases as well.
+Khandani and Lo (2007) examine returns of a similar reversal strategy during the “quant
+crisis” in August 2007 and ﬁnd that it produced substantial b ut largely transitory losses over a
+period of a few days. The results in this paper show that rever sal strategies were, in contrast,
+highly proﬁtable during the subsequent ﬁnancial crisis per iod. Moreover, the downside risk of
+these strategies is generally low. Returns are positively s kewed, and as Figure 1 shows, there
+was not a single three-month period from 1998 to 2010 in which this strategy lost money
+(before costs of carrying out the trades). Thus, the experie nce during the “quant crisis” was
+exceptional. Downside risk is unlikely to be the explanatio n for the high Sharpe Ratios of
+liquidity provision strategies during times of high VIX.
+While reversal strategies at the individual stock level are known to be proﬁtable (and
+this paper adds the evidence that proﬁts are time-varying an d highly predictable), I am
+not aware of prior evidence in the literature that reversal s trategies constructed from more
+aggregated portfolios earn positive returns. Yet, common f actors in order imbalances might be
+particularly volatile during times of market turmoil, and m arket makers particularly averse to
+absorbing them. To investigate this possibility, I also exa mine a reversal strategy constructed
+from long-short positions in value-weighted industry port folios. The evidence shows that this
+inter-industry reversal strategy, too, earns high returns and high Sharpe Ratios when VIX is
+high, which indicates that liquidity providers earn compen sation for absorbing industry-level
+4
+order imbalances in times of market turmoil.
+The fact that expected returns from liquidity provision are strongly related to the VIX in-
+dex does not necessarily imply that the VIX index itself is th e state variable driving expected
+returns from liquidity provision. More likely, the VIX prox ies for the underlying state vari-
+ables that drive the willingness of market makers to provide liquidity and the public’s demand
+for liquidity. Uncovering these underlying state variable s is diﬃcult, as they are likely to be
+highly correlated with VIX and among each other, but I presen t some tentative evidence using
+alternative predictor variables. Decomposing the VIX into conditional volatility and a volatil-
+ity risk premium shows that both components predict reversa l strategy returns, although the
+conditional volatility part seems to be a somewhat stronger predictor. Several proxies for
+liquidity supply factors predict reversal strategy return s. Idiosyncratic volatility, which might
+be a concern for imperfectly diversiﬁed market makers, and t he Treasury-Eurodollar (TED)
+spread, a popular proxy for funding costs of ﬁnancial interm ediaries, are positively related
+to future returns from liquidity provision. Growth in prima ry dealer repo ﬁnancing, shown
+by Adrian and Shin (2010) to be positively related to balance sheet size and risk appetite
+of ﬁnancial intermediaries, is negatively related to the ex pected return from liquidity provi-
+sion. However, these variables do not fully subsume the expl anatory power of VIX in the
+forecasting regression.
+The ﬁndings in this paper relate to earlier work showing that market makers extract price
+concessions for absorbing order imbalances over and above c ompensation for adverse selection.
+As a result, inventory positions aﬀect prices and liquidity (Hansch, Naik, and Viswanathan
+(1998); Comerton-Forde, Hendershott, Jones, Moulton, and Seasholes (2010)), and the level of
+inventory positions predicts returns over a horizon of seve ral days (Hendershott and Seasholes
+(2007)). The inventory data used in these studies are privat e information, while the reversal
+strategies that I examine in this paper utilize only publicl y available information, but over
+a longer time period, which allows me to study time-variatio n in the expected return from
+liquidity provision, particularly during the ﬁnancial cri sis 2007-09.
+5
+Existing work shows that volatility is negatively related t o liquidity. Chordia, Sarkar, and
+Subrahmanyam (2005) ﬁnd that positive volatility innovati ons in stock and bond markets
+predict an increase in quoted spreads and a reduction of dept h in those markets. Deuskar
+(2008) ﬁnds that price impact of trades is higher when the vol atility risk premium component
+in VIX is high. The liquidity measures used in these papers ca pture adverse selection as well
+as inventory imperfections. When these measures indicate i lliquidity, this does not necessarily
+imply high expected returns from liquidity provision. The r eversal strategies examined in this
+paper isolate the inventory-related component that drives the return from liquidity provision.
+P´ astor and Stambaugh (2003) develop a liquidity measure related to short-term reversals,
+but, unlike the reversal strategies in this paper, their liq uidity measure is not interpretable as
+a return (per dollar of capital) on a trading strategy, which makes it unsuitable for a study
+of time-variation in the returns from liquidity provision. Hameed, Kang, and Viswanathan
+(2010) ﬁnd that bid-ask spreads and reversal strategy retur ns increase in the weeks following
+large stock market market declines. I show that the VIX is a mu ch more powerful predictor of
+reversal strategy returns than lagged market returns, that Sharpe Ratios of reversal strategies
+increase during times of high VIX, and that reversal strateg y returns formed from industry
+portfolios also have high expected returns when VIX is high.
+2 Measuring Returns from Liquidity Provision
+While it is intuitively clear that short-term reversal stra tegies approximate the trading pat-
+terns of liquidity providers, and that they beneﬁt from the n egative serial correlation in price
+changes induced by imperfect liquidity provision, it is les s clear precisely which speciﬁcation
+of reversal strategies provides the best approximation of t he returns from liquidity provision.
+The returns of diﬀerent versions of reversal strategies can all be represented as scaled auto-
+covariances of market-adjusted returns. But it is not clear which scaling of autocovariances
+is most suitable for an assessment of the returns from liquid ity provision. To clarify these
+issues, this section presents a model that contains the key f eatures of market microstructure
+6
+models: The public trades for both informational and liquid ity reasons (as in Kyle (1985)),
+and market makers in this model are averse to taking on invent ory (as in Grossman and Miller
+(1988)). Within this model, one can compute the return from l iquidity provision and compare
+it to reversal strategy returns. This helps understand whic h reversal strategy speciﬁcation
+approximates best the returns from liquidity provision and which factors could interfere with
+this proxy relationship. The model should be thought of as ap plying to a relatively short time
+period in which the parameters determining the expected ret urn from liquidity provision are
+roughly constant, while the subsequent empirical analysis will look at time-variation in the
+expected return from liquidity provision at lower frequenc ies.
+2.1 Model
+Consider an asset market with a single risky asset in zero net supply, a riskless asset in
+perfectly elastic supply at interest rate of zero, and discr ete time, t = 0, 1, 2, ..., T. There are
+three groups of market participants: Informed traders, mar ket makers, and liquidity traders.
+The latter group trades an exogeneous amount zt each period.
+The value of the risky asset in the ﬁnal period T is
+vT = v0 +
+T∑
+τ =1
+δt +
+T∑
+τ =1
+ξt, (1)
+which is paid as a terminal dividend. The innovations δt, ξt, and zt are jointly normal, IID
+over time, mutually uncorrelated, and have variances σ2
+δ , σ2
+ξ , and σ2
+z , respectively.
+The signal ξt is public and observed at time t by all market participants. In contrast,
+δt becomes public information at t, but informed traders observe a signal st−1 = δt one
+period earlier, which means they have a short-lived informa tional advantage, as in Admati
+and Pﬂeiderer (1988). Informed traders are competitive and myopic with CARA utility. 3
+3Assuming the variance of ξt to increase at an appropriate rate as t → T to compensate for the reduced
+variance stemming from a lower number of remaining δt shocks one could make the setting IID in which
+non-myopic demand functions would be equivalent to the myop ic ones. For simplicity of exposition, I assume
+myopia.
+7
+Informed traders submit market orders, i.e., they cannot co ndition their demand on the price
+in the current trading round, similar to Kyle (1985). As a res ult, the demand function of the
+representative informed trader is
+yt = βst, (2)
+where β is increasing in the aggregate risk-bearing capacity of inf ormed traders and decreasing
+in the level of risk they perceive and the price impact that th ey expect to have in aggregate
+(see Appendix A).
+The representative competitive market maker has CARA utili ty with (myopic) asset de-
+mand
+mt = γ (E[δt+1|Mt] + vt − Pt) , (3)
+where Mt denotes market makers’ information set at time t, which includes prices and order
+imbalances up to time t. The slope of demand, γ, captures the aggressiveness with which
+market makers supply liquidity, which is increasing in the r isk-bearing capacity of the market-
+making sector, and decreasing in the level of risk. More gene rally, margin constraints, as in
+Gromb and Vayanos (2002) and Brunnermeier and Pedersen (200 9), or risk management
+constraints, as in Adrian and Shin (2010), eﬀectively induc e risk-averse behavior, and a
+ﬁnite γ can be thought of as a reduced-form representation of these f rictions. As shown in
+Appendix A, E[δt+1|Mt] = φxt, where xt ≡ yt + zt is the total asset demand imbalance from
+informed and liquidity traders absorbed by the market maker (which equals the negative of
+the inventory position of the market maker in period t), and
+φ = βσ 2
+δ
+β2σ2
+δ + σ2z
+(4)
+captures the informativeness of xt about δt+1. Thus, E[δt+1|Mt] = φxt represents the market
+maker’s best estimate of the information about st = δt+1 contained in xt.
+8
+In equilibrium, dollar returns Rt+1 ≡ Pt+1 − Pt follow
+Rt+1 = ξt+1 + ηt+1 +
+( 1
+γ + φ
+)
+xt+1 −
+( 1
+γ
+)
+xt. (5)
+In this model, order ﬂow ∆ xt+1 = xt+1 − xt follows an MA(1) process with MA-coeﬃcient of
+−1. The market maker provides immediacy and absorbs intertem poral imbalances in order
+ﬂow, but over time these imbalances tend to cancel out, as in G rossman and Miller (1988),
+and the market maker’s inventory is stationary. 4
+Equation (5) shows that returns have a predictable and an unp redictable component.
+Since st+1 and zt+1 are IID over time, xt+1 is not predictable based on information at time t
+(neither the market makers’ nor the informed traders’) and h ence xt+1 represents unexpected
+period t+1 order ﬂow, which has price impact for both informational r easons (captured by φ)
+and because of imperfect supply of liquidity (captured by 1 /γ). In contrast, −xt represents
+the expected component of period t + 1 order ﬂow and it is associated with a predictable
+return −(1/γ)xt that compensates market makers for bearing inventory risk. For example,
+if market makers are long inventory in period t (xt < 0), then the return expected in period
+t + 1 is positive. Market makers’ limited risk-bearing capaci ty implies an imperfect supply of
+immediacy, which in turn induces predictability and negati ve serial correlation into the return
+process. By providing liquidity (in the form of immediacy), market makers earns positive
+expected proﬁts.
+2.2 Returns from liquidity provision
+To calculate these returns from supplying liquidity, I now e xtend the model in a simple way
+to a cross-section of i = 1 , 2, ..., N securities. Let all variables in the model now carry i-
+subscripts, and let δit and zit be jointly normal IID in the cross-section. I allow the publi c
+information component of returns to be correlated across st ocks by specifying a simple factor
+4In Grossman and Miller (1988) order ﬂow imbalances have perf ect negative serial correlation, while in this
+model the correlation is not perfect because of the presence of the innovation of the MA(1) process.
+9
+structure ξit = ft + eit, where f is a serially uncorrelated common factor (for simplicity al l
+stocks are assumed to have identical factor loadings, hence f is also the market factor) and
+eit are cross-sectionally normal IID factor-model residuals.
+The market making sector’s dollar gain in period t, aggregated across all N securities, is
+− ∑N
+i=1 xit−1Rit. A calculation of market maker returns requires calculatio n of the capital
+needed for carrying these inventory positions. One complic ation that arises in a CARA-
+normal model is that prices can be negative, which is not real istic for stocks. To abstract
+from such complications arising from the cross-sectional d istribution of prices, and from
+scale diﬀerences between stocks, I assume that prices of all securities at t − 1 are equal and
+normalized to Pit−1 = 1. 5 Assuming a 50% margin for both long and short positions, 6 the
+required capital is (1 /2) ∑N
+i=1 |xit−1|, and hence market makers’ return per dollar of capital
+is
+LM M
+t = −
+(
+1
+2
+N∑
+i=1
+|xit−1|
+) −1 N∑
+i=1
+xit−1Rit. (6)
+Appendix A shows that as N → ∞, market makers’ return converges to
+lim
+N →∞
+LM M
+t =
+√
+2π
+( 1
+γ
+)
+σx. (7)
+The returns from supplying liquidity earned by market maker s are decreasing in market
+makers’ aggressiveness γ and increasing in the volatility of unexpected order ﬂow
+σx =
+√
+β2σ2
+δ + σ2z . (8)
+Changing γ can be thought of as changing the supply of liquidity, while c hanging σx can be
+5Approximately, this could hold, for example, if v0i = 1, and the price impacts of inventory imbalances
+since t = 0 are small relative to the initial values v0i.
+6This choice of margin is motivated by Regulation T, which is n ot necessarily the appropriate constraint for
+hedge funds or market makers that may be able to use cross-mar gining or beneﬁt from exceptions (see, e.g.,
+the Appendix in Brunnermeier and Pedersen (2009)). However , the empirical evidence on leverage of equity
+hedge funds in Ang, Gorovyy, and van Inwegen (2011) is at leas t roughly consistent with 50% margins. In
+any case, any other margin requirements can easily be accomo dated here by scaling reversal strategy returns
+up or down accordingly.
+10
+thought of as changing the demand for liquidity.
+In this setting, with cross-sectionally uncorrelated orde r ﬂow, and with securities that have
+identical loadings on the common factor in the public inform ation component of returns,
+market maker returns converge to a constant as the number of s ecurities goes to inﬁnity.
+In reality, a market maker’s risk is unlikely to be fully dive rsiﬁable. First, market makers
+specialize their market-making activities on a ﬁnite subse t of securities, limiting their ability
+to diversify. For example, Naik and Yadav (2003) ﬁnd that the liquidity provision of individual
+dealers on the London Stock Exchange is aﬀected by dealer-sp eciﬁc inventory risks that are
+diversiﬁable within the ﬁrm employing the dealers. Second, stocks have dispersed loadings
+on common factors in order ﬂow and public information. Gener alizing the model to allow for
+dispersed factor loadings would yield the result that the re versal strategy loads on common
+factors and therefore, as N → ∞, market maker returns converge to a non-degenerate random
+variable.
+Extending the model to capture limited diversiﬁability of r isk exposures would not change
+the basic message of the model that a ﬁnite γ induces negative serial correlation which
+results in proﬁtable reversal strategies. The beneﬁt of suc h an extension would be that one
+could endogenize γ. The model above is silent about the reasons why γ is ﬁnite. Limited
+diversiﬁability, possibly combined with margin or risk-ma nagement constraints, would allow
+endogenizing the limited risk-bearing capacity of market m akers implied by the assumption
+of a ﬁnite γ.
+2.3 Empirical proxies for returns from liquidity provision
+Empirically, the inventory positions of the entire market- making sector are not observable,
+which renders infeasible a direct calculation of aggregate returns from market-making activi-
+ties according to Eq. (7). Some researchers have obtained pr oprietary data sets on designated
+market maker inventory positions (e.g., Comerton-Forde, H endershott, Jones, Moulton, and
+Seasholes (2010) for the NYSE). A limitation of these data is that they do not capture the
+11
+increasingly important activities of hedge funds and other market participants that do not
+have an oﬃcial market-making role, but eﬀectively compete w ith oﬃcial market makers in
+providing liquidity. The data of Comerton-Forde et al. also do not include the ﬁnancial crisis
+2007-09. This section shows that trading strategies that co ndition on past returns can be
+used to approximate the return from liquidity provision ear ned by the market-making sector.
+Moreover, some of the liquidity providers outside of the set of oﬃcial market makers might
+actually employ precisely these kinds of trading strategie s that condition on past returns in
+their eﬀorts to capture some of the returns from liquidity pr ovision that are available in the
+market place.
+Consider a trading strategy with portfolio weight for stock i at the beginning of period t
+wR
+it = −
+(
+1
+2
+N∑
+i=1
+|Rit−1 − Rmt−1|
+) −1
+(Rit−1 − Rmt−1) , (9)
+where Rmt−1 ≡ 1
+N
+∑N
+i=1 Rit−1 is the equal-weighted market index return. This is the rever sal
+strategy examined by Lehman (1990). The strategy earns posi tive returns if t − 1 returns
+partly reverse in period t. The scaling by the ﬁrst term in parentheses in (9) ensures th at
+the strategy is always $1 short and $1 long. With 50% margin on long and short positions,
+this requires $1 dollar of capital, and hence the payoﬀs of th is strategy,
+LR
+t = −
+(
+1
+2
+N∑
+i=1
+|Rit−1 − Rmt−1|
+) −1 N∑
+i=1
+(Rit−1 − Rmt−1) Rit, (10)
+can be interpreted as a return per dollar of capital invested . Appendix A shows that with a
+large cross-section of securities, the realized time- t return from this strategy is
+lim
+N →∞
+LR
+t = ρ
+√
+2π
+( 1
+γ
+)
+σx, (11)
+where
+ρ ≡
+(
+1
+γ + φ
+)
+σx
+σR
+(12)
+12
+is the volatility of the unexpected return driven by order ﬂo w divided by the total cross-
+sectional standard deviation of returns σR. If ρ does not change over time, then time-variation
+in reversal strategy proﬁts tracks time-variation in the ma rket maker proﬁts in (7) (scaled
+by ρ). The presence of ρ in (11) arises from the fact that past returns are a noisy prox y
+for market makers’ inventory positions −xit−1 because the public information component
+in returns adds noise unrelated to inventory imbalances. As a consequence, the reversal
+strategy eﬀectively uses up more capital than the market mak ers’ strategy, because it takes
+positions proportional to −(Rit−1 − Rmt−1) rather than proportional to only the component
+of −(Rit−1 − Rmt−1) driven by xit−1.
+The model helps to understand how the speciﬁcation of the rev ersal strategy inﬂuences
+the degree to which it approximates market makers’ returns f rom liquidity provision. In the
+empirical analysis, two concerns might arise: (a) High valu es of LR
+t might be the result of
+a low variance of public information shocks (which lowers th e denominator ρ but does not
+aﬀect the numerator) rather than high LM M
+t ; (b) high values of LR
+t might reﬂect high φ
+(which raises ρ towards one) rather than high LM M
+t .
+With regards to (a), it seems plausible that the variance sha re of the public information
+component increases rather than decreases in times of marke t turmoil. If so, LR
+t would
+actually understate the extent to which market maker proﬁts increase during these times.
+In any case, one can eliminate the dependence on the variance share of public information
+shocks by considering an alternative reversal strategy wit h weights
+wit = − (1/N) (Rit−1 − Rmt−1) , (13)
+as in Lo and MacKinlay (1990). The returns of this strategy co nverge to the negative of the
+market-adjusted return autocovariance, which equals
+( 1
+γ + φ
+) ( 1
+γ
+)
+σ2
+x, (14)
+13
+and which is insensitive to changes in the volatility of the p ublic information component.
+With regards to (b), the elasticity of LR
+t with respect to changes in φ is
+φ
+1
+γ + φ (1 − ρ2). (15)
+Thus, since 0 ≤ ρ ≤ 1, LR
+t will typically increase when φ rises. However, one can construct an
+alternative reversal strategy that is less sensitive to var iation in φ. Consider portfolio weights
+wit = −
+( N∑
+i=1
+(Rit−1 − Rmt−1)2
+) −1
+(Rit−1 − Rmt−1) . (16)
+With these weights, the reversal strategy proﬁt is, eﬀectiv ely, a cross-sectional estimate of
+the negative of the autocorrelation of market-adjusted ret urns. In this case, the elasticity of
+the reversal strategy proﬁt with respect to changes in φ is
+φ
+1
+γ + φ (1 − 2ρ2). (17)
+For ρ2 > 0.5, the proﬁt of this reversal strategy actually falls when φ rises. The ﬁndings in
+Hasbrouck (1991) and more recent evidence from Hendershott and Menkveld (2010) suggest
+that unexpected order ﬂow explains about 1 /3 of the variance of permanent (“eﬃcient”)
+price changes. In addition, Hendershott and Menkveld (2010 ) show that order ﬂow also exerts
+substantial transitory price pressure. Taken together, th ese ﬁndings suggest values for ρ2 that
+are likely close to or greater than 0 .5. Thus, the proﬁts of this alternative “autocorrelation”
+reversal strategy should be relatively insensitive, or eve n inversely related to changes in φ.
+Thus, compared with these two alternative reversal strateg ies, the reversal strategy in
+(9) that is used in the empirical analysis below strikes a bal ance between insensitivity to φ
+and insensitivity to changes in the volatility of the public information component of returns.
+The reversal strategy formed according to (9) has the added b eneﬁt of a clear interpretation
+as a $1 long/$1 short strategy. But, as shown in Appendix C, al l the predictability results
+14
+below also hold if one replaces the reversal strategy with th ese alternative ones based on
+cross-sectional autocovariance or autocorrelation estim ates. Time-variation in φ or in the
+volatility of public information shocks is therefore unlik ely to provide an explanation of the
+predictability patterns reported in this paper.
+2.4 Empirical Implementation and Data
+The empirical implementation of the reversal strategies us es daily data on NYSE, AMEX,
+and Nasdaq stocks from CRSP (see Appendix B). Mapping the mod el to the empirical data
+requires some adjustments to take into account complexitie s that the model abstracts from
+for the sake of clear intuition.
+Individual stocks or portfolios. Most of the analysis employs reversal strategy portfolios
+constructed from individual stocks. This is the proper appr oach to evaluate the expected
+returns of liquidity providers overall. However, anecdota lly, it seems that transitory price
+pressure from order imbalances also aﬀect entire sectors of the market in a correlated way
+during times of ﬁnancial turmoil (e.g., because mutual fund s concentrated in certain sectors
+face outﬂows), and market makers may, at the same time, be ave rse to absorbing these
+correlated imbalances. For this reason, I also examine reve rsal strategies constructed with
+industry portfolios as basis assets. The industry portfoli os are constructed by classifying
+stocks into 48 industries as in Fama and French (1997). 7 I am not aware of evidence in the
+literature that a reversal strategy based on industry portf olios is proﬁtable unconditionally,
+but I investigate here whether it is proﬁtable conditional o n high levels of the VIX index.
+Return measurement horizon . It is not obvious how one should interpret empirically the
+period length in the model. While analyses of microstructur e models often focus on intraday
+data, inventory imbalances, and their associated price eﬀe cts, are likely to persist beyond a
+daily horizon. For example, Hansch, Naik, and Viswanathan ( 1998) report that the average
+half-life of dealer inventory positions on the London Stock Exchange is roughly two days.
+7I thank Ken French for providing the industry classiﬁcation on his website.
+15
+Hendershott and Menkveld (2010), using NYSE data, ﬁnd half- lifes ranging from half a day
+for the largest stocks to two days for the smallest stocks. Th ese ﬁndings suggest that data
+at daily frequency may allow to capture much of the eﬀects of i mperfect liquidity provision.
+A related issue arises from the model’s omission, for the sak e of simplicity, of features that
+can cause positive serial correlation in returns. As shown, for example, in Wang (1994)
+and Llorente, Michaely, Saar, and Wang (2002), long-lived p rivate information can induce
+positive serial correlation at short horizons. Conditioni ng reversal strategy day- t portfolio
+weights only on day t − 1 returns could understate the returns from supplying liqui dity in this
+case. To address this, I calculate the returns of the reversa l strategies as an overlay of the
+returns of ﬁve sub-strategies: One with portfolio weights c onditioned on day t − 1 returns,
+one conditioned on day t − 2 data, ..., one conditioned on t − 5 data. I then take the simple
+average of these ﬁve sub-strategies’ returns as the overall reversal strategy return. Adding
+lags beyond the ﬁrst lag helps in case of short-run continuat ion and delayed reversal, but
+does not introduce distorting eﬀects in case these addition al lags of returns do not predict
+future returns. With exception of the industry portfolio re sults, which do exhibit some return
+continuations at a daily horizon, the results in the empiric al analysis are not sensitive to the
+choice of lags (see Appendix C).
+Bid-ask spreads. If calculated based on transaction prices, the reversal st rategy returns
+represent the returns of a hypothetical representative liq uidity supplier whose limit orders
+or quotes always get executed at the closing transaction pri ce. To assess the returns from
+liquidity provision earned by the market-making sector as a whole, including all designated
+and de-facto market makers, this perspective makes sense, a s the market-making sector does
+not pay the bid-ask spread, but instead earns the non-advers e selection component of the
+bid-ask spread, i.e., the part that induces negative serial correlation in transaction-price
+returns.8 However, it would also interesting to see how much of the retu rns from liquidity
+8The existence of positive bid-ask spreads need not necessar ily imply negative serial correlation in trans-
+action price changes. If adverse selection was the only reas on for the existence of bid-ask spreads, transaction
+prices would follow a martingale (Glosten and Milgrom (1985 )). Only the part of the bid-ask spread in excess
+of the adverse selection component, which compensates mark et makers for taking on inventory or reﬂects
+16
+provision arise from this bid-ask bounce in transaction pri ces, and how much is attributable
+to negative serial correlation in quote-midpoint changes. For this reason, I calculate reversal
+strategy returns both with returns based on daily closing tr ansaction prices (for all stocks) as
+well as returns based on the midpoints of bid and ask closing q uotes as recorded (for Nasdaq
+stocks only) by CRSP. In each case, the portfolio weights are calculated with the same type
+of return (on days t − 1 to t − 5) as the type used to calculate portfolio returns (on day t).
+Common factors in returns . Reversal strategies of the sort analyzed in this paper have a
+rather mechanical time-varying exposure to common factors . For example, consider a return-
+reversal strategy that buys stocks with negative market-ad justed returns on day t − 1 and
+shorts those with positive market-adjusted returns on day t − 1. If the market index went
+up on day t − 1, this strategy tends to be long low-beta stocks and short hi gh-beta stocks,
+resulting in a negative conditional beta for the strategy on day t. Similarly, the strategy tends
+to have a positive conditional beta following days on which t he market went down. Along
+the same lines, time-varying factor exposures can arise wit h respect to other common factors
+in stock returns. Market makers might hedge some of these com mon factor exposures, as the
+factor loadings are straightforward to predict based on the sign of lagged factor realizations.
+Hedging market factor risk would also be relatively simple i n practice, e.g. with S&P 500
+futures contracts. For this reason, I focus on the returns of hedged reversal strategies after
+eliminating time-varying market factor exposure. I ﬁrst es timate a regression
+LR
+t = β0 + β1ft + β2 (ft × sgn(ft−1)) + εt, (18)
+where ft is the return on the CRSP value-weighted index and LR
+t is the reversal strategy
+return. The time-varying beta is βt−1 = β1 + β2 sgn(ft−1), which is then used to calculate
+hedged returns as LR
+t − βt−1ft.
+Heterogeneity in scale . In the model, all stocks have the same size. In reality, ther e is
+enormous dispersion in size. Market maker inventory portfo lios and their proﬁts are likely to
+market power of market makers, generates negative serial co rrelation and positive reversal strategy proﬁts.
+17
+be dominated by large stocks. For this reason, Appendix C rep orts results for an alternative
+value-weighted reversal strategy where portfolio weights are proportional to the negative
+of market-adjusted return times the lagged market capitali zation of the stock. These results
+convey a similar message about time-variation in the expect ed returns from liquidity provision
+as those reported in the main part of the paper. Section 3.4 co nstructs reversal strategies for
+subgroups of stocks sorted by several stock characteristic s, including size.
+Sample period and institutional change . The sample period runs from the beginning of
+1998 to the end of December 2010. The start of the sample perio d is set in 1998 because a
+substantial change in order-handling rules on Nasdaq was ph ased in throughout 1997. This
+institutional change, together with Department of Justice investigations and public scrutiny
+following the Christie and Schultz (1994) ﬁndings, resulte d in a dramatic decrease in bid-ask
+spreads and trading costs on Nasdaq in the pre-1998 period (B arclay, Christie, Harris, Kandel,
+and Schulz (1999)). These changes are also likely to aﬀect th e returns from liquidity provision
+and the serial correlation properties of price changes for m any stocks. The presence of these
+institutional regime changes in the sample could therefore obscure the time-series relation
+between the expected returns from liquidity provision and m arket turmoil factors (as proxied
+for by VIX) that are the focus of this paper. Even the post-199 8 period saw some institutional
+changes, though. The likely most important change was the in troduction of decimalization
+in 2001. Bessembinder (2003) ﬁnds that while this change was associated with a substantial
+decline in quoted bid-ask spreads, it did not reduce eﬀectiv e bid-ask spreads, and so it may
+not have a big eﬀect on reversal strategy proﬁtability. Neve rtheless, to control for possible
+eﬀects, the empirical analysis below employs a dummy for the pre-decimalization period.
+18
+3 Time-Variation in Expected Returns from Liquidity Provi-
+sion
+Table 1 reports summary statistics of the reversal strategy returns. Panel A presents statistics
+for the raw returns of these strategies, while Panel B shows s imilar statistics for hedged
+returns, which are obtained by eliminating conditional mar ket factor exposure. These hedged
+returns are the focus of the empirical analysis that follows . Comparing Panels A and B,
+the mean returns are almost identical, but the standard devi ations of the hedged strategy
+returns are moderately smaller. This reﬂects the fact that c onditional market factor exposure
+constitutes a signiﬁcant contribution to the total volatil ity of reversal strategy returns, and
+this component is eliminated in Panel B. Moreover, while unc onditional betas in Panel A are
+close to 0.10, unconditional betas are virtually exactly ze ro in Panel B, as one would expect.
+Whether the calculation of returns is done with quote-midpo ints or transaction prices
+makes a substantial diﬀerence. While return standard devia tions are similar with the two
+approaches, the mean returns are only about half as big when q uote-midpoints are used
+to calculate returns. This indicates that a substantial por tion, although by far not all, of
+the reversal strategy returns with transaction prices aris e from the bid-ask bounce. For
+the industry return-reversal strategy, however, there is v irtually no diﬀerence between the
+transaction-price and quote-midpoint returns, and so I rep ort only the transaction-price re-
+turns here and in the analysis below. 9
+Focusing on mean returns, it is apparent that the reversal st rategies constructed from
+individual stocks earn very high returns with relatively lo w volatility (for comparison, the
+mean return per day of the CRSP value-weighted index during t he sample period is 0.02%
+with a standard deviation of 1.35%). This is also reﬂected in the enormous Sharpe ratios of the
+reversal strategies at the bottom of Panels A and B (for compa rison, the CRSP value-weighted
+9At the end of each day, some stocks’ closing prices are at the b id, some are at the ask, and so averaging
+transaction-price returns across all stocks within an indu stry portfolio yields virtually the same result as
+averaging the quote-midpoint returns.
+19
+Table 1: Summary Statistics of Reversal Strategy Returns
+The daily reversal strategy return is calculated as the aver age of the returns, on day t, of ﬁve sub-
+strategies that weight stocks (or industries) proportiona l to the negative of market-adjusted returns
+on days t − 1, t − 2, ..., t − 5, with weights scaled to add up to $1 short and $1 long. Transa ction-price
+returns are calculated from daily CRSP closing prices. Quot e-midpoint returns are calculated from
+bid-ask midpoints of daily CRSP closing quotes (with Nasdaq stocks only). The industry return-
+reversal strategy is calculated with transaction prices. T he sample period runs from January 1998 to
+December 2010.
+Indiv. stock reversal Industry
+Transact. Quote- portfolio
+prices midpoints reversal
+Panel A: Raw returns
+Mean return (% per day) 0.30 0.18 0.02
+Std.dev. (% per day) 0.56 0.61 0.52
+Skewness 3.02 2.74 1.06
+Kurtosis 38.21 40.50 17.93
+Worst day return (%) -3.88 -4.76 -3.93
+Worst 3-month return (%) 2.56 -2.13 -9.28
+Beta 0.11 0.11 0.09
+Annualized Sharpe Ratio 8.44 4.50 0.56
+Panel B: Returns hedged for conditional market factor expos ure
+Mean return (% per day) 0.29 0.17 0.01
+Std.dev. (% per day) 0.48 0.54 0.47
+Skewness 2.45 2.26 0.88
+Kurtosis 31.26 34.51 15.97
+Worst day return (%) -2.26 -3.92 -3.12
+Worst 3-month return (%) 2.27 -1.28 -7.87
+Beta 0.00 0.00 0.00
+Annualized Sharpe Ratio 9.58 4.91 0.44
+20
+index has a realized Sharpe Ratio of 0.26 during the sample pe riod). Thus, the volatility of the
+reversal strategy returns by itself is unlikely to be the mai n impediment that deters investors
+from investing more aggressively in these kinds of strategi es and supplying liquidity. The
+industry return-reversal strategy is diﬀerent. It earns mu ch lower mean returns than the
+individual-stock reversal strategies, leading to a much lo wer Sharpe Ratio (but one that is
+still higher than the Sharpe Ratio of the CRSP value-weighte d index). Thus, unconditionally
+at least, the evidence indicates that inventory-induced re versals of price changes are less
+prevalent at the industry portfolio level than at the indivi dual stock level.
+The statistics in the table also indicate that exposure to as ymmetric downside risk can
+be ruled out as a potential explanation for the high Sharpe Ra tios. Reversal strategy returns
+have positive skewness, and while there are instances of los ses of several percent on a given
+day, there is no three-month period in the sample period in wh ich the individual-stock reversal
+strategy lost money in terms of transaction-price returns. Even with quote-midpoint returns,
+the worst three-month loss is only a few percent (the corresp onding number for the CRSP
+value-weighted index is -52%).
+Fixed costs for high-speed market access and technological requirements for successful
+placement of orders that capture order ﬂow probably play an i mportant role in preventing
+more aggressive entry into the liquidity provision busines s. After accounting for these ﬁxed
+costs, Sharpe ratios would likely be much less extreme. In an y case, the focus of this paper
+is on the relative variation over time in the expected return s and conditional Sharpe Ratios
+of these reversal strategies, rather than the level of uncon ditional mean returns and Sharpe
+Ratios.
+3.1 Predicting Returns from Liquidity Provision with VIX
+Turning to time-variation in the expected returns from liqu idity provision, I focus on the VIX
+index as a “market turmoil” state variable to predict the ret urns of reversal strategies. Table
+21
+2 presents predictive regressions of the form
+LR
+t = a + bV IX t−5 + c′gt−5 + et, (19)
+where LR
+t is the reversal strategy return on day t. VIX is lagged by ﬁve days to account for the
+fact that the portfolio weights of the day t reversal strategy are conditioned on returns from
+days t − 1 to t − 5. In these regressions, the VIX is normalized to a daily vola tility measure
+by dividing it by
+√
+250. To control for eﬀects of the institutional changes asso ciated with
+decimalization, the control variable vector gt−5 includes a dummy variable that takes a value
+of one prior to decimalization (April 9, 2001) and a value of z ero thereafter. Furthermore,
+I also include RM , the lagged four-week return on the value-weighted CRSP ind ex up until
+the end of day t − 5 to capture the dependence of reversal strategy proﬁts on la gged market
+returns documented in Hameed, Kang, and Viswanathan (2010) .
+As column (1) of Table 2 shows, reversal strategies construc ted from individual stocks
+have returns that are strongly predictable with the VIX. The magnitude of the coeﬃcient
+(0.22) is big relative to the standard error shown in parenth esis (0.02). An increase of
+one percentage point in the normalized VIX (corresponding t o an increase of
+√
+250 ≈ 16
+percentage points in the annualized VIX) is associated with an increase of 0.22 percentage
+points in the daily returns of the return-reversal strategy . The sizeable economic magnitude
+of the eﬀect is evident from the adj. R2 of 0.07, which is extremely high for a predictive
+regression with daily returns. Column (2) adds the pre-deci malization dummy as a control,
+which reduces the coeﬃcient on VIX only marginally. Adding t he lagged market return as
+an explanatory variable in column (3) also only has a weak eﬀe ct, and VIX remains a strong
+predictor. Columns (5) to (7) repeat the same regressions, b ut now with reversal strategy
+returns calculated from quote-midpoint returns. The magni tude of the coeﬃcient is about
+two-thirds of the coeﬃcient obtained with transaction-pri ce returns, but everything else is
+similar.
+Columns (9) to (11) examine the predictability of reversal s trategy returns using industry
+22
+Table 2: Predicting Reversal Strategy Returns with VIX
+In the daily regressions, the dependent variable is the reve rsal strategy return on day t (in percent), and the predictor variables are
+measured at the end of day t − 5. In the monthly regressions, the dependent variable is the monthly average of daily reversal strategy
+returns, and the predictor variables are measured ﬁve days b efore the end of the month preceding the return measurement m onth. VIX,
+the CBOE S&P500 implied volatility index, is normalized to a daily volatility measure by dividing it by
+√
+250. The control variables
+include a dummy for the time period prior to decimalization ( April 9, 2001), and RM , the lagged four-week return on the value-weighted
+CRSP index. Newey-West HAC standard errors (with 20 lags for daily data and 3 lags for monthly data) are reported in parent heses.
+Quote-midpoint returns are calculated from bid-ask midpoi nts of daily CRSP closing quotes (with Nasdaq stocks only). T he industry
+reversal strategy is calculated with transaction prices. T he sample period runs from January 1998 to December 2010.
+Individual stocks Individual stocks Industry
+Transaction-price returns Quote-midpoint returns portfo lios
+Daily Monthly Daily Monthly Daily Monthly
+(1) (2) (3) (4) (5) (6) (7) (8) (9) (10) (11) (12)
+Intercept -0.03 -0.05 -0.02 0.02 -0.06 -0.07 -0.04 -0.01 -0. 08 -0.09 -0.06 -0.05
+(0.03) (0.02) (0.02) (0.02) (0.03) (0.03) (0.03) (0.02) (0. 02) (0.02) (0.02) (0.01)
+VIX 0.22 0.20 0.18 0.15 0.16 0.16 0.13 0.10 0.07 0.07 0.05 0.04
+(0.02) (0.02) (0.02) (0.01) (0.02) (0.02) (0.02) (0.02) (0. 02) (0.02) (0.02) (0.01)
+Pre-decim. 0.22 0.22 0.23 0.08 0.09 0.09 0.00 0.01 0.01
+(0.03) (0.03) (0.03) (0.03) (0.03) (0.03) (0.02) (0.02) (0. 02)
+RM -0.60 -0.03 -0.59 -0.16 -0.42 -0.05
+(0.19) (0.26) (0.21) (0.28) (0.17) (0.16)
+Adj. R2 0.07 0.11 0.11 0.56 0.03 0.03 0.04 0.25 0.01 0.01 0.01 0.07
+23
+portfolios as basis assets. Even though the industry revers al strategy is unconditionally not
+proﬁtable (the ﬁtted value with normalized VIX at the sample mean of 1.4% is close to zero),
+its returns vary substantially with VIX. An increase of one p ercentage point in the normalized
+VIX raises the expected daily return by 0.07 percentage poin ts. The ﬁtted value correspond-
+ing to VIX levels of 60% reached during the height of the ﬁnanc ial crisis (which corresponds
+to roughly 4% for the normalized VIX used in the regression) i s a conditional expected return
+of about 0.20% per day. This indicates that there is either un usual industry-level liquidity
+demand from the public (e.g., because of greater commonalit y of within-industry order imbal-
+ances), or that market makers are particularly averse to abs orbing correlated order imbalances
+in times of high VIX.
+Columns (4), (8), and (12) explore monthly regressions in wh ich the daily reversal strategy
+returns are averaged within each calendar month, and the pre dictor variables are measured
+ﬁve days before the end of the prior month. The magnitude of th e coeﬃcient on VIX is
+very close to the coeﬃcient in the corresponding daily regre ssion, which indicates that the
+predictable component in reversal strategy returns persis ts far beyond one day. As a conse-
+quence, the monthly adj. R2 is enormous, reaching 56% for transaction-price returns, 2 5%
+for quote-midpoint returns, and a still sizeable 7% for the i ndustry portfolio reversal strategy,
+which underscores the economic signiﬁcance of the predicta bility associated with VIX.
+The high degree of predictability is also apparent in Figure 2. The plots on the left-hand
+side average the dependent variable (solid line) and the ﬁtt ed values from the predictive
+regressions in Table 2, columns (1), (5), and (9) (dotted lin e), within three-month rolling
+windows. Focusing on the ﬁrst row, which shows the transacti on-price returns of the reversal
+strategy constructed from individual stocks, the in-sampl e ﬁt (in terms of these three-month
+moving averages) of these regressions is extremely good.
+However, the VIX is quite persistent, and so a natural concer n is how well this in-sample
+ﬁt extends out of sample. 10 An out-of-sample analysis would also be an interesting chec k of
+10The persistence of the predictor does not lead to a noticeabl e predictive regression bias in this case, though;
+see Appendix C
+24
+1998 2000 2002 2004 2006 2008 2010
+0
+0.005
+0.01
+(a) Transaction−price returns, in−sample fit
+Jan2007 Jan2008 Jan2009 Jan2010
+0
+0.005
+0.01
+(b) Transaction−price returns, out−of−sample fit
+1998 2000 2002 2004 2006 2008 2010
+0
+0.005
+0.01
+(c) Quote−midpoint returns, in−sample fit
+Jan2007 Jan2008 Jan2009 Jan2010
+0
+0.005
+0.01
+(d) Quote−midpoint returns, out−of−sample fit
+1998 2000 2002 2004 2006 2008 2010
+−0.002
+     0
+ 0.002
+ 0.004
+(e) Industry portfolios, out−of−sample fit
+Jan2007 Jan2008 Jan2009 Jan2010
+−0.002
+     0
+ 0.002
+ 0.004
+(f) Industry portfolios, out−of−sample fit
+ 
+ 
+actual fitted w/ VIX
+Figure 2: In-sample and out-of-sample predicted reversal s trategy returns. The ﬁgure shows
+3-month moving averages of daily reversal strategy returns and of ﬁtted values from predictive
+regressions on lagged VIX as in columns (1), (5), and (9) of Ta ble 2. The left-hand side plots
+show the in-sample ﬁtted values, the plots on the right-hand side show the out-of-sample
+ﬁtted values when the predictive regression is estimated wi th data up to the end of June
+2007.
+25
+the extent to which the enormous increase in reversal strate gy returns during the ﬁnancial
+crisis could have been predicted conditional on pre-crisis estimates of the predictive regression
+coeﬃcients and conditional on the time path of VIX realized d uring the crisis. For these
+reasons, the plots on the right-hand side look at an out-of-s ample experiment. The predictive
+regressions are estimated with data leading up to June 2007, i.e. until just before the onset
+of the ﬁnancial crisis 2007-09. The plot then compares the th ree-month moving averages
+of realized reversal strategy returns with the out-of-samp le prediction based on the pre-
+June 2007 coeﬃcient estimates. As the plot in the top row show s, the out-of-sample ﬁt for
+transaction-price returns is remarkably good. In other wor ds, the increase in reversal strategy
+proﬁtability during the ﬁnancial crisis corresponds close ly to what one would have expected
+conditional on the rise in VIX, given the relationship betwe en VIX and reversal strategy
+proﬁts that was apparent before the crisis. For quote-midpo int returns, the out-of-sample
+ﬁt is good, too, but the out-of-sample predictions underest imate to some extent the reversal
+strategy returns during the height of the crisis. For the ind ustry-portfolio reversal strategy
+in the bottom row, the out-of-sample ﬁt also picks up a substa ntial part of the increase
+in reversal strategy proﬁts during the ﬁnancial crisis, but the ﬁt is not as good as for the
+individual-stock reversal strategies, which partly simpl y reﬂects the fact that even in-sample,
+the returns of the industry-portfolio reversal strategy ar e less predictable.
+3.2 Time-variation in Compensation for Risk
+The volatility of individual-stock reversal strategy retu rns is generally low relative to the mean
+returns earned by these strategies, but it is possible that p eriods of ﬁnancial market turmoil
+could also produce bursts of substantially higher volatili ty of reversal strategy returns. To
+interpret the predictability of reversal strategy returns , it would be useful to know whether
+the rise in expected reversal strategy returns with VIX is ju st commensurate with a rise in
+their volatility, or whether the compensation per unit of ri sk increases as well. In Grossman
+and Miller (1988), a rise in the volatility of returns would i ncrease the expected return from
+26
+liquidity provision, but not the Sharpe Ratio, unless marke t makers’ participation costs or
+their risk aversion rose as well. Thus, if Sharpe Ratios from liquidity provision are higher
+in times of high VIX, this would indicate that additional imp ediments to liquidity provision
+such as funding constraints (Gromb and Vayanos (2002); Brun nermeier and Pedersen (2009))
+may be relevant.
+For this reason, I now investigate to what extent the conditi onal Sharpe Ratios of reversal
+strategies vary with VIX. I specify the conditional mean of t he reversal strategy return as
+E[LR
+t |V IX t−5] = σtθt, (20)
+where σt ≡ Var (LR
+t |V IX t−5)1/2, and θt is the Sharpe Ratio conditional on V IX t−5. Both σt
+and θt are assumed to be linear in V IX t−5 and a pre-decimalization dummy dt−5,
+σt = a0 + a1V IX t−5 + a2dt−5 (21)
+θt = b0 + b1V IX t−5 + b2dt−5. (22)
+The earlier evidence of a positive relationship between VIX and reversal strategy returns
+could be explained either by a1 > 0 or b1 > 0.
+To estimate σt conditional on lagged VIX, I run predictive regressions
+| ˜LR
+t |κ = a0 + a1V IX t−5 + a2dt−5 + ut, (23)
+where ˜LR
+t is the residual from the regression of daily reversal strate gy returns on V IX t−5
+and dt−5, and it is scaled by
+κ =
+(
+T −1 ∑T
+t=1( ˜LR
+t )2
+) 1/2
+T −1 ∑T
+t=1 | ˜LR
+t |
+(24)
+to account for the diﬀerence between standard deviation and expected absolute value. 11 The
+11In a large sample drawn from a (mean zero) normal distributio n, κ would equal
+p
+π/2, the ratio of the
+standard deviation to the expected absolute value.
+27
+Table 3: Conditional Sharpe Ratios of Reversal Strategies
+The dependent variable is the reversal strategy return on da y t standardized by its conditional volatil-
+ity, which is estimated by regressing (scaled) absolute une xpected reversal strategy returns on lagged
+VIX. The VIX is measured at the end of day t − 5, and it is normalized to a daily volatility measure
+by dividing it by
+√
+250. The regressions include a dummy for the time period prio r to decimalization
+(April 9, 2001). Newey-West HAC standard errors (with 20 lag s) are reported in parentheses. The
+sample period runs from January 1998 to December 2010.
+Indiv. stocks Industry
+Transact. Quote- portfolios
+prices midpoints
+(1) (2) (3)
+Intercept 0.33 0.10 -0.12
+(0.04) (0.04) (0.04)
+VIX 0.13 0.13 0.08
+(0.03) (0.03) (0.02)
+Pre-decim. 0.23 0.02 0.02
+(0.04) (0.04) (0.03)
+Adj. R2 0.02 0.01 0.00
+ﬁtted value is used as an estimate of σt. I then proceed to run predictive regressions
+LR
+t
+σt
+= b0 + b1V IX t−5 + b2dt−5 + et. (25)
+The ﬁtted value from (25) represents the conditional Sharpe ratio of the reversal strategy
+return.
+Table 3 presents the results. The regressions show that the V IX still has strong explana-
+tory power after scaling returns with the reciprocal of thei r conditional volatility. The point
+estimates of the coeﬃcient on VIX are far larger than the stan dard errors, and the economic
+magnitudes are big. For the individual-stock reversal stra tegy with transaction-price returns
+in column (1), a one percentage point increase in the VIX corr esponds to an increase in the
+28
+1998 2000 2002 2004 2006 2008 2010
+−2
+0
+2
+4
+6
+8
+10
+12
+14
+16
+ 
+ 
+Transaction−price Quote−midpoint Industry portfolios
+Figure 3: Annualized conditional Sharpe Ratios of reversal strategy returns
+conditional (annualized) Sharpe Ratio by 0.13. 12 With quote-midpoint returns in column (2),
+a one percentage point increase in VIX is associated with a si milar increase in the conditional
+Sharpe Ratio of 0.13. As in the previous unscaled regression s in Table 2, the coeﬃcients on
+VIX for the industry portfolio reversal strategy are somewh at smaller, but still economically
+big.
+To illustrate the time-variation in the magnitudes of condi tional Sharpe Ratios, Figure 3
+plots the ﬁtted values from the regressions in Table 3. To foc us on the variation in condi-
+tional Sharpe ratios associated with variation in VIX, the p re-decimalization dummy is set
+to zero for the whole sample in the calculation of the ﬁtted va lues. The solid lines represent
+transaction-price returns, quote-midpoint returns are sh own as dotted lines, and conditional
+Sharpe Ratios for industry-portfolio reversal strategy re turns as dashed line. The plots clearly
+show the substantial increase in conditional Sharpe Ratios during times of ﬁnancial market
+12Both the dependent variable and the VIX must be multiplied by
+√
+250 to get annualized numbers, and
+hence the coeﬃcients in the table directly provide the eﬀect of annualized VIX on annualized Sharpe Ratios.
+29
+turmoil, such as the LTCM crisis in late 1998, and, much more d ramatically, the ﬁnancial
+crisis in 2007-09. The plots also show a pronounced spike in t he second quarter of 2010
+in which the European sovereign debt crisis lead to elevated levels of the VIX index. The
+volatility of reversal strategy returns is higher in times o f high VIX, which dampens the rise
+in conditional Sharpe Ratios compared with the rise in condi tional expected returns. For
+example, the conditional expected return of the individual -stock reversal strategy calculated
+from transaction prices rose almost ten-fold from the pre-c risis period to the fourth quarter of
+2008, while the conditional Sharpe Ratio only doubled. As th e ﬁgure shows, the variation in
+conditional Sharpe Ratios is still substantial, though. Th is indicates that liquidity providers
+earn a higher compensation per unit of risk in times of high VI X.
+3.3 Exploring the Role of the VIX
+The results so far show that the VIX captures very well the tim e-variation in the expected
+returns and the risk premium from providing liquidity. This does not necessarily mean that
+the VIX index itself is the state variable driving expected r eturns from liquidity provision.
+More likely, the VIX proxies for the underlying state variab les that drive the willingness of
+market makers to provide liquidity and the public’s demand f or liquidity. Uncovering these
+underlying state variables is diﬃcult, as they are likely hi ghly correlated with VIX and among
+each other. For example, the severity of funding constraint s, the level of risk, and perhaps
+also risk aversion on the part of market makers might all have spiked simultaneously during
+the ﬁnancial crisis, and hence a time-series analysis will h ave a hard time disentangling these
+eﬀects. Nevertheless, this section attempts to shed some li ght on potential underlying drivers
+of the predictability associated with VIX.
+Given that VIX represents the square root of the risk-neutra l expectation of variance, a
+natural question to ask ﬁrst is whether the expectation of fu ture variance under the physical
+measure or the variance risk premium drive the predictabili ty of reversal strategy proﬁts.
+If the variance risk premium captures option market makers’ , and perhaps more generally
+30
+ﬁnancial intermediaries’ aversion to absorbing inventory , as argued by Gˆ arleanu, Pedersen,
+and Poteshman (2009), then not only the expected variance co mponent, but also the variance
+risk premium component might be related to the returns from s upplying liquidity.13
+Table 4 repeats the regressions from Table 2, but with the VIX broken up into its two
+components. In column (1), the regression includes σM , the square root of a GARCH(1,1)
+forecast of the variance of the S&P500 index return over a 21 t rading-day horizon. This
+horizon corresponds to the approximately one calendar-mon th maturity of the options that
+are underlying the VIX index. The GARCH(1,1) model is estima ted with daily S&P500
+returns over the full sample period from 1998 to 2010. Condit ional volatility σM is then
+constructed as a multi-period forecasts from these estimat es. The volatility risk premium is
+represented by VIX - σM .
+As column (1) shows using transaction-price returns, both c omponents of the VIX con-
+tribute roughly equally, in terms of the magnitude of their c oeﬃcients, to the individual-stock
+reversal strategy proﬁtability. Including lagged market r eturns in column (2) only has a mi-
+nor eﬀect on the coeﬃcient estimates. Both components are al so signiﬁcant predictors in
+the monthly regressions in column (3). With quote-midpoint returns in columns (5) to (7),
+however, most of the predictability is driven by the expecte d variance component and not
+by the variance risk premium. The same tends to be true for the industry-portfolio reversal
+strategy.
+To the extent that the volatility forecast σM contains errors due to imprecision in estima-
+tion or omission of relevant conditioning information beyo nd the information captured in the
+GARCH model, it is also possible that the V IX − σM variable picks up an expected volatil-
+ity component missed by the GARCH forecast. The VIX is calcul ated from market prices of
+options and therefore may contain information about future volatility above and beyond the
+13In a simple aﬃne jump-diﬀusion model with constant prices of risk, the volatility risk premium is a linear
+function of spot volatility, which would imply that expecte d variance and the volatility risk premium can be
+collinear [see, e.g., Chernov (2007)]. However, stochasti c volatility of volatility or time-varying prices of risk
+break this collinearity. Empirically, estimates of the two components of VIX are positively correlated, but far
+from perfectly so. Nevertheless, their role may be diﬃcult t o disentangle with relatively short time series.
+31
+Table 4: Predicting Reversal Strategy Returns: Separating Conditional Volatility and the Volatility Risk Premium
+In the daily regressions, the dependent variable is the reve rsal strategy return on day t (in percent), and the predictor variables are
+measured at the end of day t − 5. The regression includes σM , the square root of a GARCH(1,1) forecast of the variance of t he S&P500
+index return over a 21 trading-day horizon, corresponding t o the approximately one calendar-month maturity of the opti ons underlying
+VIX. The forecast is obtained by estimating the GARCH model w ith daily data, and then constructing multi-period forecas ts from these
+estimates. VIX - σM represents an estimate of the volatility risk premium. VIX i s normalized to a daily volatility measure by dividing it
+by
+√
+250. In the monthly regressions, the dependent variable is t he monthly average of daily reversal strategy returns, and t he predictor
+variables are measured ﬁve days before the end of the month pr eceding the return measurement month. The monthly regressi on includes
+σM (RV ), the square root of an ARMA(1,1) variance forecast constru cted from a monthly series of realized variances from Boller slev,
+Gibson, and Zhou (2011). The monthly realized variances are the sum of squared 5-minute returns of the S&500 within each m onth. Both
+the GARCH model for σM and the ARMA model for σM (RV ) are estimated in sample over the full sample period. The con trol variables
+include a dummy for the time period prior to decimalization ( April 9, 2001), and RM , the lagged four-week return on the value-weighted
+CRSP index. Newey-West HAC standard errors (with 20 lags for daily data and 3 lags for monthly data) are reported in parent heses.
+The sample period runs from January 1998 to December 2010, ex cept for columns (4), (8), and (12), where the sample period e nds in
+February 2010 due to limited availability of the realized vo latility series.
+Individual stocks Individual stocks
+Transaction-price returns Quote-midpoint returns Indust ry portfolios
+Daily Monthly Daily Monthly Daily Monthly
+(1) (2) (3) (4) (5) (6) (7) (8) (9) (10) (11) (12)
+Intercept -0.06 -0.02 0.02 0.02 -0.08 -0.05 -0.01 -0.03 -0.0 9 -0.06 -0.06 -0.07
+(0.02) (0.02) (0.02) (0.05) (0.03) (0.03) (0.03) (0.05) (0. 02) (0.02) (0.02) (0.03)
+VIX - σM 0.18 0.16 0.12 0.07 0.05 0.05 0.06 0.04 -0.01
+(0.04) (0.04) (0.06) (0.05) (0.05) (0.06) (0.03) (0.03) (0. 03)
+σM 0.21 0.18 0.16 0.17 0.15 0.12 0.07 0.05 0.05
+(0.02) (0.02) (0.02) (0.03) (0.03) (0.03) (0.02) (0.02) (0. 01)
+VIX - σM (RV ) 0.15 0.08 0.01
+(0.04) (0.05) (0.02)
+σM (RV ) 0.15 0.13 0.07
+(0.05) (0.06) (0.03)
+Pre-decim. 0.22 0.23 0.23 0.23 0.09 0.10 0.10 0.10 0.01 0.01 0 .02 0.02
+(0.22) (0.03) (0.03) (0.03) (0.09) (0.03) (0.03) (0.03) (0. 01) (0.02) (0.02) (0.02)
+RM -0.60 -0.05 -0.07 -0.58 -0.19 -0.13 -0.42 -0.08 -0.02
+(0.18) (0.27) (0.29) (0.20) (0.29) (0.33) (0.17) (0.17) (0. 18)
+Adj. R2 0.11 0.11 0.56 0.56 0.04 0.04 0.25 0.26 0.01 0.01 0.08 0.07
+32
+GARCH forecast. To check robustness, columns (4), (8), and ( 12) report monthly regressions
+that use an alternative volatility forecast in constructin g σM . I obtain a monthly realized
+variance series for the S&P500 index from Bollerslev, Gibso n, and Zhou (2011), 14 where each
+monthly observation is the within-month sum of squared 5-mi nute returns. I estimate an
+ARMA(1,1) model, the preferred model in Bollerslev, Gibson , and Zhou (2011), from these
+monthly realized variance observations, and I use the ARMA( 1,1) forecast at the end of each
+month as the expected variance, and the square root of this ex pected variance is denoted
+σM (RV ). Using this alternative measure of expected variance yiel ds a slightly stronger eﬀect
+for the variance risk premium for all three types of reversal strategies.
+Overall, the results suggest that both the expected volatil ity component and the variance
+risk premium embedded in the VIX help forecast the returns fr om supplying liquidity. How-
+ever, the bid-ask bounce component of reversal strategy ret urns (transaction price returns
+minus quote-midpoint returns) seems to be explained mostly by the variance risk premium,
+while the quote-midpoint reversal component is explained m ostly by the expected variance
+component. This diﬀerence is intriguing, but theory does no t yet provide much guidance on
+potential causes for this diﬀerence. The models in Ho and Sto ll (1981) and Hendershott and
+Menkveld (2010) predict that the strength of quote-midpoin t reversals depends on the magni-
+tude of inventory imbalances absorbed by market makers, whi le the size of the bid-ask spread
+and the strength of the bid-ask bounce eﬀect do not depend on i nventory positions.15 Thus,
+interpreted through the lens of these models, the ﬁndings ab ove suggest the possibility that
+the variance risk premium might be correlated more strongly with liquidity supply factors
+(market power and risk-bearing capacity of market makers), which drive the bid-ask bounce,
+while expected volatility may be more strongly related to li quidity demand factors (variance
+of inventory imbalances) which, in addition to liquidity su pply factors, inﬂuence the strength
+of quote-midpoint reversals. A further evaluation of this h ypothesis is beyond the scope of
+14I thank Hao Zhou for providing the data on his website
+15In these models, the bid-ask spread does not have an adverse s election component, and hence a greater
+bid-ask spread introduces stronger negative serial correl ation into transaction price changes.
+33
+this paper, but it would be interesting to investigate this f urther in future research.
+Table 5 looks at predictor variables that should proxy for li quidity supply factors. These
+alternative predictors include the level of idiosyncratic volatility (measured as the cross-
+sectional standard deviation of individual stock returns d uring the prior month) as a proxy
+for the level of risk faced by imperfectly diversiﬁed liquid ity providers, the TED spread (the
+3-month Eurodollar deposit rate minus the 3-month Treasury Bill rate) as a proxy for funding
+costs of ﬁnancial intermediaries (see, e.g., Gˆ arleanu and Pedersen (2011)), and the 13-week
+growth rate in primary dealer repurchase agreements (repo) based on weekly data from the
+Federal Reserve Bank of New York. Repo is one of the main fundi ng sources of broker-dealers
+and Adrian and Shin (2010) show that expansion and contracti on of broker-dealer balance
+sheets happens largely via expansion and contraction of rep o. Times of high repo growth
+appear to be associated with high intermediary risk appetit e and therefore, presumably,
+aggressive liquidity provision. 16
+The results in Table 5 show that when these alternative predi ctors are the only explanatory
+variable (in addition to the pre-decimalization dummy vari able), they do indeed capture some
+of the predictable variation in reversal strategy returns, and they do so with the expected sign.
+High idiosyncratic volatility and high TED spread should be associated with lower liquidity
+supply and higher expected returns from liquidity provisio n, which is consistent with the
+positive coeﬃcients in Table 5. For repo growth, too, the sig n is as expected: high repo
+growth predicts low future returns from liquidity provisio n. With exception of columns (10)
+and (11) for the industry portfolio reversal strategy, the p oint estimates are also more than
+two standard errors away from zero. These results provide so me support for the notion that
+the time-variation in expected reversal strategy returns i s driven at least partly by liquidity
+supply factors.
+The regressions reported in columns (4), (8), and (12) show, however, that these alterna-
+16Adrian, Etula, and Muir (2011) show that a risk factor constr ucted from broker-dealer leverage can help
+explain a variety of asset pricing facts. For the purposes of the analysis in this paper, repo growth is preferable
+because it is available at weekly frequency, while the broke r-dealer balance sheet variables are from Flow of
+Funds Accounts data, which is available only quarterly.
+34
+Table 5: Predicting Reversal Strategy Returns: Liquidity S upply Proxies
+The dependent variable is the reversal strategy return on da y t (in percent), and the predictor variables are measured at th e end of day
+t − 5. VIX, the CBOE S&P500 implied volatility index, is normali zed to a daily volatility measure by dividing it by
+√
+250. Idiosyncratic
+volatility is measured as the cross-sectional standard dev iation of individual stock returns on day t−5. TED is the spread between 3-month
+Eurodollar deposit rates and 3-month Treasury Bill rates. R epo growth is the 13-week growth rate in primary dealer repo o utstanding
+calculated from weekly data reported by the Federal Reserve Bank of New York. A dummy for the time period prior to decimali zation
+(April 9, 2001) is included as a control variable. Newey-Wes t HAC standard errors (with 20 lags) are reported in parenthe ses. Quote-
+midpoint returns are calculated from bid-ask midpoints of d aily CRSP closing quotes (with Nasdaq stocks only). The indu stry-portfolio
+reversal strategy is calculated with transaction prices. T he sample period runs from January 1998 to December 2010.
+Indiv. stocks Indiv. stocks Industry
+Transaction price returns Quote-midpoint returns portfol ios
+(1) (2) (3) (4) (5) (6) (7) (8) (9) (10) (11) (12)
+Intercept -0.09 0.16 0.23 -0.06 -0.11 0.06 0.14 -0.05 -0.09 - 0.01 0.01 -0.07
+(0.04) (0.02) (0.01) (0.03) (0.05) (0.02) (0.01) (0.04) (0. 03) (0.01) (0.01) (0.02)
+VIX 0.12 0.05 0.03
+(0.02) (0.03) (0.02)
+Idio. Vol. 8.80 2.95 7.02 2.39 2.71 0.88
+(1.20) (1.35) (1.46) (1.53) (0.80) (1.02)
+TED 12.08 2.24 14.22 8.53 4.50 1.73
+(2.87) (3.07) (2.82) (3.30) (2.29) (2.24)
+Repo Growth -0.71 -0.10 -0.86 -0.32 -0.01 0.18
+(0.27) (0.29) (0.27) (0.29) (0.36) (0.37)
+Pre-decim. 0.11 0.24 0.25 0.18 -0.01 0.10 0.11 0.05 -0.03 0.0 1 0.01 -0.01
+(0.03) (0.03) (0.03) (0.02) (0.04) (0.03) (0.03) (0.03) (0. 02) (0.02) (0.02) (0.02)
+RM -0.64 -0.59 -0.43
+(0.17) (0.18) (0.17)
+Adj. R2 0.09 0.08 0.05 0.12 0.03 0.03 0.01 0.04 0.00 0.00 0.00 0.01
+35
+tive predictors do not fully subsume the predictive power of the VIX and the lagged market
+return. Including the liquidity supply proxies jointly wit h the VIX leads to a substantial drop
+in their slope coeﬃcients, while the coeﬃcient on VIX does no t drop as much compared with
+the earlier estimates in Table 2. Statistically, the coeﬃci ent on VIX remains highly signiﬁcant
+for transaction-price returns and marginally signiﬁcant f or quote-midpoint returns and the
+industry portfolio reversal strategy, while the liquidity supply proxies are mostly insigniﬁ-
+cant in the joint regression. The VIX seems to contain additi onal information regarding the
+current state of market liquidity provision that is not full y captured by the liquidity supply
+proxies.
+3.4 Exploring Cross-Sectional Heterogeneity
+In this section, I examine the expected return from liquidit y provision and its time-variation
+for subgroups of stocks sorted by stock characteristics. Th e motivation for this is analysis
+is two-fold. First, there is reason to believe that in times o f ﬁnancial market turmoil the
+expected return from liquidity provision increases partic ularly strongly among low “quality”
+assets. For example, in the model of Brunnermeier and Peders en (2009), high-volatility
+assets have higher margin requirements. When market makers face a lack of capital, they
+focus their liquidity provision activities on low-volatil ity assets and withdraw liquidity supply
+from high-volatility assets. Furthermore, Naik and Yadav ( 2003) ﬁnd that individual dealers
+on the London Stock Exchange are averse to risk that would be d iversiﬁable at the dealership
+ﬁrm level. To the extent that high-volatlity assets also exp erience the strongest increases in
+volatility during periods of turmoil, one would therefore e xpect a more pronounced withdrawal
+of liquidity supply from high-volatility assets. Second, A vramov, Chordia, and Goyal (2006)
+show that reversal strategy returns are highest among illiq uid stocks, as measured by the
+Amihud (2002) illiquidity ratio. This raises the question w hether all of the reversal strategy
+return in the previous analysis, and its predictable variat ion, is driven entirely by illiquid
+stocks.
+36
+To analyze cross-sectional heterogeneity of this kind, I so rt stocks into decile groups based
+on three characteristics: market capitalization at the end of the prior month, the Amihud
+(2002) illiquidity ratio computed as the average of the dail y ratio of absolute returns and
+dollar trading volume during the prior month, and the volati lity of daily returns during the
+prior month. To account for the fact that trading volume is co unted diﬀerently on Nasdaq,
+the assignment of Amihud illiquidity ratio decile ranks is d one separately for NYSE/Amex
+and Nasdaq stocks.
+Figure 4 presents ﬁtted values from regressions of the subgr oup reversal strategy returns
+on VIX and a pre-decimalization dummy, as in Table 2. The ﬁtte d values are evaluated at 5th
+(circles) and 95th percentile (crosses) of the distributio n of VIX, with the pre-decimalization
+dummy set to zero. The error bars indicate 95% conﬁdence inte rvals. For comparison, the
+dashed line shows the high-VIX ﬁtted value from a reversal st rategy that uses all stocks, as
+in Table 2.
+The ﬁgure clearly shows that the lowest “quality” stocks (sm all, illiquid, high volatility)
+generally oﬀer the highest reversal strategy returns, cons istent with Avramov, Chordia, and
+Goyal (2006). Even in times of low VIX, reversal strategies a mong these stocks oﬀer daily
+returns up to roughly 0.40% per day in transaction-price ret urns (top row) and 0.20% per
+day in quote-midpoint returns (bottom row). This is consist ent with the ﬂight-to-quality
+hypothesis discussed above.
+In contrast, for large, liquid, low-volatility stocks, rev ersal strategy proﬁts are very close
+to zero when VIX is low. In low volatility times, liquidity pr oviders are apparently suﬃciently
+aggressive that the expected return from liquidity provisi on is close to zero for all but the
+lowest quality stocks. In times of high VIX, however, even th e largest, most liquid, lowest-
+volatility stocks exhibit statistically and economically signiﬁcant reversal strategy returns.
+The magnitude of the return is on the order of about 0.1% per da y for both transaction-
+price and quote-midpoint returns. This may seem small compa red with the much bigger
+magnitudes for the lowest quality stocks in times of high VIX , but one has to keep in mind
+37
+Large Medium Small
+0
+0.2
+0.4
+0.6
+0.8
+1
+1.2
+(a) Transaction−price returns
+by size
+Liquid Medium Illiquid
+0
+0.2
+0.4
+0.6
+0.8
+1
+1.2
+(b) Transaction−price returns
+by illiquidity ratio
+Low vol. Medium High vol.
+0
+0.2
+0.4
+0.6
+0.8
+1
+1.2
+(c) Transaction−price returns
+by volatility
+Large Medium Small
+0
+0.2
+0.4
+0.6
+0.8
+1
+1.2
+(d) Quote−midpoint returns
+by size 
+Liquid Medium Illiquid
+0
+0.2
+0.4
+0.6
+0.8
+1
+1.2
+(e) Quote−midpoint returns
+by illiquidity ratio
+Low vol. Medium High vol.
+0
+0.2
+0.4
+0.6
+0.8
+1
+1.2
+(f) Quote−midpoint returns
+by volatility
+ 
+ 
+Low VIX High VIX All stocks high VIX
+Figure 4: Predicted daily reversal strategy returns within size-, illiquidity-, and volatility-
+sorted subgroups evaluated at low (5th percentile) and high (95th percentile) VIX level.
+Fitted values from regression of each subgroups reversal st rategy returns on VIX and a pre-
+decimalization dummy as in Table 2. Error bars indicate 95% c onﬁdence intervals. The
+dashed line shows the corresponding high-VIX ﬁtted value fr om the reversal strategyin Table
+2 that uses all stocks .
+38
+that 0.1% per day represents an annualized return of about 25 %. This is clearly economically
+signiﬁcant, especially for a strategy that uses only the lar gest stocks.
+Overall, the evidence suggests that ﬂight to quality in time s of high VIX leads to a
+particularly pronounced increase in the expected returns f rom liquidity provision among
+small, illiquid, high-volatility stocks. But the evaporat ion of liquidity is not conﬁned to these
+types of stocks. It is a pervasive phenomenon that aﬀects the largest, most liquid, lowest
+volatility stocks, too.
+4 Conclusion
+This paper shows that short-term reversal strategy returns can be interpreted as proxies for
+the returns from liquidity provision earned by the market-m aking sector. In times of ﬁnancial
+market turmoil, as indicated by elevated levels of the VIX in dex, the expected returns of these
+reversal strategies rise predictably and dramatically. Fo r example, during the ﬁnancial crisis
+2007-09, expected returns of reversal strategies formed wi th individual stocks rose almost
+ten-fold from their levels in 2006 in close lockstep with a co rresponding increase in the VIX
+index. Even reversal strategies formed with industry portf olios as basis assets, which are
+not proﬁtable in “normal” times, earn substantial returns d uring times of high VIX. The
+volatility of reversal strategy returns is less sensitive t o the VIX than expected returns. As
+a result, conditional Sharpe Ratios of reversal strategies are elevated in times of high VIX.
+These ﬁndings suggest that the expected return and the risk p remium earned by liquidity
+providers is highly time-varying and closely related to the level of the VIX index. The same
+factors that drive time-variation in the VIX index appear to drive time-variation in the returns
+from liquidity provision.
+Thus, at least part of the reason for the evaporation of marke t liquidity during periods
+of ﬁnancial market turmoil seems to be that liquidity provid ers demand a higher expected
+return from liquidity provision. Potential explanations f or this phenomenon are provided by
+Adrian and Shin (2010), who argue that variations in ﬁnancia l intermediaries’ risk appetite
+39
+are driven by risk-management constraints, which are more l ikely to be binding when VIX is
+high, and Brunnermeier and Pedersen (2009), who show that th e funding of liquidity suppliers
+can dry up when volatility is high.
+40
+Appendices
+A Proofs
+Informed trader demand. Informed traders take as given their joint aggregate demand and
+the demand function of the market maker, and CARA utility imp lies that their demand
+function is linear in the expected dollar return of the asset ,
+yt = ˜β (E[Pt+1|It] − E[Pt|It]) , (A.1)
+where It is the informed traders’ information set and the slope ˜β represents the aggregate risk-
+bearing capacity of informed traders divided by the variance of the asset perceived by informed
+investors. Given the IID nature of the shocks in the model, we have E[Pt+1|It] = vt + st.
+Informed traders conjecture (conﬁrmed below) that their ag gregate price impact per unit of
+order ﬂow will be 1 /γ + φ, and that their aggregate demand is linear in their signal, yt = βst,
+which implies
+E[Pt|It] = vt +
+( 1
+γ + φ
+)
+βst. (A.2)
+Substituting back into (A.1),
+yt = ˜β
+(
+st −
+( 1
+γ + φ
+)
+βst
+)
+, (A.3)
+which is consistent with the conjecture that yt = βst, with
+β =
+˜β
+1 + ˜β
+(
+1
+γ + φ
+) . (A.4)
+Equilibrium. The joint normality of δt+1 and zt implies
+E[δt+1|Mt] = βσ 2
+δ
+β2σ2
+δ + σ2z
+xt. (A.5)
+41
+Writing E[δt+1|Mt] = φxt, with φ deﬁned accordingly,17 substituting into the market maker’s
+demand function, and imposing the market clearing conditio n xt + mt = 0 yields the equilib-
+rium price
+Pt = vt +
+( 1
+γ + φ
+)
+xt. (A.6)
+Using the deﬁnition of (dollar) returns Rt+1 ≡ Pt+1 − Pt, we obtain
+Rt+1 = ξt+1 + δt+1 +
+( 1
+γ + φ
+)
+(xt+1 − xt). (A.7)
+Here δt+1 can be decomposed into a predictable (based on xt) and an unpredictable compo-
+nent as δt+1 = φxt + ηt+1, which yields
+Rt+1 = ξt+1 + ηt+1 +
+( 1
+γ + φ
+)
+xt+1 −
+( 1
+γ
+)
+xt, (A.8)
+as stated in the text.
+Aggregate Market Maker Proﬁts . Returns per dollar invested for the market maker are
+qt = −
+(
+1
+2
+N∑
+i=1
+|xit−1|
+) −1 N∑
+i=1
+xit−1Rit. (A.9)
+Since δit and zit are cross-sectionally jointly normal IID, xit is also cross-sectionally normal
+IID, which implies that we can ﬁnd the probability limit of th e term in the inverse in (A.9)
+from the properties of the half-normal distribution. We obt ain
+plim
+N →∞
+1
+2N
+N∑
+i=1
+|xit−1| = σx√
+2π
+, (A.10)
+17Note that, as shown above, β is a function of φ, and so the deﬁnition of φ is implicit. The explicit
+expression of φ is rather complicated, and does not provide further essenti al intuition other than that the
+aggressiveness of the informed traders’ demand, β, is moderated by the price impact that the informed traders
+expect to have in aggregate.
+42
+where σx ≡ Var (xit)1/2, while
+plim
+N →∞
+1
+N
+N∑
+i=1
+xit−1Rit = − σ2
+x
+γ . (A.11)
+Taking the negative of the ratio (A.11) and (A.10) yields the result stated in the text.
+Reversal strategy proﬁts. Focusing ﬁrst on the inverse term in the expression for the r ever-
+sal strategy weights (9), and taking probability limits, it follows from the (cross-sectionally
+IID) normal distribution of Rit−1 − Rmt−1 that
+plim
+N →∞
+1
+2N
+N∑
+i=1
+|Rit−1 − Rmt−1| = σR√
+2π , (A.12)
+where σR is deﬁned as the cross-sectional standard deviation of Rit−1. Further,
+plim
+N →∞
+1
+N
+N∑
+i=1
+Rit−1Rit = E [Rit−1Rit] (A.13)
+= −
+( 1
+γ + φ
+) ( 1
+γ
+)
+σ2
+x. (A.14)
+Taking the negative of the ratio of (A.14) and (A.12) yields t he result stated in the text.
+B Data
+The stock return data used in this paper is from the CRSP daily returns ﬁle. Reversal
+strategy returns based on transaction prices are calculate d from daily closing prices, and the
+reversal strategy returns based on quote-midpoints are cal culated from averages of closing bid
+and ask quotes, as reported in the CRSP daily returns ﬁle (for Nasdaq stocks only), adjusted
+for stock splits and dividends using the CRSP adjustment fac tors and dividend information.
+To enter into the sample, a stock needs to have share code 10 or 11. In addition, it must
+have a closing price of at least $1 on the last trading day of th e previous calendar month.
+In a few instances, the closing bid and ask data for Nasdaq sto cks on CRSP have some
+43
+data recording errors, such as increases of bid or ask by a fac tor of 100 or digits that are cut oﬀ.
+To screen out these corrupted records, I require that the rat io of bid to quote-midpoint is not
+smaller than 0.5, and the one-day return based on quote-midp oints minus the return based
+on closing prices is not less than -50% and not higher than 100 %. If a closing transaction
+price is not available, the quote-midpoint is used to calcul ate transaction-price returns.
+C Robustness Checks
+Predictive regression bias. Given that VIX is quite persistent, one might worry that the
+predictive regressions with VIX as predictor could suﬀer fr om predictive regression bias.
+However, the bias-adjustment proposed by Stambaugh (1999) is virtually zero in this case
+here. The reason is that the time- t innovation in the predictor variable (VIX) has virtually
+zero correlation with the innovation in time- t reversal strategy returns. As a result, the bias-
+adjustment is also extremely close to zero. This is very diﬀe rent from the situation in typical
+stock market return prediction regressions with scaled pri ce ratios as predictors, where the
+correlation of these innovations is far from zero. Thus, the re is little reason to believe that
+the predictive regressions in the paper suﬀer from predicti ve regression bias.
+Return horizon in construction of reversal strategy portfo lio weights. The reversal strate-
+gies in the main analysis are constructed as an overlay of sub -strategies with portfolio weights
+conditioned on day t − 1, t − 2, ..., t − 5 returns. Table A.1 shows that focusing on the re-
+versal strategy with portfolio weights conditioned on day t − 1 returns only delivers a similar
+relationship between reversal strategy returns and the VIX as in the main analysis in Table
+2. Only for industry portfolios, the relationship with VIX b ecomes weak. For portfolios
+like the industry portfolios in this analysis, non-synchro nous trading or lead-lag relationships
+between ﬁrms within an industry is a potential explanation f or small short-run continuations
+in industry portfolio returns. Overlaying sub-strategies with portfolio weights conditioned on
+day t − 1, t − 2, ..., t − 5 returns as in the main analysis helps to reduce the inﬂuence of these
+short-run continuations.
+44
+Alternative scaling of reversal strategy portfolio weight s. The portfolio weights of the
+reversal strategies in the main analysis are scaled to sum up to $1 long and $1 short. Table
+A.2 repeats the regressions from Table 2 for a reversal strat egy that is constructed with
+alternative portfolio weights wit = −
+( ∑N
+i=1 (Rit−1 − Rmt−1)2
+) −1
+(Rit−1 − Rmt−1). In this
+case, the reversal strategy proﬁt is the negative of the slop e coeﬃcient in a cross-sectional
+regression of market-adjusted returns on their own lag, and hence, eﬀectively, the negative of a
+cross-sectional estimate of the autocorrelation. Table A. 2 shows that VIX is a strong predictor
+of the proﬁts from this alternative speciﬁcation of reversa l strategies. Table A.3 shows results
+for a reversal strategy with weights wit = − (1/N) (Rit−1 − Rmt−1), which yields, eﬀectively,
+the negative of a cross-sectional estimate of the autocovar iance of market-adjusted returns.
+VIX is again a strong predictor of reversal strategy proﬁts f or this alternative formulation.
+Heterogeneity in scale . In the model, all stocks are of the same size. In reality, the re
+are large diﬀerences in scale between stocks. A unit of unexp ected order ﬂow has less price
+impact for a large stock than for a small stock. Market maker i nventory, and hence mar-
+ket maker’s portfolios and proﬁts are likely to be heavily do minated by large stocks. For
+this reason, Table A.4 explores value-weighted reversal st rategies where the weights wit =
+−
+(
+1
+2
+∑N
+i=1 |(Rit−1 − Rmt−1)Mit−1|
+) −1
+(Rit−1 − Rmt−1) Mit−1 have been multiplied with Mit−1,
+stock i’s lagged market capitalization. The results are similar to those of Table 2. VIX is
+still strongly related to reversal strategy proﬁts. This de monstrates that the results in the
+main paper are not driven just by small stocks. One notable di ﬀerence, though, is that the
+reversal strategy proﬁts in terms of transaction-price ret urns and quote-midpoint returns are
+now almost identical. This reﬂects the fact that large stock s have tiny bid-ask spreads, and
+hence there is hardly any diﬀerence between quote-midpoint s and transaction prices.
+Long and short components of reversal strategy . Table A.5 splits the reversal strategy
+(9) into long and short positions to check whether there is an y asymmetry in the returns
+from liquidity provision between the long and short side. Th e reversal strategy portfolio
+in (9) is split into two components: stocks with positive por tfolio weight (long) and stocks
+45
+negative portfolio weights (short). The equal-weighted ma rket return is subtracted from the
+long component and added to the short component, so that both components represent $1
+long/$1short strategies. As Table A.5 shows, there is littl e diﬀerence in the results for the
+long and short components. Only for the industry reversal st rategy, there is some evidence
+for a higher sensitivity to VIX on the long side which indicat es that the industry reversals
+arise mostly from price impact of sell orders.
+46
+Table A.1: Predicting Reversal Strategy Returns with VIX: R eversal Strategies Formed Based on Day t − 1 returns
+This table repeats the regressions from Table 2, but with rev ersal strategies with portfolio weights formed based on day t − 1 returns
+instead of the overlay of sub-strategies formed based on day t − 1 to t − 5 returns that is used in the main text. Predictor variables a re
+measured on day t − 1.
+Individual stocks Individual stocks Industry
+Transaction-price returns Quote-midpoint returns portfo lios
+Daily Monthly Daily Monthly Daily Monthly
+(1) (2) (3) (4) (5) (6) (7) (8) (9) (10) (11) (12)
+Intercept -0.13 -0.21 -0.12 -0.06 -0.41 -0.38 -0.22 -0.13 -0 .06 -0.06 -0.10 -0.08
+(0.13) (0.10) (0.09) (0.08) (0.11) (0.11) (0.10) (0.12) (0. 06) (0.06) (0.06) (0.05)
+VIX 0.77 0.71 0.65 0.61 0.51 0.53 0.43 0.34 0.01 0.00 0.03 0.02
+(0.10) (0.08) (0.08) (0.06) (0.09) (0.09) (0.08) (0.10) (0. 05) (0.05) (0.05) (0.05)
+Pre-decim. 0.70 0.72 0.70 -0.27 -0.25 -0.23 0.03 0.03 0.03
+(0.08) (0.08) (0.12) (0.09) (0.08) (0.12) (0.04) (0.04) (0. 05)
+RM -1.52 -1.30 -2.70 -1.59 0.62 -0.12
+(0.58) (0.68) (0.88) (0.89) (0.42) (0.43)
+Adj. R2 0.14 0.21 0.21 0.63 0.05 0.05 0.06 0.18 -0.00 -0.00 0.00 -0.01
+47
+Table A.2: Predicting Reversal Strategy Returns with VIX: R eversal Strategies Scaled to Estimate Autocorrelation
+This table repeats the regressions from Table 2, but with rev ersal strategies with portfolio weights wit =
+−
+( ∑N
+i=1 (Rit−1 − Rmt−1)2
+) −1
+(Rit−1 − Rmt−1). The reversal strategy proﬁts in this case correspond to th e negative of a cross-
+sectional autocorrelation estimate.
+Individual stocks Individual stocks Industry
+Transaction-price returns Quote-midpoint returns portfo lios
+Daily Monthly Daily Monthly Daily Monthly
+(1) (2) (3) (4) (5) (6) (7) (8) (9) (10) (11) (12)
+Intercept 1.38 1.19 1.72 2.06 0.09 0.07 0.61 0.97 -3.43 -3.51 -2.60 -2.25
+(0.31) (0.26) (0.27) (0.29) (0.32) (0.31) (0.30) (0.29) (1. 29) (1.30) (1.37) (1.07)
+VIX 1.88 1.73 1.38 1.08 1.50 1.48 1.13 0.78 2.66 2.60 2.00 1.64
+(0.22) (0.20) (0.20) (0.18) (0.24) (0.25) (0.23) (0.20) (0. 86) (0.87) (0.88) (0.62)
+Pre-decim. 1.63 1.70 1.80 0.15 0.23 0.41 0.63 0.76 1.02
+(0.30) (0.28) (0.38) (0.30) (0.28) (0.35) (1.06) (1.05) (1. 24)
+RM -9.01 -2.28 -9.11 -5.30 -15.40 0.47
+(2.06) (2.36) (2.40) (2.64) (9.13) (7.97)
+Adj. R2 0.03 0.05 0.05 0.36 0.02 0.02 0.02 0.14 0.00 0.00 0.00 0.01
+48
+Table A.3: Predicting Reversal Strategy Returns with VIX: R eversal Strategies Scaled to Estimate Autocovariance
+This table repeats the regressions from Table 2, but with rev ersal strategies with portfolio weights wit = − (1/N) (Rit−1 − Rmt−1) × 100.
+The reversal strategy proﬁts in this case correspond to the n egative of a cross-sectional autocovariance estimate of pe rcentage market-
+adjusted returns.
+Individual stocks Individual stocks Industry
+Transaction-price returns Quote-midpoint returns portfo lios
+Daily Monthly Daily Monthly Daily Monthly
+(1) (2) (3) (4) (5) (6) (7) (8) (9) (10) (11) (12)
+Intercept -0.66 -0.76 -0.59 -0.39 -0.62 -0.66 -0.50 -0.33 -0 .14 -0.14 -0.11 -0.08
+(0.15) (0.16) (0.14) (0.11) (0.17) (0.17) (0.15) (0.12) (0. 04) (0.04) (0.03) (0.02)
+VIX 1.05 0.98 0.87 0.72 0.79 0.76 0.65 0.53 0.11 0.11 0.09 0.07
+(0.12) (0.13) (0.12) (0.09) (0.14) (0.15) (0.13) (0.11) (0. 03) (0.03) (0.03) (0.02)
+Pre-decim. 0.83 0.85 0.87 0.34 0.36 0.39 -0.00 0.00 0.01
+(0.12) (0.12) (0.15) (0.14) (0.14) (0.15) (0.03) (0.03) (0. 03)
+RM -2.85 -0.45 -2.72 -0.40 -0.54 -0.01
+(0.87) (1.32) (0.96) (1.39) (0.23) (0.22)
+Adj. R2 0.10 0.13 0.14 0.53 0.04 0.05 0.05 0.27 0.01 0.01 0.01 0.13
+49
+Table A.4: Predicting Reversal Strategy Returns with VIX: V alue-weighted Reversal Strategies
+This table repeats the regressions from Table 2, but with val ue-weighted reversal strategies with portfolio weights wit =
+−
+(
+1
+2
+∑N
+i=1 |(Rit−1 − Rmt−1)Mit−1|
+) −1
+(Rit−1 − Rmt−1) Mit−1, where Mit−1 is stock i’s lagged market capitalization.
+Individual stocks Individual stocks Industry
+Transaction-price returns Quote-midpoint returns portfo lios
+Daily Monthly Daily Monthly Daily Monthly
+(1) (2) (3) (4) (5) (6) (7) (8) (9) (10) (11) (12)
+Intercept -0.14 -0.15 -0.09 -0.05 -0.16 -0.18 -0.11 -0.06 -0 .06 -0.06 -0.02 -0.01
+(0.04) (0.04) (0.03) (0.03) (0.05) (0.05) (0.04) (0.05) (0. 04) (0.04) (0.04) (0.03)
+VIX 0.20 0.20 0.15 0.13 0.25 0.24 0.19 0.15 0.06 0.07 0.04 0.03
+(0.03) (0.04) (0.03) (0.02) (0.04) (0.04) (0.04) (0.04) (0. 04) (0.04) (0.03) (0.03)
+Pre-decim. 0.07 0.08 0.09 0.13 0.14 0.16 -0.02 -0.01 -0.01
+(0.04) (0.04) (0.04) (0.06) (0.06) (0.06) (0.04) (0.03) (0. 03)
+RM -1.14 -0.57 -1.18 -1.10 -0.62 -0.34
+(0.28) (0.41) (0.35) (0.58) (0.34) (0.29)
+Adj. R2 0.03 0.03 0.03 0.27 0.02 0.02 0.02 0.25 0.00 0.00 0.00 0.03
+50
+Table A.5: Long and Short Components of Reversal Strategy
+This table repeats the regressions from Table 2, but with rev ersal strategy portfolios split into those with positive po rtfolio weight (long)
+and negative portfolio weights (short). The equal-weighte d market return is subtracted from the long component and add ed to the short
+component. The returns used in the regressions are hedged ag ainst conditional market factor exposure as in Table 2.
+Individual stocks Individual stocks Industry
+Transaction-price returns Quote-midpoint returns portfo lios
+Daily Monthly Daily Monthly Daily Monthly
+Long Short Long Short Long Short Long Short Long Short Long Sh ort
+(1) (2) (3) (4) (5) (6) (7) (8) (9) (10) (11) (12)
+Intercept -0.04 -0.02 0.01 0.01 -0.05 -0.03 -0.02 -0.00 -0.0 5 -0.03 -0.05 -0.01
+(0.02) (0.02) (0.01) (0.01) (0.02) (0.02) (0.02) (0.02) (0. 02) (0.01) (0.01) (0.01)
+VIX 0.11 0.09 0.08 0.07 0.07 0.09 0.05 0.07 0.04 0.02 0.04 0.00
+(0.01) (0.01) (0.01) (0.01) (0.02) (0.02) (0.01) (0.02) (0. 01) (0.01) (0.01) (0.00)
+Pre-decim. 0.12 0.09 0.13 0.10 0.04 0.03 0.04 0.03 -0.02 0.02 -0.02 0.02
+(0.02) (0.03) (0.02) (0.03) (0.03) (0.04) (0.03) (0.05) (0. 01) (0.01) (0.01) (0.01)
+Adj. R2 (0.05) (0.04) (0.46) (0.27) (0.01) (0.01) (0.06) (0.06) (0. 01) (0.00) (0.10) (0.01)
+51
+References
+Admati, Anat R., and Paul Pﬂeiderer, 1988, A Theory of Intrad ay Patterns: Volume and
+Price Variability, Review of Financial Studies 1, 3–40.
+Adrian, Tobias, Erkko Etula, and Tyler Muir, 2011, Financia l Intermediaries and the
+Cross-Section of Asset Returns. Working paper, Northweste rn University and Federal
+Reserve Bank of New York.
+Adrian, Tobias, and Hyun Song Shin, 2010, Liquidity and Leve rage, Journal of Financial
+Intermediation 19, 418–437.
+Amihud, Yakov, 2002, Illiquidity and Stock Returns: Cross- Section and Time-Series Ef-
+fects, Journal of Financial Markets 5, 31–56.
+Ang, Andrew, Sergiy Gorovyy, and Gregory B. van Inwegen, 201 1, Hedge Fund Leverage,
+Journal of Financial Economics 102.
+Avramov, Doron, Tarun Chordia, and Amit Goyal, 2006, Liquid ity and Autocorrelations
+in Individual Stock Returns, Journal of Finance 61, 2365–2394.
+Bao, Jack, Jun Pan, and Jiang Wang, 2011, The Illiquidity of C orporate Bonds, Journal
+of Finance 66, 911–946.
+Barclay, Michael J., William G. Christie, Jeﬀrey H. Harris, Eugene Kandel, and Paul H.
+Schulz, 1999, Eﬀects of Market Reformon the Trading Costs an d Depths of Nasdaq
+Stocks, Journal of Finance 54, 1–34.
+Ben-David, Itzhak, Francesco Franzoni, and Rabih Moussawi , 2011, Hedge Fund Stock
+Trading in the Financial Crisis of 2007-2008, Review of Financial Studies . forthcoming.
+Bessembinder, Hendrik, 2003, Trade Execution Costs and Mar ket Quality after Decimal-
+ization, Journal of Financial and Quantitative Analysis 38, 747–777.
+Bollerslev, Tim, Michael Gibson, and Hao Zhou, 2011, Dynami c Estimation of Volatility
+Risk Premia and Investor Risk Aversion from Option-Implied and Realized Volatilities,
+52
+Journal of Econometrics , 102–118.
+Brunnermeier, Markus K., 2009, Deciphering the Liquidity a nd Credit Crunch 2007-2008,
+Journal of Economic Perspectives 23, 77–100.
+Brunnermeier, Markus K., Stefan Nagel, and Lasse Pedersen, 2008, Carry Trades and
+Currency Crashes, in Daron Acemoglu, Kenneth Rogoﬀ, and Mic hael Woodford, eds.:
+NBER Macroeconomics Annual 2008 .
+Brunnermeier, Markus K., and Lasse H. Pedersen, 2009, Marke t Liquidity and Funding
+Liquidity, Review of Financial Studies 22, 2201–2238.
+Chernov, Mikhail, 2007, On the Role of Risk Premia in Volatil ity Forecasting, Journal of
+Business and Economic Statistics 25, 411–426.
+Chordia, Tarun, Asani Sarkar, and Avanidhar Subrahmanyam, 2005, An Empirical Anal-
+ysis of Stock and Bond Market Liquidity, Review of Financial Studies 18, 85–129.
+Christie, William G., and Paul H. Schultz, 1994, Why do NASDA Q Market Makers Avoid
+Odd-Eigth Quotes?, Journal of Finance 49, 1813–1840.
+Comerton-Forde, Carole, Terrence Hendershott, Charles M. Jones, Pamela C. Moulton,
+and Mark S. Seasholes, 2010, Time Variation in Liquidity: Th e Role of Market Maker
+Inventories and Revenues, Journal of Finance 65, 295–331.
+Deuskar, Prachi, 2008, Extrapolative Expectations: Impli cations for Volatility and Liquid-
+ity, working paper,. University of Illinois Urbana/Champaign.
+Fama, Eugene F, and Kenneth R. French, 1997, Industry Costs o f Equity, Journal of
+Financial Economics 43, 153–193.
+Gˆ arleanu, Nicolae, and Lasse Heje Pedersen, 2011, Margin- Based Asset Pricing and Devi-
+ations from the Law of One Price, Review of Financial Studies 24, 1980–2022.
+Gˆ arleanu, Nicolae, Lasse Heje Pedersen, and Allen M. Potes hman, 2009, Demand-Based
+Option Pricing, Review of Financial Studies 22, 4259–4299.
+53
+Glosten, Lawrence R., and Paul R. Milgrom, 1985, Bid, Ask and Transaction Prices in a
+Specialist Market with Heterogeneously Informed Traders, Journal of Financial Eco-
+nomics 14, 71–100.
+Gorton, Gary, and Andrew Metrick, 2010, Haircuts, Federal Reserve Bank of St. Louis
+Review 92, 507–519.
+Gromb, Denis, and Dimitri Vayanos, 2002, Equilibrium and we lfare in markets with ﬁnan-
+cially constrained arbitrageurs, Journal of Financial Economics 66, 361–407.
+Grossman, Sanford J., and Merton H. Miller, 1988, Liquidity and Market Structure, Jour-
+nal of Finance 43, 617–633.
+Hameed, Allaudeen, Wenjin Kang, and S. Viswanathan, 2010, S tock Market Declines and
+Liquidity, Journal of Finance 65, 257–293.
+Hansch, Oliver, Narayan Y. Naik, and S. Viswanathan, 1998, D o Inventories Matter
+in Dealership Markets? Evidence from the London Stock Excha nge, Journal of Fi-
+nance 53, 1623–1656.
+Hasbrouck, Joel, 1991, The Summary Informativeness of Stoc k Trades: An Econometric
+Analysis, Review of Financial Studies 4, 571–595.
+Hendershott, Terrence, Charles M. Jones, and Albert J. Menk veld, 2011, Does Algorithmic
+Trading Improve Liquidity?, Journal of Finance 66, 1–33.
+Hendershott, Terrence, and Albert J. Menkveld, 2010, Price Pressures, working paper , UC
+Berkeley.
+Hendershott, Terrence, and Mark S. Seasholes, 2007, Market Maker Inventories and Stock
+Prices, American Economic Review Papers and Proceedings 97, 210–214.
+Ho, Thomas, and Hans R. Stoll, 1981, Optimal Dealer Pricing U nder Transactions and
+Return Uncertainty, Journal of Financial Economics 9, 47–73.
+Kaniel, Ron, Gideon Saar, and Sheridan Titman, 2008, Indivi dual Investor Trading and
+54
+Stock Returns, Journal of Finance 63, 273–310.
+Khandani, Amir E., and Andrew W. Lo, 2007, What Happened to th e Quants in August
+2007?, Journal of Investment Management 5, 5–54.
+Kyle, Albert S., 1985, Continuous Auctions and Insider Trad ing, Econometrica 53, 1315–
+1335.
+Lehman, Bruce N., 1990, Fads, Martingales, and Market Eﬃcie ncy, Quarterly Journal of
+Economics 105, 1–28.
+Llorente, Guillermo, Roni Michaely, Gideon Saar, and Jiang Wang, 2002, Dynamic Volume-
+Return Relation of Individual Stocks, Review of Financial Studies 15, 1005–1047.
+Lo, Andrew W., and A. Craig MacKinlay, 1990, When are Contrar ian Proﬁts Due to Stock
+Market Overreaction?, Review of Financial Studies 2, 175–205.
+Longstaﬀ, Francis A., Jun Pan, Lasse H. Pedersen, and Kennet h J. Singleton, 2010, How
+Sovereign is Sovereign Credit Risk?, American Economic Journal: Macroeconomics 3,
+75–103.
+Naik, Narayan Y., and Pradeep K. Yadav, 2003, Do dealer ﬁrms m anage inventory on a
+stock-by-stock or a portfolio basis?, Journal of Financial Economics 69, 325–353.
+P´ astor,ˇLuboˇ s, and Robert F. Stambaugh, 2003, Liquidity Risk and Ex peced Stock Re-
+turns, Journal of Political Economy 111, 642–685.
+Stambaugh, Robert F., 1999, Predictive Regressions, Journal of Financial Economics 54,
+375–421.
+Wang, Jiang, 1994, A Model of Competitive Stock Trading Volu me, Journal of Political
+Economy 102, 127–168.
+55
