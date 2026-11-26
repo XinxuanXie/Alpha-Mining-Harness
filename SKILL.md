@@ -93,13 +93,13 @@ subagent 由你临时创建，在独立上下文中执行，只交回摘要（�
 - 成分区间 `data/membership_intervals.parquet`：每只股票进出标普 500 的起止日期。加载时按它过滤，股票只在成分期内有值。
 - 市场基准 `data/spy_benchmark.parquet`：每日市场收益，公式中的 mktret 来自这里。
 - 程序自算字段：ivol20（20 日特质波动）、resid_ret（当日残差收益），加载时由 engine.py 算出；returns（日收益率 close/delay(close,1)−1）由 engine.py 在加载时派生，只在成分期内有值。
-- 基本面 `data/fundamentals.parquet`：EDGAR 季度财报，长格式（date、permno、10 个基本面字段，另有 10 个 filed 日期列供对齐核查、加载时不用），2007 年起才有。
+- 基本面 `data/fundamentals.parquet`：EDGAR 季度财报，长格式（date、permno、10 个基本面字段，另有 10 个 filed 日期列供对齐核查、加载时不用），2009 年中起才有（按 filed 披露日期算，2009 年 7 月前无值）。
 
 公式可用字段共 20 个：open、high、low、close、volume、mktcap、mktret、ivol20、resid_ret、returns、revenue、net_income、total_assets、book_equity、rnd、op_income、capex、cash、lt_debt、shares_out。
 
-字段口径（开工前闭合，见第 1 轮复盘 F7）：价格为拆股调整后价格；volume 按 panel 原值使用，engine 内不做复权处理；mktcap ÷ close = 隐含股数（拆股调整后口径），volume ÷ (mktcap ÷ close) = 换手率；mktret 取自 spy_benchmark.parquet 的 vwretd（市值加权市场收益），每日全股相同；ivol20 是 20 日滚动回归（个股日收益对市场收益）的残差标准差，日频、未年化，窗口须满 20 日、用当日及以前数据；resid_ret 是当日残差收益（个股日收益减同一 20 日窗口的拟合值）；基本面 10 个字段均为季度财报数，按 filed 披露日期往后填充到每个交易日（只用披露日及以前的数据，无未来信息）：revenue 营业收入、net_income 净利润、total_assets 总资产、book_equity 净资产（股东权益）、rnd 研发费用、op_income 经营利润、capex 资本开支、cash 现金及等价物、lt_debt 长期负债、shares_out 流通股数；金额类（除 shares_out 外）单位为美元，shares_out 单位为股数；2007 年起才有，2000–2006 年无值；注意事项：rnd 覆盖率约 44% 是行业属性（很多行业本来就没有研发支出），缺失不代表数据错误；shares_out 有 109 家用的是已发行股数（含库存股）口径，与流通股口径存在差异；IFRS 申报公司已并入同一口径；映射不上 EDGAR 的成分股在这些字段上为缺失；全部字段只在标普 500 成分期内有值（membership_intervals.parquet 过滤）。
+字段口径（开工前闭合，见第 1 轮复盘 F7）：价格为拆股调整后价格；volume 按 panel 原值使用，engine 内不做复权处理；mktcap ÷ close = 隐含股数（拆股调整后口径），volume ÷ (mktcap ÷ close) = 换手率；mktret 取自 spy_benchmark.parquet 的 vwretd（市值加权市场收益），每日全股相同；ivol20 是 20 日滚动回归（个股日收益对市场收益）的残差标准差，日频、未年化，窗口须满 20 日、用当日及以前数据；resid_ret 是当日残差收益（个股日收益减同一 20 日窗口的拟合值）；基本面 10 个字段均为季度财报数，按 filed 披露日期往后填充到每个交易日（只用披露日及以前的数据，无未来信息）：revenue 营业收入、net_income 净利润、total_assets 总资产、book_equity 净资产（股东权益）、rnd 研发费用、op_income 经营利润、capex 资本开支、cash 现金及等价物、lt_debt 长期负债、shares_out 流通股数；金额类（除 shares_out 外）单位为美元，shares_out 单位为股数；2009 年中起才有，2009 年 7 月前无值（早期 XBRL 是事后补录，按 filed 披露日期算）；注意事项：rnd 覆盖率约 44% 是行业属性（很多行业本来就没有研发支出），缺失不代表数据错误；rnd 约 13% 的季度是全年总数（仅在 10-K 里披露），作季度流量用时慎用；shares_out 有 109 家用的是已发行股数（含库存股）口径，与流通股口径存在差异；IFRS 申报公司已解析，但 10 家均未进面板（映射 permno 窗口与数据窗口不重叠）；映射不上 EDGAR 的成分股在这些字段上为缺失；全部字段只在标普 500 成分期内有值（membership_intervals.parquet 过滤）。
 
-数据分三段：IS 段 2000–2016、OOS 段 2017–2019、holdout 段 2020–2026。
+数据分三段：IS 段 2010–2016、OOS 段 2017–2019、holdout 段 2020–2026。
 
 ### 算子
 

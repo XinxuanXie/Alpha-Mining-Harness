@@ -21,7 +21,7 @@ POOL_PATH = os.path.join(ROOT, "research", "hypothesis_pool.md")
 REGISTRY_PATH = os.path.join(ROOT, "research", "registry.jsonl")
 
 SEG_LABEL = {
-    "is": "IS（2000–2016）",
+    "is": "IS（2010–2016）",
     "oos": "OOS（2017–2019）",
     "holdout": "holdout（2020–2026）",
 }
