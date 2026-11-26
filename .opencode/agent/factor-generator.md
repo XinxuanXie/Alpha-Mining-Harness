@@ -33,6 +33,14 @@ permission:
     "*/research/shared_memory.md": deny
     "research/literature_notes.md": deny
     "*/research/literature_notes.md": deny
+    "research/registry.jsonl": deny
+    "*/research/registry.jsonl": deny
+    "research/status.md": deny
+    "*/research/status.md": deny
+    "research/round_summaries/*": deny
+    "*/research/round_summaries/*": deny
+    "research/round_summaries/TEMPLATE.md": deny
+    "*/research/round_summaries/TEMPLATE.md": deny
   bash:
     "*": deny
     "python3 tools/search/openalex.py *": allow
@@ -127,3 +135,7 @@ permission:
 一条线一次最多 4 对。
 
 辩论交回时另给三样：最新版对子（假设、公式、证据）、修改清单、辩论记录文件已更新（立论、答辩、修改清单均在内）。判应弃的只交三样：致命攻击编号、不可修论证、建议的探索性版本/无。
+
+# 交接格式
+
+以上内容全文写文件（辩论内容写进辩论记录），交回主 agent 时只交摘要，不超过 15 行，固定包含：结论（本线交几对、未成形方向及卡点）、每对一句话（假设、公式、承重证据等级）、写了哪些文件（辩论记录路径）、未决事项（证据缺位等）。决策信息（锚点五维结论、零假设期望值、判应弃的三样）必须留在摘要里，不许只写“已完成”。主 agent 需要细节时自己读文件。

@@ -34,6 +34,14 @@ permission:
     "*/research/shared_memory.md": deny
     "research/literature_notes.md": deny
     "*/research/literature_notes.md": deny
+    "research/registry.jsonl": deny
+    "*/research/registry.jsonl": deny
+    "research/status.md": deny
+    "*/research/status.md": deny
+    "research/round_summaries/*": deny
+    "*/research/round_summaries/*": deny
+    "research/round_summaries/TEMPLATE.md": deny
+    "*/research/round_summaries/TEMPLATE.md": deny
 ---
 
 # 职责
@@ -61,3 +69,7 @@ permission:
 - 复核结果（逐条是或否，并写明每条未闭合攻击是锚点级还是可修类、是否应进第二轮）。
 
 辩论记录文件同步更新。
+
+# 交接格式
+
+攻击清单与复核结果全文写进辩论记录文件，交回主 agent 时只交摘要，不超过 15 行，固定包含：结论（应弃/应修/通过）、每方向的攻击编号与一句话要点、复核结论（每条未闭合攻击是锚点级还是可修类、是否进第二轮）、辩论记录文件路径、未决事项。决策信息（攻击编号、分类、是否进第二轮）必须留在摘要里，不许只写“已完成”。主 agent 需要细节时自己读辩论记录。

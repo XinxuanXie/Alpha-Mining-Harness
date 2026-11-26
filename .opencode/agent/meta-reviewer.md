@@ -32,6 +32,12 @@ permission:
     "*/opencode.json": deny
     "research/literature_notes.md": deny
     "*/research/literature_notes.md": deny
+    "research/registry.jsonl": deny
+    "*/research/registry.jsonl": deny
+    "research/status.md": deny
+    "*/research/status.md": deny
+    "research/round_summaries/TEMPLATE.md": deny
+    "*/research/round_summaries/TEMPLATE.md": deny
     "research/debate/*": deny
     "*/research/debate/*": deny
 ---
@@ -53,8 +59,12 @@ permission:
    - 反复出现的问题模式：哪类攻击反复成立、哪类机制总在同一环被攻破、哪类构造错误反复出现。每条附出处编号，可回溯到具体辩论记录。
    - 给下一轮生成的指向：哪类方向已被反复证伪、要避开；哪些区域还没探索过、值得往那边生成。同一方向连续两轮 0 对的，把「换方向」列为标准选项（除非拿出新字段、新评价协议或新的全文锚点）。
    - 流程本身的问题：例如某类攻击总是悬空进仲裁，说明口径不清。
-3. 把本轮反馈按轮次追加进共享记忆的 Meta-review 反馈一节。
+3. 把本轮反馈按轮次追加进共享记忆的 Meta-review 反馈一节。另按 `research/round_summaries/TEMPLATE.md` 写本轮一页纸摘要 `research/round_summaries/round-N.md`（0 对的轮次也写）；模板逐项填，不自由发挥。
 
 # 输出
 
 交回主 agent：本轮写入的反馈条数与每条的一句话摘要。反馈只含定性模式，不含单条对子的具体成绩。
+
+# 交接格式
+
+反馈全文写进共享记忆（由主 agent 落盘），本轮一页纸摘要由你直接写 `research/round_summaries/round-N.md`。交回主 agent 时只交摘要，不超过 15 行，固定包含：结论（本轮写入的反馈条数与每条一句话摘要）、摘要文件路径、未决事项（下轮是否换方向）。决策信息（反馈条数与摘要、下轮建议）必须留在摘要里，不许只写“已完成”。主 agent 需要细节时自己读文件。

@@ -27,10 +27,12 @@
 | `research/experiment_registry.md` | 实验登记：进入 IS 前冻结的版本登记（公式哈希、方向、持有期、指标、OOS 规则） |
 | `research/literature_notes.md` | 文献笔记：论文登记与分析结论，主 agent 落盘 |
 | `research/debate/` | 辩论记录：一对一文件，按编号命名 |
+| `research/status.md` | 常新状态：当前轮次、方向、各对阶段与下一步，主 agent 每阶段结束更新 |
+| `research/round_summaries/` | 每轮一页纸摘要：复盘 agent 按 `TEMPLATE.md` 写 |
 | `classic_library.md` + `classic_library/` | 经典因子库索引与原文：200 条、13 个家族；`formulas.json` 为机器可读表（抽取脚本见 `tools/backtest/extract_library.py`） |
 | `engine.py` | 计算引擎：读数据、公式求值（37 个算子）、白名单检查 |
 | `tools/check_formula.py` | 公式校验：结构、字段、算子合法性，报告算子调用数作参考，不接触数据 |
-| `tools/backtest/` | 回测统一入口 `backtest.py`（成绩单 v2、基线对照、登记），等权合成 `combine.py`，零分布批量跑 `run_null.py`，登记视图 `render_registry.py`；结果存入 `results/`，登记进 `research/registry.jsonl` |
+| `tools/backtest/` | 回测统一入口 `backtest.py`（成绩单 v2、基线对照、登记），等权合成 `combine.py`，零分布批量跑 `run_null.py`，登记视图 `render_registry.py`，成绩单回写 `pool_sync.py`；结果存入 `results/`，登记进 `research/registry.jsonl` |
 | `benchmarks/` | 基线集 `baselines.json`、零分布 `is_null.json`（`run_null.py` 生成）、缺口报告 `gap_report.md` |
 | `tools/search/` | 文献检索脚本：openalex.py、core.py、arxiv.py |
 | `report.py` | 单文件 HTML 报告：多空累计收益图、指标表、分年表 |

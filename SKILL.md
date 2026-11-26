@@ -14,17 +14,20 @@ description: 本项目的总说明书。主 agent（Supervisor）开工前先读
 - 质疑（factor-challenger）：逐环质疑对子，复核修改。
 - 复盘（meta-reviewer）：每轮收尾汇总反复出现的问题，写定性反馈入共享记忆。
 
-subagent 由你临时创建，在独立上下文中执行，只交回结论；subagent 之间不直接通信，经你与假设池中转。
+subagent 由你临时创建，在独立上下文中执行，只交回摘要（约 15 行：结论、关键数字、写了哪些文件、未决事项），全文写文件；需要细节时你读文件，不追问复述。决策信息（攻击编号、淘汰理由、裁决）必须留在摘要里。subagent 之间不直接通信，经你与假设池中转。
 
 ## 文件地图
 
 - `research/shared_memory.md`：共享记忆，全局共享，所有 agent 开工前必读。研究计划、试验登记、运行统计由你记，Meta-review 反馈由复盘 agent 追加。
 - `research/hypothesis_pool.md`：假设池，只有你能写。
 - `research/literature_notes.md`：文献笔记，由你落盘；生成 agent 把笔记内容随交回附上。
+- `research/status.md`：常新状态，只由你写，每阶段结束更新（见「常新状态」）。
+- `research/round_summaries/`：每轮一页纸摘要，复盘 agent 按 `TEMPLATE.md` 写。
+- `research/registry.jsonl`：回测登记，一行一个冻结版本；回测入口写，`pool_sync.py` 读。
 - `research/debate/<编号>.md`：辩论记录，一对一文件，生成与质疑两个 agent 追加。
 - `classic_library.md` 与 `classic_library/`：经典库，200 条、13 个家族。
 - `tools/search/`：文献检索脚本（openalex.py、core.py、arxiv.py），key 从环境变量或根目录 .env 读。
-- `tools/backtest/` 与 `report.py`：回测统一入口 `backtest.py`（成绩单 v2、基线对照、登记 `research/registry.jsonl`）、等权合成 `combine.py`、零分布批量跑 `run_null.py`、登记视图 `render_registry.py`；回测是正式阶段（见「一轮怎么跑」第 6 步与纪律）。
+- `tools/backtest/` 与 `report.py`：回测统一入口 `backtest.py`（成绩单 v2、基线对照、登记 `research/registry.jsonl`）、等权合成 `combine.py`、零分布批量跑 `run_null.py`、登记视图 `render_registry.py`、成绩单回写 `pool_sync.py`；回测是正式阶段（见「一轮怎么跑」第 6 步与纪律）。
 
 ## 一轮怎么跑
 
@@ -33,9 +36,13 @@ subagent 由你临时创建，在独立上下文中执行，只交回结论；su
 3. 派生成：每条线派一个生成 agent，任务书只写本线与分配到的文献、不提其他线；各线独立产出，互不知道对方的内容。各线交回后，你把各线的笔记统一记入 literature_notes.md，结论冲突的并列记录、标注未裁决。
 4. 初筛与入池：派审查 agent 汇总全部候选初筛（标准见「初筛」一节），最多选 10 对。你按入选名单逐条入池建档，编号 H001 起，状态记为待辩论；审查的淘汰理由由你转交 Meta-review，并在本轮交付时汇总报告。
 5. 逐条派辩论：生成方先立论（把机制链写入辩论记录；生成时已有的机制链直接沿用，不重写），质疑按攻击方向攻击并逐条编号，生成方逐条回应（接受并给出改法，或不接受并给出理由）。生成方按双方一致的结论逐处修改，每处修改对应一个攻击编号，产出修改清单（对应攻击、改前、改后），每个版本留档；改完重写机制—公式合同并重跑校验。质疑复核只查两件事：已接受的攻击是否都已回应、修改是否引入新问题；已解决的攻击不重提，新攻击只限修改引入的。以上为一轮，最多 2 轮。首轮复核后分类早退：复核把未闭合的攻击分为锚点级（锚点错配、识别缺口、样本不匹配，不可修）与可修类（公式实现、参数、口径）；致命攻击全是锚点级的，不进第二轮，直接收口仲裁；只有可修类才进第二轮。生成方判应弃的，只交三样（致命攻击编号、不可修论证、建议的探索性版本/无），不再做完整修改。辩论结束，你看辩论记录，在这条对子的全部版本中选最合适的一版定稿（双方已一致选定的，你确认即可），定稿后不再修改。辩论只产出定稿版本，不淘汰对子；生成方判应弃且你同意的，记为已淘汰留档。修改的目标是纠正：删无依据的成分、改实现错的成分。
-6. 定稿与收尾：定稿版本替换池中正文，版本链与选版结论追加进档案，状态记为待验证。定稿后进回测：你用统一入口（`python tools/backtest/backtest.py --segment is --formula "…" --hypothesis Hxxx --version vx`）跑 IS，成绩单 v2、基线对照与全库百分位自动写进 `research/registry.jsonl`（`research/experiment_registry.md` 为生成视图，不手工改）；状态按结果记为 IS 已验证。IS→OOS 须研究者确认后才跑；holdout 须研究者明确授权并记录日期与原因（入口以 `--allow-holdout` 与 `--holdout-reason` 强制执行）。回测结果不回流给生成 agent；IS 结果（尤其已证伪的机制）记入共享记忆的已证伪机制区，供下一轮避开。本轮 0 对入池也是合法收口：留档三项（致命攻击编号与不可修论证、重启条件、可行性判断是否改变），不凑数。连续两轮 0 对的，复盘须把「换方向」列为标准选项。本批对子全部定稿，一轮结束：派 Meta-review 复盘，更新试验登记与运行统计，把本轮结果交付研究者。
+6. 定稿与收尾：定稿版本替换池中正文，版本链与选版结论追加进档案，状态记为待验证。定稿后进回测：你用统一入口（`python tools/backtest/backtest.py --segment is --formula "…" --hypothesis Hxxx --version vx`）跑 IS，成绩单 v2、基线对照与全库百分位自动写进 `research/registry.jsonl`（`research/experiment_registry.md` 为生成视图，不手工改）；状态按结果记为 IS 已验证。随后运行 `python tools/backtest/pool_sync.py --hypothesis Hxxx` 把成绩单摘要写回池中该对条目（脚本生成、固定格式、幂等；不要手工抄数字进池子）。IS→OOS 须研究者确认后才跑；holdout 须研究者明确授权并记录日期与原因（入口以 `--allow-holdout` 与 `--holdout-reason` 强制执行）。回测结果不回流给生成 agent；IS 结果（尤其已证伪的机制）记入共享记忆的已证伪机制区，供下一轮避开。本轮 0 对入池也是合法收口：留档三项（致命攻击编号与不可修论证、重启条件、可行性判断是否改变），不凑数。连续两轮 0 对的，复盘须把「换方向」列为标准选项。本批对子全部定稿，一轮结束：派 Meta-review 复盘，更新试验登记与运行统计，把本轮结果交付研究者。复盘 agent 另按 `research/round_summaries/TEMPLATE.md` 写本轮一页纸摘要 `research/round_summaries/round-N.md`（0 对的轮次也写）；你收尾时更新 `research/status.md`（见「常新状态」）。
 
 盘点优先于固定顺序：每派一活前先看池子缺口——多少条待辩论、多少条未收口——缺什么派什么。
+
+## 常新状态
+
+`research/status.md` 是常新状态文件，打开就知道现在哪轮、哪一步、卡在哪、等谁。你每阶段结束更新它：拆线、生成交回、初筛、每对辩论收口、回测、复盘。固定格式：一张状态表（当前轮次、方向、每对编号与阶段）加一句话下一步（下一步是什么、等谁）。只写事实，不写论证；细节在假设池、辩论记录、登记表里。状态文件只由你写，subagent 不写。
 
 ## 初筛
 
@@ -146,6 +153,7 @@ subagent 由你临时创建，在独立上下文中执行，只交回结论；su
 | `python tools/backtest/backtest.py --segment is\|oos\|holdout --formula "<公式>" [--hypothesis Hxxx --version vx]` | 回测统一入口：成绩单 v2、基线对照、全库百分位，并登记进 `research/registry.jsonl` |
 | `python tools/backtest/combine.py --segment is --formulas "<公式1>" "<公式2>"` | 等权多因子合成（rank 平均，不拟合）+ 合成成绩单与增量 |
 | `python tools/backtest/run_null.py` | 零分布批量跑：全库白名单通过条目逐条试算 IS，写 `benchmarks/is_null.json` |
+| `python tools/backtest/pool_sync.py --hypothesis Hxxx [--version vx] [--segment is]` | 成绩单回写：把登记表里的成绩单摘要写回假设池对应条目（脚本生成、固定格式、幂等）；`--all` 全量同步，`--dry-run` 只看不写 |
 | `python report.py "<公式>" --segment is` | 生成 HTML 报告：多空累计收益图、成绩单表、分年表 |
 
 - 回测是正式阶段（见「一轮怎么跑」第 6 步）：定稿版本进回测，成绩单、基线对照与全库百分位写进登记；回测结果不回流给生成 agent，IS 结果进共享记忆的已证伪机制区。

@@ -34,6 +34,14 @@ permission:
     "*/research/shared_memory.md": deny
     "research/literature_notes.md": deny
     "*/research/literature_notes.md": deny
+    "research/registry.jsonl": deny
+    "*/research/registry.jsonl": deny
+    "research/status.md": deny
+    "*/research/status.md": deny
+    "research/round_summaries/*": deny
+    "*/research/round_summaries/*": deny
+    "research/round_summaries/TEMPLATE.md": deny
+    "*/research/round_summaries/TEMPLATE.md": deny
     "research/debate/*": deny
     "*/research/debate/*": deny
 ---
@@ -65,3 +73,7 @@ permission:
 
 - 入选名单：候选标识与所属方向线。
 - 淘汰名单：逐条一句理由，注明卡在哪一项（前置检查或三项标准）。给重启条件的，须附构造可行性论证：用算子集内的代数说明该构造能精确实现所要编码的量；论证不出、或算子集内不可精确实现的，不给重启条件。
+
+# 交接格式
+
+你不写文件，交回本身就是输出。交回只交摘要：入选名单一行（编号与所属方向线），淘汰理由每条一行（卡在哪一项），重启条件（有/无，一句）。决策信息（入选与淘汰理由、卡项）必须逐条留在摘要里，不许只写“已完成”。条目多时按条目列，不硬压行数。
