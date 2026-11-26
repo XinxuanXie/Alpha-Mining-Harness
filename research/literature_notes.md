@@ -211,10 +211,100 @@
 
 ---
 
+## 机制线索引（第 5 轮：基本面方向）
+
+- 机制线一：价值（账面市值比）——H-cand12。主锚 16 号（Fama & French 1992，摘要级）；辅助 20 号（Lakonishok, Shleifer & Vishny 1994，全文，年度持有，仅支持符号/机制，不作期限承重）。
+- 机制线二：盈利能力（净利/资产或净利/权益）——H-cand13。主锚 17 号（Novy-Marx 2010 WP，全文）；代理缺口：毛利口径→净利/经营利润口径。
+- 机制线三：投资（资产增速/资本开支）——H-cand14。主锚 18 号（Chen & Zhang 2007，全文）+ 19 号（Cooper, Gulen & Schill 2008，摘要级）。
+- 方向审查：21 号（Chan, Lakonishok & Sougiannis 2001，全文，年度持有，20 日不匹配；R&D 本轮不选）；22 号（Linnainmaa & Roberts, The History of the Cross-Section of Stock Returns，会计异象数据挖掘警告，负面证据）。
+
+### 第 5 轮 Step 0 证据—评价匹配结论
+
+- 月频 vs 20 日：20 个交易日 ≈ 1 个日历月；月度持有/月度收益与项目 20 日 forward 在期限上同构，差 1 个交易日属量级/采样差异，不是对象改变。
+- 层级：只接受**个股截面**证据（Fama-MacBeth 个股回归或逐股排序）；组合层十分位多空单独出现时按 R8/N13 判层级错配，不可单独承重。
+- 价值线：FF 1992 的月度个股 Fama-MacBeth 通过期限/层级/粒度；全文不可得，摘要级承重，辩论首攻。
+- 盈利线：Novy-Marx 的月度个股 Fama-MacBeth 通过期限/层级/粒度；毛利→净利是代理缺口，辩论首攻。
+- 投资线：Chen & Zhang 的月度投资/资产增速 + Fama-MacBeth 通过期限/层级/粒度；Cooper 摘要补充大盘稳健性。
+- 研发线：Chan et al. 为年度组合形成、3 年 buy-and-hold，20 日评价属对象改变；本轮 0 对，失败分类=期限不可行 + 字段口径风险。
+
+## 16. The Cross-Section of Expected Stock Returns
+- 作者/年份：Fama, Eugene F.; French, Kenneth R.（Journal of Finance 47(2), 1992）
+- 出处：DOI 10.1111/j.1540-6261.1992.tb04398.x；OpenAlex W2166215547。**全文不可得**：Wiley pdfdirect 403，OpenAlex 标记 bronze 但无 OA 镜像，CORE/Unpaywall 均只返回 Wiley 链接。
+- 适用样本：美国 NYSE/AMEX/NASDAQ 非金融普通股，1963–1990，月度；个股 Fama-MacBeth 截面回归（beta、size、B/M、E/P、leverage），另做组合排序。
+- 结论（摘要级）：size 与 B/M 两个易测变量联合捕获与 beta、size、leverage、B/M、E/P 相关的截面收益变异；当允许 beta 与 size 无关的变异时，beta 与平均收益的关系变平。B/M 高（便宜）→ 平均收益高。
+- 对应机制环：价值线（高 B/M → 预期收益高）；支持符号、月度期限、个股截面、美国样本。
+- 外推限制：样本含小盘、1963–1990 vs 标普 500 大盘、2010–2016；B/M 的账面权益为财年值、市值口径与日频 `mktcap` 需对齐；**只有摘要，不能核对系数、控制变量与表格**；摘要级承重，辩论首攻。
+- 来源：摘要（全文不可得）。
+- 主锚机制线：线一（价值）。
+
+## 17. The Other Side of Value: Good Growth and the Gross Profitability Premium
+- 作者/年份：Novy-Marx, Robert（NBER Working Paper 15940, 2010-04；后刊于 Journal of Financial Economics, 2013）
+- 出处：NBER 稳定链接 https://www.nber.org/papers/w15940；CORE id 2693307（全文 134,482 字符）。Step 0 实读 `core.py` 截断的 30,000 字符，覆盖摘要、§1–§4.1 开头与 Table 2。
+- 适用样本：美国非金融（SIC 一位≠6），1963-07 至 2009-12，月度；个股 Fama-MacBeth 截面回归 + 组合排序。
+- 结论（已读段）：gross profits/assets 是强预测变量（Table 2 Panel A 单独 0.67，t=5.06；加控制后同量级；行业去均值 0.91，t=8.54）；earnings/assets 单独为正（0.77，t=1.77），但加控制后弱（0.22，t=0.49；0.07，t=0.15；−0.28，t=−0.55），并被毛利率吞没；free cash flow/assets 单独 0.65（t=2.52）。作者明确论证：越往利润表下方，盈利度量越被投资/会计处理污染；毛利率是最干净的“真实经济盈利能力”代理。
+- 对应机制环：盈利线（高盈利能力 → 预期收益高）；支持符号、月度期限、个股截面、美国样本；**不支持**净利口径与毛利口径等价——原文的强结果是毛利率，净利是弱代理。
+- 外推限制：(1) 本数据无 COGS，不能构造 gross profits；按研究者指示改用净利/经营利润（`net_income/total_assets`、`net_income/book_equity` 或 `op_income/total_assets`），代理缺口是承重风险；(2) op_income 有 XOM=0 等口径问题；(3) 样本 1963–2009 含小盘 vs 标普 500 大盘 2010–2016；(4) NBER WP 未同行评审，JFE 定稿未读；(5) 组合/Fama-MacBeth 均为月度，20 日≈月度，期限同构。
+- 来源：全文·已读 30,000/134,482 字符（CORE 截断；覆盖摘要、§1–§4.1 开头、Table 2）。
+- 主锚机制线：线二（盈利）。
+
+## 18. Neoclassical Factors
+- 作者/年份：Chen, Long; Zhang, Lu（NBER Working Paper 13282, 2007-07）
+- 出处：NBER 稳定链接 https://www.nber.org/papers/w13282；CORE id 2689201（全文 173,824 字符）。Step 0 实读 `core.py` 截断的 30,000 字符，覆盖摘要、§1–§2.2。
+- 适用样本：美国 NYSE/AMEX/NASDAQ，1972–2006，月度；组合方法为主，辅以个股 Fama-MacBeth 截面回归（§2.2 明确）。
+- 结论（已读段）：投资-to-assets（INV）因子月均 0.34%（t=4.15），生产力/盈利-to-assets（PROD）月均 0.73%（t=5.67）；投资越高、平均收益越低（投资假说）；资产增速是最综合的投资度量；q-theory 把预期收益与投资/盈利特征直接相连；截面回归用于直接检验理论。
+- 对应机制环：投资线（高资产增速 → 低预期收益）；支持负号、月度期限、个股/组合层、美国样本。
+- 外推限制：组合层为主、Fama-MacBeth 为辅；样本 1972–2006 vs 2010–2016；投资-to-assets 为年度变化/滞后资产，日频 `delta(log(total_assets),252)` 是代理；NBER WP 未同行评审；与 Cooper et al. 的资产增速口径相近但不完全相同。
+- 来源：全文·已读 30,783/173,824 字符（CORE 截断；覆盖摘要、§1–§2.2）。
+- 主锚机制线：线三（投资，全文承重）。
+
+## 19. Asset Growth and the Cross-Section of Stock Returns
+- 作者/年份：Cooper, Michael J.; Gulen, Huseyin; Schill, Michael J.（Journal of Finance 63(4), 2008）
+- 出处：DOI 10.1111/j.1540-6261.2008.01370.x；CORE id 2995518；SSRN 760967。**全文不可得**：CORE 无全文，SSRN/Wiley 403；OpenAlex 只有 SSRN/ citeseerx 不可用镜像。
+- 适用样本：美国，1968–2003，月度；firm-level 资产增速与后续股票收益的截面关系；组合排序 + 截面回归；摘要明确称“firm-level asset investment effects”“even on large capitalization stocks”。
+- 结论（摘要级）：资产增速是未来异常收益的强预测变量，负号；控制 B/M、市值、滞后收益、应计等项目后仍稳健；大盘股仍有效。
+- 对应机制环：投资线（高资产增速 → 低预期收益）；支持负号、月度、个股层、美国、大盘稳健。
+- 外推限制：全文不可得，无法核对样本筛选、控制变量、表格与大盘子样本；1968–2003 vs 2010–2016；资产增速为年度口径；发表后衰减风险（见 22 号）。
+- 来源：摘要（全文不可得）。
+- 主锚机制线：线三（投资，摘要级辅助；Chen & Zhang 全文承重）。
+
+## 20. Contrarian Investment, Extrapolation, and Risk
+- 作者/年份：Lakonishok, Josef; Shleifer, Andrei; Vishny, Robert W.（NBER WP 4360, 1993-05；Journal of Finance 1994）
+- 出处：CORE id 2789543（全文 110,987 字符）；NBER WP 4360。Step 0 实读 `core.py` 截断的 30,531 字符，覆盖摘要、§I–§III。
+- 适用样本：美国 NYSE/AMEX，1963-04 至 1990-04；**年度**组合形成、年度 buy-and-hold（最多 5 年）；B/M、C/P、E/P、销售增长；规模调整收益。
+- 结论（已读段）：高 B/M 价值股相对 glamour 股年化超额约 7.8%（规模调整）；价值策略并非基本面更风险；支持价值溢价符号与“外推错误”机制。
+- 对应机制环：价值线（符号/机制背景）；**不支持 20 日期限**——原文明确用年度 buy-and-hold，与“多数前人用月度”相对照。
+- 外推限制：年度持有 vs 20 日评价，属对象改变；组合层 vs 个股连续截面；1963–1990 vs 2010–2016；只能作背景/符号辅助，不能作期限承重。
+- 来源：全文·已读 30,531/110,987 字符（CORE 截断；覆盖摘要、§I–§III）。
+- 主锚机制线：线一（辅助，不作期限承重）。
+
+## 21. The Stock Market Valuation of Research and Development Expenditures
+- 作者/年份：Chan, Louis K. C.; Lakonishok, Josef; Sougiannis, Theodore（NBER WP 7223, 1999-07；Journal of Finance 2001）
+- 出处：CORE id 2677188（全文 107,701 字符）；NBER WP 7223。Step 0 实读 `core.py` 截断的 30,000 字符，覆盖摘要、§1–§2.1。
+- 适用样本：美国 NYSE/AMEX/NASDAQ，1975–1995；每年 4 月底按 R&D/销售、R&D/市值分组，**年度** buy-and-hold，持有 3 年。
+- 结论（已读段）：R&D 公司平均收益与无 R&D 公司相当（19.65% vs 19.50%/年）；但在 growth 股中 R&D 密集者跑赢，R&D/市值高者（过去输家）后续超额约 6.12%/年；市场未充分给 R&D 定价；R&D 密集与收益波动正相关。
+- 对应机制环：研发线的符号/机制背景；**期限/层级不匹配**（年度、3 年持有、组合层）。
+- 外推限制：年度持有 vs 20 日属对象改变；组合层；`rnd` 约 13% 季度为全年总数，作季度流量慎用；本轮不选。
+- 来源：全文·已读 30,000/107,701 字符（CORE 截断；覆盖摘要、§1–§2.1）。
+- 主锚机制线：研发线（本轮不选；负面/背景证据）。
+
+## 22. The History of the Cross-Section of Stock Returns
+- 作者/年份：Linnainmaa, Juhani T.; Roberts, Michael R.（NBER WP 22894, 2016；Review of Financial Studies 2018）
+- 出处：NBER 稳定链接 https://www.nber.org/papers/w22894；DOI 10.1093/rfs/hhy030。
+- 适用样本：美国长期历史数据（20 世纪至 2015 前后），月度；会计类异象（含投资）的样本内外比较。
+- 结论（摘要级）：多数会计类收益异象，包括投资，很可能是数据挖掘的产物；样本外（向前或向后移动）平均收益与 Sharpe 下降、波动与相关性上升；少数持续者与实物资本投资结构变化相关。
+- 对应机制环：价值/盈利/投资线的**可证伪条件与负面证据**；不能反推任何方向。
+- 外推限制：长期历史、样本与方法未逐表核对；仅作负面证据登记，不作承重。
+- 来源：摘要/工作论文（未逐表读）。
+- 用途：(ii) 登记证伪/负面证据。
+
+---
+
 ## 已证伪 / 负面证据
 
 因子衰减、复现失败、被证伪的机制，生成时须避开。只记已核对过的条目，不要凭印象写。
 
-暂无已登记条目。可作本轮可证伪条件的已有材料在各自条目内：5 号（Ang et al. 2006，特质波动高的股票平均收益极低）与 6 号（Stambaugh, Yu, Yuan 2015，IVOL-收益关系在高估组为负、低估组为正）给出线四与线一的符号翻转条件。
+- 21 号（Chan, Lakonishok & Sougiannis 2001）：R&D 密集的收益优势是年度、3 年 buy-and-hold、组合层证据；在本项目 20 日个股截面协议下是**期限对象改变**，不能作为 20 日方向证据。本轮 R&D 线据此不选。
+- 22 号（Linnainmaa & Roberts 2018）：多数会计类异象（含投资）在长期样本外衰减，疑似数据挖掘；价值/盈利/投资线的可证伪条件须包含“样本外/子期衰减”一条。该条只登记证伪，不反推方向。
+- 5 号（Ang et al. 2006，特质波动高的股票平均收益极低）与 6 号（Stambaugh, Yu, Yuan 2015，IVOL-收益关系在高估组为负、低估组为正）仍给出线四与线一的符号翻转条件（第 2 轮已登记于各自条目）。
 
 可补充的方向举例（不是已登记条目）：因子发表后衰减（McLean & Pontiff 2016）、多重检验与因子动物园批判（Harvey, Liu & Zhu 2016）、异象复现研究（Hou, Xue & Zhang 2020）。补入时按上面同样的登记项写，并注明它证伪的是哪条机制线。

@@ -66,7 +66,7 @@ permission:
 - `membership_intervals.parquet`：每只股票进出标普 500 的起止日期，加载时按它过滤，股票只在成分期内有值。
 - `spy_benchmark.parquet`：每日市场收益，公式中的 mktret 来自这里。
 - 程序自算字段：ivol20（20 日特质波动）、resid_ret（当日残差收益）、returns（日收益率），由 engine.py 加载时算出。
-- 基本面 `fundamentals.parquet`：EDGAR 季度财报，10 个字段（revenue、net_income、total_assets、book_equity、rnd、op_income、capex、cash、lt_debt、shares_out），按 filed 披露日期往后填充，2007 年起才有。
+- 基本面 `fundamentals.parquet`：EDGAR 季度财报，10 个字段（revenue、net_income、total_assets、book_equity、rnd、op_income、capex、cash、lt_debt、shares_out），按 filed 披露日期往后填充，2009 年中起才有（2009 年 7 月前无值）。
 
 公式可用字段共 20 个：open、high、low、close、volume、mktcap、mktret、ivol20、resid_ret、returns、revenue、net_income、total_assets、book_equity、rnd、op_income、capex、cash、lt_debt、shares_out。以上数据只用于了解字段与口径，不读取其中的行情数值，不自行计算任何统计量。字段口径（ivol20、resid_ret 的窗口与对齐、mktcap/close 的含义、volume 的复权状态、基本面 10 个字段的定义与注意事项）以 SKILL.md 环境一节为准，开工前先读。
 
