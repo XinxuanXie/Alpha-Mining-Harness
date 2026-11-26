@@ -1,0 +1,1533 @@
+{
+  "generated_at": "2026-11-26T16:15:46",
+  "generated_by": "tools/backtest/run_null.py",
+  "segment": "is",
+  "data_version": {
+    "panel_range": "2000-01-03 至 2016-12-30",
+    "git_commit": "2b961c5"
+  },
+  "runnable_count": 127,
+  "scored_count": 121,
+  "failed_count": 6,
+  "excluded_count": 73,
+  "quantiles": {
+    "median": 0.0035991093764494828,
+    "p75": 0.00962718822172966,
+    "p90": 0.013283526342560973,
+    "max": 0.04799741214385537,
+    "min": -0.018446107372901116
+  },
+  "items": [
+    {
+      "id": "C01",
+      "family": "二、反转",
+      "formula": "-(close / delay(close, 20) - 1)",
+      "ic": 0.01148877368075942,
+      "icir": 0.07501430736814622,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C02",
+      "family": "二、反转",
+      "formula": "-(close / delay(close, 756) - 1)",
+      "ic": -0.007498994764559895,
+      "icir": -0.03764860119508911,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C03",
+      "family": "一、动量",
+      "formula": "delay(close, 21) / delay(close, 252) - 1",
+      "ic": 0.00990147694164821,
+      "icir": 0.046663352166241505,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C04",
+      "family": "一、动量",
+      "formula": "close / ts_max(close, 252)",
+      "ic": 0.0006225541334294827,
+      "icir": 0.0026672667994781444,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C05",
+      "family": "一、动量",
+      "formula": "abs(close / delay(close, 252) - 1) * (ts_mean(gt(close / delay(close, 1) - 1, 0), 252) - ts_mean(gt(0, close / delay(close, 1) - 1), 252))",
+      "ic": 0.00902142842391872,
+      "icir": 0.04741446821369711,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C06",
+      "family": "五、流动性与换手",
+      "formula": "ts_mean(volume, 5) / ts_mean(volume, 60)",
+      "ic": 0.0012877409422872546,
+      "icir": 0.01766445430356924,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C07",
+      "family": "一、动量",
+      "formula": "(delay(close, 21) / delay(close, 252) - 1) * (1 - rank(ts_mean(volume * close / mktcap, 60)))",
+      "ic": 0.011381408588706171,
+      "icir": 0.06658351291578671,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C08",
+      "family": "四、波动与风险",
+      "formula": "neg(ts_std(close / delay(close, 1) - 1, 60))",
+      "ic": 0.007651245097889966,
+      "icir": 0.03088230562360242,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C09",
+      "family": "四、波动与风险",
+      "formula": "neg(ts_max(close / delay(close, 1) - 1, 20))",
+      "ic": 0.009851881279562743,
+      "icir": 0.05066933773006531,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C10",
+      "family": "四、波动与风险",
+      "formula": "neg(ts_corr(close / delay(close, 1) - 1, mktret, 252) * ts_std(close / delay(close, 1) - 1, 252) / ts_std(mktret, 252))",
+      "ic": 0.008046615511764103,
+      "icir": 0.02883484763770646,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C11",
+      "family": "五、流动性与换手",
+      "formula": "ts_mean(abs(close / delay(close, 1) - 1) / (close * volume), 20)",
+      "ic": 0.025408759274075352,
+      "icir": 0.20785189449214173,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C12",
+      "family": "五、流动性与换手",
+      "formula": "neg(ts_mean(volume * close / mktcap, 60))",
+      "ic": 0.004648094547609603,
+      "icir": 0.0245141350535594,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C13",
+      "family": "七、隔夜与日内",
+      "formula": "ts_sum(open / delay(close, 1) - 1, 20)",
+      "ic": -0.005796136109820728,
+      "icir": -0.05878631458933206,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C14",
+      "family": "七、隔夜与日内",
+      "formula": "neg(ts_sum(close / open - 1, 20))",
+      "ic": 0.0067906077281756575,
+      "icir": 0.047872377417937234,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C15",
+      "family": "六、规模与价格水平",
+      "formula": "neg(log(mktcap))",
+      "ic": 0.02459642078999234,
+      "icir": 0.20045168240463052,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C16",
+      "family": "一、动量",
+      "formula": "delay(close, 232) / delay(close, 252) - 1",
+      "ic": 0.0025744991965283826,
+      "icir": 0.019002801301553233,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C17",
+      "family": "一、动量",
+      "formula": "ts_sum(sector_mean(close / delay(close, 1) - 1), 126)",
+      "ic": 0.002442379236025204,
+      "icir": 0.012896780744727008,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C18",
+      "family": "一、动量",
+      "formula": "delay(close, 21) / delay(close, 84) - 1",
+      "ic": -0.008168422112719951,
+      "icir": -0.0470708819896042,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C19",
+      "family": "一、动量",
+      "formula": "delay(close, 21) / delay(close, 147) - 1",
+      "ic": 0.001984063656939146,
+      "icir": 0.01051821643916369,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C20",
+      "family": "一、动量",
+      "formula": "delay(close, 21) / delay(close, 210) - 1",
+      "ic": 0.0059339033553008885,
+      "icir": 0.028658417073407178,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C21",
+      "family": "一、动量",
+      "formula": "delay(close, 147) / delay(close, 252) - 1",
+      "ic": 0.014009612190516317,
+      "icir": 0.08293947145104814,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C23",
+      "family": "一、动量",
+      "formula": "(delay(close, 21) / delay(close, 147) - 1) * gt(rank(ts_mean(volume * close / mktcap, 60)), 0.67)",
+      "ic": 0.010198682044222685,
+      "icir": 0.07375292367405954,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C24",
+      "family": "一、动量",
+      "formula": "gt(rank(delay(close, 21) / delay(close, 147) - 1), 0.8) * gt(rank(-(close / delay(close, 756) - 1)), 0.8) - gt(rank(-(delay(close, 21) / delay(close, 147) - 1)), 0.8) * gt(rank(close / delay(close, 756) - 1), 0.8)",
+      "ic": -0.0038301273648957477,
+      "icir": -0.04473522570086469,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C26",
+      "family": "二、反转",
+      "formula": "-(delay(close, 252) / delay(close, 756) - 1)",
+      "ic": -0.010076388821604318,
+      "icir": -0.0651309011236502,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C27",
+      "family": "二、反转",
+      "formula": "-(delay(close, 273) / delay(close, 378) - 1)",
+      "ic": -0.009500690913151465,
+      "icir": -0.06522932962678017,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C28",
+      "family": "三、季节性",
+      "formula": "delay(close, 252) / delay(close, 273) - 1",
+      "ic": -0.012339819530372961,
+      "icir": -0.0952915737340054,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C29",
+      "family": "三、季节性",
+      "formula": "(delay(close, 504) / delay(close, 525) - 1 + delay(close, 756) / delay(close, 777) - 1 + delay(close, 1008) / delay(close, 1029) - 1 + delay(close, 1260) / delay(close, 1281) - 1) / 4",
+      "ic": -0.013797942770646412,
+      "icir": -0.11774072882568626,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C30",
+      "family": "三、季节性",
+      "formula": "(delay(close, 1512) / delay(close, 1533) - 1 + delay(close, 1764) / delay(close, 1785) - 1 + delay(close, 2016) / delay(close, 2037) - 1 + delay(close, 2268) / delay(close, 2289) - 1 + delay(close, 2520) / delay(close, 2541) - 1) / 5",
+      "ic": 0.003008554045885624,
+      "icir": 0.02726701682391429,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C31",
+      "family": "三、季节性",
+      "formula": "(delay(close, 2772) / delay(close, 2793) - 1 + delay(close, 3024) / delay(close, 3045) - 1 + delay(close, 3276) / delay(close, 3297) - 1 + delay(close, 3528) / delay(close, 3549) - 1 + delay(close, 3780) / delay(close, 3801) - 1) / 5",
+      "ic": -0.009759854902753455,
+      "icir": -0.09442013228263041,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C32",
+      "family": "三、季节性",
+      "formula": "(delay(close, 4032) / delay(close, 4053) - 1 + delay(close, 4284) / delay(close, 4305) - 1 + delay(close, 4536) / delay(close, 4557) - 1 + delay(close, 4788) / delay(close, 4809) - 1 + delay(close, 5040) / delay(close, 5061) - 1) / 5",
+      "ic": null,
+      "icir": null,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C38",
+      "family": "四、波动与风险",
+      "formula": "ts_beta(close / delay(close, 1) - 1, mktret, 1260)",
+      "ic": -0.015673625672254287,
+      "icir": -0.05773968425443151,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C42",
+      "family": "四、波动与风险",
+      "formula": "neg(ts_std(close / delay(close, 1) - 1, 21))",
+      "ic": 0.009169996734828417,
+      "icir": 0.03942841841973008,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C45",
+      "family": "四、波动与风险",
+      "formula": "neg(ts_skew(close / delay(close, 1) - 1, 21))",
+      "ic": 0.002662346592186202,
+      "icir": 0.032570054922471,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C47",
+      "family": "五、流动性与换手",
+      "formula": "neg(log(ts_mean(delay(close * volume, 42), 21)))",
+      "ic": 0.026219389997789975,
+      "icir": 0.2305432678319045,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C48",
+      "family": "五、流动性与换手",
+      "formula": "gt(ts_mean(volume / (mktcap / close), 63), 0.1)",
+      "ic": null,
+      "icir": null,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C49",
+      "family": "五、流动性与换手",
+      "formula": "neg(ts_sum(volume / (mktcap / close), 252))",
+      "ic": 0.001173588318601006,
+      "icir": 0.006073923934244503,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C55",
+      "family": "五、流动性与换手",
+      "formula": "ts_sum(where(gt(volume, 0), 0, 1), 21)",
+      "ic": -0.005705801862336956,
+      "icir": -0.11582862664048565,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C56",
+      "family": "五、流动性与换手",
+      "formula": "ts_mean(where(gt(volume, 0), 0, 1), 126)",
+      "ic": -0.004187797870047531,
+      "icir": -0.0754047582015456,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C57",
+      "family": "五、流动性与换手",
+      "formula": "ts_mean(where(gt(volume, 0), 0, 1), 252)",
+      "ic": -0.007503662078881645,
+      "icir": -0.12294593517249729,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C58",
+      "family": "六、规模与价格水平",
+      "formula": "neg(log(close))",
+      "ic": 0.04799741214385537,
+      "icir": 0.46927023676535734,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C64",
+      "family": "九、公司行为",
+      "formula": "neg(winsorize(delta(log(mktcap / close), 250)))",
+      "ic": 0.012995607120197167,
+      "icir": 0.1266139996295294,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C65",
+      "family": "九、公司行为",
+      "formula": "neg(delta(log(mktcap / close), 1260))",
+      "ic": 0.017283479089831442,
+      "icir": 0.17154283920354707,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C66",
+      "family": "九、公司行为",
+      "formula": "neg(delta(log(mktcap), 1260) - delta(log(close), 1260))",
+      "ic": 0.017283502181277704,
+      "icir": 0.17154309850900284,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C68",
+      "family": "十、量价相关",
+      "formula": "-1 * ts_corr(rank(delta(log(volume), 2)), rank((close - open) / open), 6)",
+      "ic": 0.004864680184082904,
+      "icir": 0.08703689438387575,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C69",
+      "family": "十、量价相关",
+      "formula": "-1 * ts_corr(rank(open), rank(volume), 10)",
+      "ic": 0.005651938322262669,
+      "icir": 0.10471212170187408,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C70",
+      "family": "二、反转",
+      "formula": "-1 * ts_rank(rank(low), 9)",
+      "ic": 0.012584671715414157,
+      "icir": 0.10281797260095733,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C71",
+      "family": "十、量价相关",
+      "formula": "-1 * ts_corr(open, volume, 10)",
+      "ic": 0.0056396160458512465,
+      "icir": 0.07482936069141896,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C73",
+      "family": "一、动量",
+      "formula": "-1 * rank((ts_sum(open, 5) * ts_sum(returns, 5)) - delay(ts_sum(open, 5) * ts_sum(returns, 5), 10))",
+      "ic": 0.005608912267734887,
+      "icir": 0.04778743950148126,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C75",
+      "family": "二、反转",
+      "formula": "sign(delta(volume, 1)) * (-1 * delta(close, 1))",
+      "ic": 0.0035991093764494828,
+      "icir": 0.05370438477785683,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C76",
+      "family": "十、量价相关",
+      "formula": "-1 * rank(ts_cov(rank(close), rank(volume), 5))",
+      "ic": 0.008922499549486878,
+      "icir": 0.15762114861431237,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C77",
+      "family": "十、量价相关",
+      "formula": "(-1 * rank(delta(returns, 3))) * ts_corr(open, volume, 10)",
+      "ic": 0.0044553956863054,
+      "icir": 0.059449583786823634,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C78",
+      "family": "十、量价相关",
+      "formula": "-1 * ts_sum(rank(ts_corr(rank(high), rank(volume), 3)), 3)",
+      "ic": 0.0057429700105177655,
+      "icir": 0.11149358390649454,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C79",
+      "family": "十、量价相关",
+      "formula": "-1 * rank(ts_cov(rank(high), rank(volume), 5))",
+      "ic": 0.008728471028262037,
+      "icir": 0.1587176660939784,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C81",
+      "family": "十二、K线与日内形态",
+      "formula": "-1 * rank(ts_std(abs(close - open), 5) + (close - open) + ts_corr(close, open, 10))",
+      "ic": 0.021440922719849292,
+      "icir": 0.21532744054120323,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C82",
+      "family": "二、反转",
+      "formula": "(-1 * sign((close - delay(close, 7)) + delta(close, 7))) * (1 + rank(1 + ts_sum(returns, 250)))",
+      "ic": 0.012956574290633082,
+      "icir": 0.1016166452414286,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C83",
+      "family": "七、隔夜与日内",
+      "formula": "(-1 * rank(open - delay(high, 1))) * rank(open - delay(close, 1)) * rank(open - delay(low, 1))",
+      "ic": 0.0013288926229647199,
+      "icir": 0.013341566620194544,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C85",
+      "family": "十、量价相关",
+      "formula": "-1 * (delta(ts_corr(high, volume, 5), 5) * rank(ts_std(close, 20)))",
+      "ic": 0.002096466636486459,
+      "icir": 0.030587981302840333,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C88",
+      "family": "十、量价相关",
+      "formula": "-1 * ts_max(ts_corr(ts_rank(volume, 5), ts_rank(high, 5), 5), 3)",
+      "ic": 0.006934893524420734,
+      "icir": 0.09560335142378926,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C90",
+      "family": "五、流动性与换手",
+      "formula": "(1 - rank(sign(close - delay(close, 1)) + sign(delay(close, 1) - delay(close, 2)) + sign(delay(close, 2) - delay(close, 3)))) * ts_sum(volume, 5) / ts_sum(volume, 20)",
+      "ic": 0.007341226501573178,
+      "icir": 0.07686367085529958,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C92",
+      "family": "二、反转",
+      "formula": "rank(-1 * (1 - open / close))",
+      "ic": 0.006668571388600599,
+      "icir": 0.052929898616568695,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C93",
+      "family": "四、波动与风险",
+      "formula": "rank((1 - rank(ts_std(returns, 2) / ts_std(returns, 5))) + (1 - rank(delta(close, 1))))",
+      "ic": 0.00608143825665957,
+      "icir": 0.06343387945611434,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C94",
+      "family": "五、流动性与换手",
+      "formula": "ts_rank(volume, 32) * (1 - ts_rank(close + high - low, 16)) * (1 - ts_rank(returns, 32))",
+      "ic": 0.014748878041264032,
+      "icir": 0.14280351629687785,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C95",
+      "family": "八、信息扩散与行业领先滞后",
+      "formula": "rank(ts_corr(delay(open - close, 1), close, 200)) + rank(open - close)",
+      "ic": 0.009402495163896577,
+      "icir": 0.0897699842282652,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C96",
+      "family": "二、反转",
+      "formula": "(-1 * rank(ts_rank(close, 10))) * rank(close / open)",
+      "ic": 0.011407710497311551,
+      "icir": 0.09236211145596881,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C97",
+      "family": "十、量价相关",
+      "formula": "(-1 * rank(ts_std(high, 10))) * ts_corr(high, volume, 10)",
+      "ic": 0.009958746566919703,
+      "icir": 0.11940260902321025,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C99",
+      "family": "十、量价相关",
+      "formula": "-1 * ts_corr(high, rank(volume), 5)",
+      "ic": 0.007595318539145558,
+      "icir": 0.12378781101146008,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C100",
+      "family": "十、量价相关",
+      "formula": "-1 * (rank(ts_mean(delay(close, 5), 20)) * ts_corr(close, volume, 2) * rank(ts_corr(ts_sum(close, 5), ts_sum(close, 20), 2)))",
+      "ic": 0.0029601704383128745,
+      "icir": 0.05175989563145888,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C103",
+      "family": "一、动量",
+      "formula": "((-1 * ts_min(low, 5)) + delay(ts_min(low, 5), 5)) * rank((ts_sum(returns, 240) - ts_sum(returns, 20)) / 220) * ts_rank(volume, 5)",
+      "ic": 0.00767877884174742,
+      "icir": 0.07773331348798283,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C104",
+      "family": "二、反转",
+      "formula": "-1 * delta(((close - low) - (high - close)) / (close - low), 9)",
+      "ic": 0.004567636928437801,
+      "icir": 0.048966502236095555,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C106",
+      "family": "十三、摆动与超买超卖",
+      "formula": "-1 * ts_corr(rank((close - ts_min(low, 12)) / (ts_max(high, 12) - ts_min(low, 12))), rank(volume), 6)",
+      "ic": 0.010253973907507038,
+      "icir": 0.18755702274546052,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C131",
+      "family": "七、隔夜与日内",
+      "formula": "(close - open) / (high - low + 0.001)",
+      "ic": -0.007428904987537114,
+      "icir": -0.06987982465538851,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C132",
+      "family": "十二、K线与日内形态",
+      "formula": "(close - open) / open",
+      "ic": -0.0066685029212964495,
+      "icir": -0.05292938371870527,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C133",
+      "family": "十二、K线与日内形态",
+      "formula": "(high - low) / open",
+      "ic": -0.008956609931282307,
+      "icir": -0.04760315408441252,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C134",
+      "family": "十二、K线与日内形态",
+      "formula": "(close - open) / (high - low)",
+      "ic": -0.007412225778591989,
+      "icir": -0.06973818894584859,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C135",
+      "family": "十二、K线与日内形态",
+      "formula": "(high - max(open, close)) / open",
+      "ic": -0.0016048628412059392,
+      "icir": -0.013995687715337973,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C136",
+      "family": "十二、K线与日内形态",
+      "formula": "(high - max(open, close)) / (high - low)",
+      "ic": 0.0037109157354540795,
+      "icir": 0.046551685882858074,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C137",
+      "family": "十二、K线与日内形态",
+      "formula": "(min(open, close) - low) / open",
+      "ic": -0.0071158188068168125,
+      "icir": -0.06023764727753852,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C138",
+      "family": "十二、K线与日内形态",
+      "formula": "(min(open, close) - low) / (high - low)",
+      "ic": -0.002507981682978959,
+      "icir": -0.030803192364402383,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C139",
+      "family": "十二、K线与日内形态",
+      "formula": "(2 * close - high - low) / open",
+      "ic": -0.008089175805046974,
+      "icir": -0.06500012483223111,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C140",
+      "family": "十二、K线与日内形态",
+      "formula": "(2 * close - high - low) / (high - low)",
+      "ic": -0.009333132614241025,
+      "icir": -0.09626334304251268,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C141",
+      "family": "十二、K线与日内形态",
+      "formula": "open / close",
+      "ic": 0.006668571388600599,
+      "icir": 0.052929898616568695,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C142",
+      "family": "十二、K线与日内形态",
+      "formula": "high / close",
+      "ic": 0.0022139424533705915,
+      "icir": 0.015251261255023872,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C143",
+      "family": "十二、K线与日内形态",
+      "formula": "low / close",
+      "ic": 0.012770744123001717,
+      "icir": 0.09647455269684543,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C144",
+      "family": "一、动量",
+      "formula": "delay(close, 20) / close",
+      "ic": 0.01148877368075942,
+      "icir": 0.07501430736814622,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C145",
+      "family": "十一、趋势与均线",
+      "formula": "ts_mean(close, 20) / close",
+      "ic": 0.012304081383624753,
+      "icir": 0.08119656552842261,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C146",
+      "family": "四、波动与风险",
+      "formula": "ts_std(close, 20) / close",
+      "ic": -0.013302478007690568,
+      "icir": -0.06828562314357031,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C150",
+      "family": "一、动量",
+      "formula": "ts_max(high, 20) / close",
+      "ic": 0.0064040460673534414,
+      "icir": 0.03520218942931085,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C151",
+      "family": "一、动量",
+      "formula": "ts_min(low, 20) / close",
+      "ic": 0.01844000335853024,
+      "icir": 0.13140100034361157,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C152",
+      "family": "一、动量",
+      "formula": "ts_quantile(close, 20, 0.8) / close",
+      "ic": 0.010702818629564305,
+      "icir": 0.06764583177504783,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C153",
+      "family": "一、动量",
+      "formula": "ts_quantile(close, 20, 0.2) / close",
+      "ic": 0.01654491585739124,
+      "icir": 0.11761717284857796,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C154",
+      "family": "一、动量",
+      "formula": "ts_rank(close, 20)",
+      "ic": -0.01824022869769786,
+      "icir": -0.14021899705834448,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C155",
+      "family": "十三、摆动与超买超卖",
+      "formula": "(close - ts_min(low, 20)) / (ts_max(high, 20) - ts_min(low, 20))",
+      "ic": -0.015272003114789308,
+      "icir": -0.11307472438007549,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C156",
+      "family": "十一、趋势与均线",
+      "formula": "ts_argmax(high, 20) / 20",
+      "ic": 0.011927484028084107,
+      "icir": 0.10355004366633373,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C157",
+      "family": "十一、趋势与均线",
+      "formula": "ts_argmin(low, 20) / 20",
+      "ic": -0.014624711784989938,
+      "icir": -0.1260815945143703,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C158",
+      "family": "十一、趋势与均线",
+      "formula": "(ts_argmax(high, 20) - ts_argmin(low, 20)) / 20",
+      "ic": 0.015239854704820562,
+      "icir": 0.11945698877432999,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C159",
+      "family": "十、量价相关",
+      "formula": "ts_corr(close, log(volume + 1), 20)",
+      "ic": -0.010434239182836525,
+      "icir": -0.11971835378003577,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C160",
+      "family": "十、量价相关",
+      "formula": "ts_corr(close / delay(close, 1), log(volume / delay(volume, 1) + 1), 20)",
+      "ic": -0.010006375281547129,
+      "icir": -0.11524256894994403,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C161",
+      "family": "一、动量",
+      "formula": "ts_mean(gt(close, delay(close, 1)), 20)",
+      "ic": -0.009590116656265734,
+      "icir": -0.08269605146350766,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C162",
+      "family": "一、动量",
+      "formula": "ts_mean(gt(delay(close, 1), close), 20)",
+      "ic": 0.007681912671633489,
+      "icir": 0.06672892288416693,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C163",
+      "family": "一、动量",
+      "formula": "ts_mean(gt(close, delay(close, 1)), 20) - ts_mean(gt(delay(close, 1), close), 20)",
+      "ic": -0.008731696747046653,
+      "icir": -0.07514598113003958,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C164",
+      "family": "十三、摆动与超买超卖",
+      "formula": "ts_sum(max(delta(close, 1), 0), 20) / ts_sum(abs(delta(close, 1)), 20)",
+      "ic": -0.013102004880572133,
+      "icir": -0.09317753820823906,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C165",
+      "family": "十三、摆动与超买超卖",
+      "formula": "ts_sum(max(-delta(close, 1), 0), 20) / ts_sum(abs(delta(close, 1)), 20)",
+      "ic": 0.013102004880572133,
+      "icir": 0.09317753820823906,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C166",
+      "family": "十三、摆动与超买超卖",
+      "formula": "(ts_sum(max(delta(close, 1), 0), 20) - ts_sum(max(-delta(close, 1), 0), 20)) / ts_sum(abs(delta(close, 1)), 20)",
+      "ic": -0.013102004880572133,
+      "icir": -0.09317753820823906,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C167",
+      "family": "五、流动性与换手",
+      "formula": "ts_mean(volume, 20) / volume",
+      "ic": -0.0006156973727405703,
+      "icir": -0.008865513306585991,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C168",
+      "family": "五、流动性与换手",
+      "formula": "ts_std(volume, 20) / volume",
+      "ic": 0.004744269868968846,
+      "icir": 0.06442428931374006,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C169",
+      "family": "四、波动与风险",
+      "formula": "ts_std(abs(returns) * volume, 20) / ts_mean(abs(returns) * volume, 20)",
+      "ic": 0.004371898173626915,
+      "icir": 0.0608588924214591,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C170",
+      "family": "五、流动性与换手",
+      "formula": "ts_sum(max(delta(volume, 1), 0), 20) / ts_sum(abs(delta(volume, 1)), 20)",
+      "ic": 0.0018789250257510008,
+      "icir": 0.027152359528675823,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C171",
+      "family": "五、流动性与换手",
+      "formula": "ts_sum(max(-delta(volume, 1), 0), 20) / ts_sum(abs(delta(volume, 1)), 20)",
+      "ic": -0.0018789250257510008,
+      "icir": -0.027152359528675823,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C172",
+      "family": "五、流动性与换手",
+      "formula": "(ts_sum(max(delta(volume, 1), 0), 20) - ts_sum(max(-delta(volume, 1), 0), 20)) / ts_sum(abs(delta(volume, 1)), 20)",
+      "ic": 0.0018789250257510008,
+      "icir": 0.027152359528675823,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C175",
+      "family": "十三、摆动与超买超卖",
+      "formula": "(close - (ts_mean(close, 20) - 2 * ts_std(close, 20))) / (4 * ts_std(close, 20))",
+      "ic": -0.01675970066520519,
+      "icir": -0.12781363198357978,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C183",
+      "family": "十一、趋势与均线",
+      "formula": "close - delay(ts_mean(close, 20), 11)",
+      "ic": -0.018446107372901116,
+      "icir": -0.13334733387314254,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C184",
+      "family": "五、流动性与换手",
+      "formula": "ts_sum(((close - low) - (high - close)) / (high - low) * volume, 20) / ts_sum(volume, 20)",
+      "ic": -0.01054358461046479,
+      "icir": -0.094077751136687,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C185",
+      "family": "十二、K线与日内形态",
+      "formula": "((high + low) / 2 - delay((high + low) / 2, 1)) / (volume / (high - low))",
+      "ic": -0.009038738734377189,
+      "icir": -0.08966954352784413,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C186",
+      "family": "五、流动性与换手",
+      "formula": "(close - delay(close, 1)) * volume",
+      "ic": -0.008322847238795728,
+      "icir": -0.06950817534355677,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C192",
+      "family": "十一、趋势与均线",
+      "formula": "(close - delay(close, 10)) / ts_sum(abs(delta(close, 1)), 10)",
+      "ic": -0.012217315410046947,
+      "icir": -0.09321434801971014,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C193",
+      "family": "四、波动与风险",
+      "formula": "sqrt(ts_mean(power(log(high / low), 2), 20) / (4 * log(2)))",
+      "ic": -0.008990827555044741,
+      "icir": -0.03709813556375681,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C194",
+      "family": "四、波动与风险",
+      "formula": "sqrt(ts_mean(0.5 * power(log(high / low), 2) - (2 * log(2) - 1) * power(log(close / open), 2), 20))",
+      "ic": -0.008841075803137364,
+      "icir": -0.03658708128889685,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C195",
+      "family": "四、波动与风险",
+      "formula": "sqrt(ts_mean(log(high / close) * log(high / open) + log(low / close) * log(low / open), 20))",
+      "ic": -0.009068212096694209,
+      "icir": -0.038017303805776524,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C197",
+      "family": "四、波动与风险",
+      "formula": "2 * sqrt(max(-ts_cov(returns, delay(returns, 1), 60), 0))",
+      "ic": -0.0001744321341588339,
+      "icir": -0.0019623680118129334,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C198",
+      "family": "四、波动与风险",
+      "formula": "ts_sum(power(min(returns, 0), 2), 20) / ts_sum(power(returns, 2), 20)",
+      "ic": 0.012424721965801643,
+      "icir": 0.10236037895081428,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C200",
+      "family": "四、波动与风险",
+      "formula": "ts_sum(power(open / delay(close, 1) - 1, 2), 20) / ts_sum(power(close / delay(close, 1) - 1, 2), 20)",
+      "ic": 0.00044610288161037474,
+      "icir": 0.005558065319289432,
+      "status": "scored",
+      "error": ""
+    },
+    {
+      "id": "C67",
+      "family": "二、反转",
+      "formula": "rank(ts_argmax(signed_power(where(returns < 0, ts_std(returns, 20), close), 2), 5)) - 0.5",
+      "ic": null,
+      "icir": null,
+      "status": "failed",
+      "error": "不支持的表达式结构：Compare"
+    },
+    {
+      "id": "C74",
+      "family": "二、反转",
+      "formula": "where(0 < ts_min(delta(close, 1), 5), delta(close, 1), where(ts_max(delta(close, 1), 5) < 0, delta(close, 1), -1 * delta(close, 1)))",
+      "ic": null,
+      "icir": null,
+      "status": "failed",
+      "error": "不支持的表达式结构：Compare"
+    },
+    {
+      "id": "C86",
+      "family": "二、反转",
+      "formula": "where(ts_mean(high, 20) < high, -1 * delta(high, 2), 0)",
+      "ic": null,
+      "icir": null,
+      "status": "failed",
+      "error": "不支持的表达式结构：Compare"
+    },
+    {
+      "id": "C87",
+      "family": "二、反转",
+      "formula": "where(delta(ts_mean(close, 100), 100) / delay(close, 100) <= 0.05, -(close - ts_min(close, 100)), -delta(close, 3))",
+      "ic": null,
+      "icir": null,
+      "status": "failed",
+      "error": "不支持的表达式结构：Compare"
+    },
+    {
+      "id": "C105",
+      "family": "十二、K线与日内形态",
+      "formula": "(-1 * ((low - close) * open^5)) / ((low - high) * close^5)",
+      "ic": null,
+      "icir": null,
+      "status": "failed",
+      "error": "只允许 + - * / 四种运算"
+    },
+    {
+      "id": "C179",
+      "family": "四、波动与风险",
+      "formula": "ts_mean(max(high - low, abs(high - delay(close, 1)), abs(low - delay(close, 1))), 14) / close",
+      "ic": null,
+      "icir": null,
+      "status": "failed",
+      "error": "算子 max 需要 2 个参数，给了 3 个"
+    }
+  ],
+  "excluded": [
+    {
+      "id": "C22",
+      "family": "一、动量",
+      "reason": "语法错误：invalid syntax"
+    },
+    {
+      "id": "C25",
+      "family": "一、动量",
+      "reason": "字段 上市月数处于截面最短五分位；字段 缺失"
+    },
+    {
+      "id": "C33",
+      "family": "三、季节性",
+      "reason": "字段 去年同月月收益；字段 月收益"
+    },
+    {
+      "id": "C34",
+      "family": "三、季节性",
+      "reason": "语法错误：invalid character '–' (U+2013)"
+    },
+    {
+      "id": "C35",
+      "family": "三、季节性",
+      "reason": "语法错误：invalid character '–' (U+2013)"
+    },
+    {
+      "id": "C36",
+      "family": "三、季节性",
+      "reason": "语法错误：invalid character '–' (U+2013)"
+    },
+    {
+      "id": "C37",
+      "family": "三、季节性",
+      "reason": "语法错误：invalid character '–' (U+2013)"
+    },
+    {
+      "id": "C39",
+      "family": "四、波动与风险",
+      "reason": "字段 市场三日收益"
+    },
+    {
+      "id": "C40",
+      "family": "四、波动与风险",
+      "reason": "字段 尾部冲击序列"
+    },
+    {
+      "id": "C41",
+      "family": "四、波动与风险",
+      "reason": "语法错误：invalid syntax. Perhaps you forgot a comma?"
+    },
+    {
+      "id": "C43",
+      "family": "四、波动与风险",
+      "reason": "字段 r"
+    },
+    {
+      "id": "C44",
+      "family": "四、波动与风险",
+      "reason": "字段 r"
+    },
+    {
+      "id": "C46",
+      "family": "四、波动与风险",
+      "reason": "语法错误：invalid syntax. Perhaps you forgot a comma?"
+    },
+    {
+      "id": "C50",
+      "family": "五、流动性与换手",
+      "reason": "算子 ts_slope；字段 月成交量"
+    },
+    {
+      "id": "C51",
+      "family": "五、流动性与换手",
+      "reason": "语法错误：invalid syntax. Perhaps you forgot a comma?"
+    },
+    {
+      "id": "C52",
+      "family": "五、流动性与换手",
+      "reason": "语法错误：invalid syntax. Perhaps you forgot a comma?"
+    },
+    {
+      "id": "C53",
+      "family": "五、流动性与换手",
+      "reason": "语法错误：invalid syntax. Perhaps you forgot a comma?"
+    },
+    {
+      "id": "C54",
+      "family": "五、流动性与换手",
+      "reason": "算子 exp；字段 α"
+    },
+    {
+      "id": "C59",
+      "family": "六、规模与价格水平",
+      "reason": "字段 个股在面板中首次出现以来的月数"
+    },
+    {
+      "id": "C60",
+      "family": "八、信息扩散与行业领先滞后",
+      "reason": "语法错误：invalid character '²' (U+00B2)"
+    },
+    {
+      "id": "C61",
+      "family": "八、信息扩散与行业领先滞后",
+      "reason": "语法错误：invalid syntax"
+    },
+    {
+      "id": "C62",
+      "family": "八、信息扩散与行业领先滞后",
+      "reason": "语法错误：invalid syntax"
+    },
+    {
+      "id": "C63",
+      "family": "八、信息扩散与行业领先滞后",
+      "reason": "语法错误：invalid syntax"
+    },
+    {
+      "id": "C72",
+      "family": "二、反转",
+      "reason": "字段 adv20"
+    },
+    {
+      "id": "C80",
+      "family": "二、反转",
+      "reason": "字段 adv20"
+    },
+    {
+      "id": "C84",
+      "family": "二、反转",
+      "reason": "字段 adv20"
+    },
+    {
+      "id": "C89",
+      "family": "十、量价相关",
+      "reason": "算子 scale；字段 adv20"
+    },
+    {
+      "id": "C91",
+      "family": "二、反转",
+      "reason": "算子 scale；字段 adv20；算子 decay_linear"
+    },
+    {
+      "id": "C98",
+      "family": "二、反转",
+      "reason": "字段 adv20"
+    },
+    {
+      "id": "C101",
+      "family": "二、反转",
+      "reason": "字段 s"
+    },
+    {
+      "id": "C102",
+      "family": "二、反转",
+      "reason": "字段 s"
+    },
+    {
+      "id": "C107",
+      "family": "二、反转",
+      "reason": "算子 decay_linear；字段 vw"
+    },
+    {
+      "id": "C108",
+      "family": "二、反转",
+      "reason": "算子 scale"
+    },
+    {
+      "id": "C109",
+      "family": "十、量价相关",
+      "reason": "语法错误：invalid syntax"
+    },
+    {
+      "id": "C110",
+      "family": "十、量价相关",
+      "reason": "语法错误：invalid syntax"
+    },
+    {
+      "id": "C111",
+      "family": "十、量价相关",
+      "reason": "算子 decay_linear；字段 adv180；字段 vw"
+    },
+    {
+      "id": "C112",
+      "family": "十、量价相关",
+      "reason": "算子 decay_linear；字段 adv40；字段 vw"
+    },
+    {
+      "id": "C113",
+      "family": "十、量价相关",
+      "reason": "语法错误：invalid syntax"
+    },
+    {
+      "id": "C114",
+      "family": "十、量价相关",
+      "reason": "语法错误：invalid syntax"
+    },
+    {
+      "id": "C115",
+      "family": "十、量价相关",
+      "reason": "算子 decay_linear；字段 adv40；字段 vw"
+    },
+    {
+      "id": "C116",
+      "family": "十、量价相关",
+      "reason": "字段 adv40；字段 vw"
+    },
+    {
+      "id": "C117",
+      "family": "十、量价相关",
+      "reason": "语法错误：invalid syntax"
+    },
+    {
+      "id": "C118",
+      "family": "十、量价相关",
+      "reason": "字段 vw"
+    },
+    {
+      "id": "C119",
+      "family": "二、反转",
+      "reason": "字段 vw"
+    },
+    {
+      "id": "C120",
+      "family": "十、量价相关",
+      "reason": "字段 adv30"
+    },
+    {
+      "id": "C121",
+      "family": "十、量价相关",
+      "reason": "语法错误：invalid syntax"
+    },
+    {
+      "id": "C122",
+      "family": "十、量价相关",
+      "reason": "算子 decay_linear；字段 adv60"
+    },
+    {
+      "id": "C123",
+      "family": "二、反转",
+      "reason": "算子 IndNeutralize；字段 adv40；字段 subindustry"
+    },
+    {
+      "id": "C124",
+      "family": "十、量价相关",
+      "reason": "算子 decay_linear；字段 adv30"
+    },
+    {
+      "id": "C125",
+      "family": "二、反转",
+      "reason": "字段 vw；字段 adv60"
+    },
+    {
+      "id": "C126",
+      "family": "二、反转",
+      "reason": "语法错误：invalid syntax"
+    },
+    {
+      "id": "C127",
+      "family": "十、量价相关",
+      "reason": "算子 decay_linear；字段 vw；字段 adv60"
+    },
+    {
+      "id": "C128",
+      "family": "十、量价相关",
+      "reason": "算子 decay_linear；字段 vw；字段 adv5；字段 adv15"
+    },
+    {
+      "id": "C129",
+      "family": "十、量价相关",
+      "reason": "语法错误：invalid syntax"
+    },
+    {
+      "id": "C130",
+      "family": "十、量价相关",
+      "reason": "字段 adv20；算子 scale；算子 IndNeutralize；字段 子行业"
+    },
+    {
+      "id": "C147",
+      "family": "十一、趋势与均线",
+      "reason": "算子 ts_slope"
+    },
+    {
+      "id": "C148",
+      "family": "十一、趋势与均线",
+      "reason": "字段 时间序号"
+    },
+    {
+      "id": "C149",
+      "family": "十一、趋势与均线",
+      "reason": "算子 ts_fitted；字段 时间序号"
+    },
+    {
+      "id": "C173",
+      "family": "十三、摆动与超买超卖",
+      "reason": "字段 上涨日涨幅；字段 下跌日跌幅"
+    },
+    {
+      "id": "C174",
+      "family": "十一、趋势与均线",
+      "reason": "算子 EMA"
+    },
+    {
+      "id": "C176",
+      "family": "十三、摆动与超买超卖",
+      "reason": "字段 典型价"
+    },
+    {
+      "id": "C177",
+      "family": "十三、摆动与超买超卖",
+      "reason": "字段 典型价上涨日资金流；字段 典型价下跌日资金流"
+    },
+    {
+      "id": "C178",
+      "family": "五、流动性与换手",
+      "reason": "字段 OBV"
+    },
+    {
+      "id": "C180",
+      "family": "十一、趋势与均线",
+      "reason": "算子 EMA；字段 DX"
+    },
+    {
+      "id": "C181",
+      "family": "十三、摆动与超买超卖",
+      "reason": "算子 EMA；字段 振幅"
+    },
+    {
+      "id": "C182",
+      "family": "十一、趋势与均线",
+      "reason": "语法错误：invalid syntax. Perhaps you forgot a comma?"
+    },
+    {
+      "id": "C187",
+      "family": "十二、K线与日内形态",
+      "reason": "算子 EMA"
+    },
+    {
+      "id": "C188",
+      "family": "十三、摆动与超买超卖",
+      "reason": "字段 A28；字段 A7；字段 A14"
+    },
+    {
+      "id": "C189",
+      "family": "十三、摆动与超买超卖",
+      "reason": "字段 上涨幅；字段 下跌幅"
+    },
+    {
+      "id": "C190",
+      "family": "十一、趋势与均线",
+      "reason": "算子 EMA"
+    },
+    {
+      "id": "C191",
+      "family": "十一、趋势与均线",
+      "reason": "字段 真实波幅"
+    },
+    {
+      "id": "C196",
+      "family": "四、波动与风险",
+      "reason": "语法错误：invalid character '²' (U+00B2)"
+    },
+    {
+      "id": "C199",
+      "family": "四、波动与风险",
+      "reason": "字段 已实现方差；字段 双幂变差"
+    }
+  ],
+  "note": "分位数只按试算成功的条目算；白名单通过但试算失败的条目在 items 里 status=failed，不计入分位数。"
+}

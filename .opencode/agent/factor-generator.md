@@ -57,15 +57,15 @@ permission:
 - `securities.parquet`：每只股票的 GICS 行业分类，供行业内排名与行业均值使用。
 - `membership_intervals.parquet`：每只股票进出标普 500 的起止日期，加载时按它过滤，股票只在成分期内有值。
 - `spy_benchmark.parquet`：每日市场收益，公式中的 mktret 来自这里。
-- 程序自算字段：ivol20（20 日特质波动）、resid_ret（当日残差收益），由 engine.py 加载时算出。
+- 程序自算字段：ivol20（20 日特质波动）、resid_ret（当日残差收益）、returns（日收益率），由 engine.py 加载时算出。
 
-公式可用字段共 9 个：open、high、low、close、volume、mktcap、mktret、ivol20、resid_ret。以上数据只用于了解字段与口径，不读取其中的行情数值，不自行计算任何统计量。字段口径（ivol20、resid_ret 的窗口与对齐、mktcap/close 的含义、volume 的复权状态）以 SKILL.md 环境一节为准，开工前先读。
+公式可用字段共 10 个：open、high、low、close、volume、mktcap、mktret、ivol20、resid_ret、returns。以上数据只用于了解字段与口径，不读取其中的行情数值，不自行计算任何统计量。字段口径（ivol20、resid_ret 的窗口与对齐、mktcap/close 的含义、volume 的复权状态）以 SKILL.md 环境一节为准，开工前先读。
 
-算子共 33 个，另有四则运算，定义见根目录 `engine.py`：
+算子共 37 个，另有四则运算，定义见根目录 `engine.py`：
 
-- 时序：delay、delta、ts_mean、ts_sum、ts_std、ts_min、ts_max、ts_rank、ts_median、ts_skew、ts_kurt、ts_decay、ts_count、ts_argmax、ts_argmin、ts_corr、ts_beta
+- 时序：delay、delta、ts_mean、ts_sum、ts_std、ts_min、ts_max、ts_rank、ts_median、ts_skew、ts_kurt、ts_decay、ts_count、ts_argmax、ts_argmin、ts_corr、ts_beta、ts_quantile、ts_cov
 - 截面：rank、rank_sector、sector_mean、zscore、winsorize、resid
-- 变换：neg、abs、log、sign、sqrt、inverse、power、signed_power
+- 变换：neg、abs、log、sign、sqrt、inverse、power、signed_power、min、max
 - 条件：gt、where
 
 经典库：200 条经典因子，13 个家族。索引在 `classic_library.md`，条目在 `classic_library/` 下，一家族一文件。

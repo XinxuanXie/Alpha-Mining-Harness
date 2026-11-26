@@ -27,10 +27,11 @@
 | `research/experiment_registry.md` | 实验登记：进入 IS 前冻结的版本登记（公式哈希、方向、持有期、指标、OOS 规则） |
 | `research/literature_notes.md` | 文献笔记：论文登记与分析结论，主 agent 落盘 |
 | `research/debate/` | 辩论记录：一对一文件，按编号命名 |
-| `classic_library.md` + `classic_library/` | 经典因子库索引与原文：200 条，13 个家族 |
-| `engine.py` | 计算引擎：读数据、公式求值（33 个算子）、白名单检查 |
+| `classic_library.md` + `classic_library/` | 经典因子库索引与原文：200 条、13 个家族；`formulas.json` 为机器可读表（抽取脚本见 `tools/backtest/extract_library.py`） |
+| `engine.py` | 计算引擎：读数据、公式求值（37 个算子）、白名单检查 |
 | `tools/check_formula.py` | 公式校验：结构、字段、算子合法性，报告算子调用数作参考，不接触数据 |
-| `tools/backtest/` | 三个回测脚本，各管一段（IS / OOS / holdout），结果存入 `results/` |
+| `tools/backtest/` | 回测统一入口 `backtest.py`（成绩单 v2、基线对照、登记），等权合成 `combine.py`，零分布批量跑 `run_null.py`，登记视图 `render_registry.py`；结果存入 `results/`，登记进 `research/registry.jsonl` |
+| `benchmarks/` | 基线集 `baselines.json`、零分布 `is_null.json`（`run_null.py` 生成）、缺口报告 `gap_report.md` |
 | `tools/search/` | 文献检索脚本：openalex.py、core.py、arxiv.py |
 | `report.py` | 单文件 HTML 报告：多空累计收益图、指标表、分年表 |
 | `requirements.txt` | Python 依赖清单（pandas、numpy、pyarrow） |
@@ -60,7 +61,7 @@ Do the following, then print a checklist table (OK / FAIL):
    Release (tag: data) into data/: panel.parquet, securities.parquet,
    membership_intervals.parquet, spy_benchmark.parquet. See the Data section below.
 6) Quick check (IS segment only):
-   python tools/backtest/backtest_is.py "-(close / delay(close, 20) - 1)"
+   python tools/backtest/backtest.py --segment is --formula "-(close / delay(close, 20) - 1)"
    Expected: 20日IC 0.0115, ICIR 0.075, and a JSON saved under results/.
 
 Print versions and pass/fail for each step. Stop after the checklist.
@@ -90,7 +91,8 @@ Manual fallback: clone the repo, run `pip install -r requirements.txt`, do step 
 - 权限：写入分工由各 subagent 定义中的权限配置强制执行——假设池仅主 agent 可写、bash 按角色白名单开放。
 - 运行记录：每轮结束用 `opencode session export <会话ID> --sanitize` 脱敏导出全程 trace 至 `traces/` 留档；逐个会话重定向落盘为 .json，打包用原始文件；不要把 .env 密钥带进 trace（编辑器里点选 .env 的行会把密钥写进会话），分享前先检查。
 - 流程内不接触数据：各 agent 只知道数据有哪些（字段、区间、口径），不读行情数值、不自算统计量；与数据有关的量只出自回测成绩单。
-- 日常研究只跑 IS 段（`tools/backtest/backtest_is.py`）。
-- OOS 段（`tools/backtest/backtest_oos.py`）须经人确认后才跑。
-- holdout 段封存：未经明确指令，不运行 `tools/backtest/backtest_holdout.py`。
+- 日常研究只跑 IS 段（`python tools/backtest/backtest.py --segment is --formula "..."`）。
+- OOS 段须经人确认后才跑（`--segment oos`）。
+- holdout 段封存：未经研究者明确指令不运行；入口强制要求 `--allow-holdout` 并写明原因（`--holdout-reason`），原因与日期写进登记。
 - 判定参考线：20 日 IC ≥ 0.02、ICIR ≥ 0.2。
+- 回测结果登记在 `research/registry.jsonl`（`research/experiment_registry.md` 为生成视图）；回测结果不回流给生成 agent，IS 结果进共享记忆的已证伪机制区。

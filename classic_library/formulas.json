@@ -1,0 +1,2276 @@
+{
+  "generated_by": "tools/backtest/extract_library.py",
+  "total": 200,
+  "runnable": 127,
+  "excluded": 73,
+  "note": "runnable 只代表通过白名单校验；真正可跑与否由 run_null.py 试算后判定。",
+  "items": [
+    {
+      "id": "C01",
+      "family": "二、反转",
+      "family_file": "02-reversal.md",
+      "name": "短期反转",
+      "formula": "-(close / delay(close, 20) - 1)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C02",
+      "family": "二、反转",
+      "family_file": "02-reversal.md",
+      "name": "长期反转",
+      "formula": "-(close / delay(close, 756) - 1)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C03",
+      "family": "一、动量",
+      "family_file": "01-momentum.md",
+      "name": "中期动量",
+      "formula": "delay(close, 21) / delay(close, 252) - 1",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C04",
+      "family": "一、动量",
+      "family_file": "01-momentum.md",
+      "name": "接近 52 周高点",
+      "formula": "close / ts_max(close, 252)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C05",
+      "family": "一、动量",
+      "family_file": "01-momentum.md",
+      "name": "趋势方向一致性",
+      "formula": "abs(close / delay(close, 252) - 1) * (ts_mean(gt(close / delay(close, 1) - 1, 0), 252) - ts_mean(gt(0, close / delay(close, 1) - 1), 252))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C06",
+      "family": "五、流动性与换手",
+      "family_file": "05-liquidity-turnover.md",
+      "name": "放量",
+      "formula": "ts_mean(volume, 5) / ts_mean(volume, 60)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C07",
+      "family": "一、动量",
+      "family_file": "01-momentum.md",
+      "name": "动量×低换手",
+      "formula": "(delay(close, 21) / delay(close, 252) - 1) * (1 - rank(ts_mean(volume * close / mktcap, 60)))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C08",
+      "family": "四、波动与风险",
+      "family_file": "04-volatility-risk.md",
+      "name": "低波动",
+      "formula": "neg(ts_std(close / delay(close, 1) - 1, 60))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C09",
+      "family": "四、波动与风险",
+      "family_file": "04-volatility-risk.md",
+      "name": "彩票 MAX",
+      "formula": "neg(ts_max(close / delay(close, 1) - 1, 20))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C10",
+      "family": "四、波动与风险",
+      "family_file": "04-volatility-risk.md",
+      "name": "低贝塔",
+      "formula": "neg(ts_corr(close / delay(close, 1) - 1, mktret, 252) * ts_std(close / delay(close, 1) - 1, 252) / ts_std(mktret, 252))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C11",
+      "family": "五、流动性与换手",
+      "family_file": "05-liquidity-turnover.md",
+      "name": "Amihud 非流动性",
+      "formula": "ts_mean(abs(close / delay(close, 1) - 1) / (close * volume), 20)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C12",
+      "family": "五、流动性与换手",
+      "family_file": "05-liquidity-turnover.md",
+      "name": "低换手",
+      "formula": "neg(ts_mean(volume * close / mktcap, 60))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C13",
+      "family": "七、隔夜与日内",
+      "family_file": "07-overnight-intraday.md",
+      "name": "隔夜累积",
+      "formula": "ts_sum(open / delay(close, 1) - 1, 20)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C14",
+      "family": "七、隔夜与日内",
+      "family_file": "07-overnight-intraday.md",
+      "name": "日内累积取负",
+      "formula": "neg(ts_sum(close / open - 1, 20))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C15",
+      "family": "六、规模与价格水平",
+      "family_file": "06-size-price.md",
+      "name": "规模",
+      "formula": "neg(log(mktcap))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C16",
+      "family": "一、动量",
+      "family_file": "01-momentum.md",
+      "name": "远端单月动量",
+      "formula": "delay(close, 232) / delay(close, 252) - 1",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C17",
+      "family": "一、动量",
+      "family_file": "01-momentum.md",
+      "name": "行业动量",
+      "formula": "ts_sum(sector_mean(close / delay(close, 1) - 1), 126)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C18",
+      "family": "一、动量",
+      "family_file": "01-momentum.md",
+      "name": "3 月动量",
+      "formula": "delay(close, 21) / delay(close, 84) - 1",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C19",
+      "family": "一、动量",
+      "family_file": "01-momentum.md",
+      "name": "6 月动量",
+      "formula": "delay(close, 21) / delay(close, 147) - 1",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C20",
+      "family": "一、动量",
+      "family_file": "01-momentum.md",
+      "name": "9 月动量",
+      "formula": "delay(close, 21) / delay(close, 210) - 1",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C21",
+      "family": "一、动量",
+      "family_file": "01-momentum.md",
+      "name": "中期动量（后半段）",
+      "formula": "delay(close, 147) / delay(close, 252) - 1",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C22",
+      "family": "一、动量",
+      "family_file": "01-momentum.md",
+      "name": "趋势因子",
+      "formula": "mean over 窗口对 (s, l) of sign(ts_mean(close, s) / ts_mean(close, l) - 1) * (close / delay(close, l) - 1)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "语法错误：invalid syntax"
+    },
+    {
+      "id": "C23",
+      "family": "一、动量",
+      "family_file": "01-momentum.md",
+      "name": "高量动量",
+      "formula": "(delay(close, 21) / delay(close, 147) - 1) * gt(rank(ts_mean(volume * close / mktcap, 60)), 0.67)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C24",
+      "family": "一、动量",
+      "family_file": "01-momentum.md",
+      "name": "动量×长期反转组合",
+      "formula": "gt(rank(delay(close, 21) / delay(close, 147) - 1), 0.8) * gt(rank(-(close / delay(close, 756) - 1)), 0.8) - gt(rank(-(delay(close, 21) / delay(close, 147) - 1)), 0.8) * gt(rank(close / delay(close, 756) - 1), 0.8)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C25",
+      "family": "一、动量",
+      "family_file": "01-momentum.md",
+      "name": "年轻股动量",
+      "formula": "where(上市月数处于截面最短五分位, delay(close, 21) / delay(close, 147) - 1, 缺失)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "字段 上市月数处于截面最短五分位；字段 缺失"
+    },
+    {
+      "id": "C26",
+      "family": "二、反转",
+      "family_file": "02-reversal.md",
+      "name": "长期反转（剔除近一年）",
+      "formula": "-(delay(close, 252) / delay(close, 756) - 1)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C27",
+      "family": "二、反转",
+      "family_file": "02-reversal.md",
+      "name": "中期反转",
+      "formula": "-(delay(close, 273) / delay(close, 378) - 1)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C28",
+      "family": "三、季节性",
+      "family_file": "03-seasonality.md",
+      "name": "去年同月收益",
+      "formula": "delay(close, 252) / delay(close, 273) - 1",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C29",
+      "family": "三、季节性",
+      "family_file": "03-seasonality.md",
+      "name": "同月收益·2–5 年",
+      "formula": "(delay(close, 504) / delay(close, 525) - 1 + delay(close, 756) / delay(close, 777) - 1 + delay(close, 1008) / delay(close, 1029) - 1 + delay(close, 1260) / delay(close, 1281) - 1) / 4",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C30",
+      "family": "三、季节性",
+      "family_file": "03-seasonality.md",
+      "name": "同月收益·6–10 年",
+      "formula": "(delay(close, 1512) / delay(close, 1533) - 1 + delay(close, 1764) / delay(close, 1785) - 1 + delay(close, 2016) / delay(close, 2037) - 1 + delay(close, 2268) / delay(close, 2289) - 1 + delay(close, 2520) / delay(close, 2541) - 1) / 5",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C31",
+      "family": "三、季节性",
+      "family_file": "03-seasonality.md",
+      "name": "同月收益·11–15 年",
+      "formula": "(delay(close, 2772) / delay(close, 2793) - 1 + delay(close, 3024) / delay(close, 3045) - 1 + delay(close, 3276) / delay(close, 3297) - 1 + delay(close, 3528) / delay(close, 3549) - 1 + delay(close, 3780) / delay(close, 3801) - 1) / 5",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C32",
+      "family": "三、季节性",
+      "family_file": "03-seasonality.md",
+      "name": "同月收益·16–20 年",
+      "formula": "(delay(close, 4032) / delay(close, 4053) - 1 + delay(close, 4284) / delay(close, 4305) - 1 + delay(close, 4536) / delay(close, 4557) - 1 + delay(close, 4788) / delay(close, 4809) - 1 + delay(close, 5040) / delay(close, 5061) - 1) / 5",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C33",
+      "family": "三、季节性",
+      "family_file": "03-seasonality.md",
+      "name": "非同月动量·近 1 年",
+      "formula": "(ts_sum(月收益, 12) - 去年同月月收益) / 11",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "字段 去年同月月收益；字段 月收益"
+    },
+    {
+      "id": "C34",
+      "family": "三、季节性",
+      "family_file": "03-seasonality.md",
+      "name": "非同月反转·2–5 年",
+      "formula": "-mean(月收益, 过去第 2–5 年的非同月月份)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "语法错误：invalid character '–' (U+2013)"
+    },
+    {
+      "id": "C35",
+      "family": "三、季节性",
+      "family_file": "03-seasonality.md",
+      "name": "非同月反转·6–10 年",
+      "formula": "-mean(月收益, 过去第 6–10 年的非同月月份)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "语法错误：invalid character '–' (U+2013)"
+    },
+    {
+      "id": "C36",
+      "family": "三、季节性",
+      "family_file": "03-seasonality.md",
+      "name": "非同月反转·11–15 年",
+      "formula": "-mean(月收益, 过去第 11–15 年的非同月月份)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "语法错误：invalid character '–' (U+2013)"
+    },
+    {
+      "id": "C37",
+      "family": "三、季节性",
+      "family_file": "03-seasonality.md",
+      "name": "非同月反转·16–20 年",
+      "formula": "-mean(月收益, 过去第 16–20 年的非同月月份)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "语法错误：invalid character '–' (U+2013)"
+    },
+    {
+      "id": "C38",
+      "family": "四、波动与风险",
+      "family_file": "04-volatility-risk.md",
+      "name": "市场贝塔·5 年",
+      "formula": "ts_beta(close / delay(close, 1) - 1, mktret, 1260)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C39",
+      "family": "四、波动与风险",
+      "family_file": "04-volatility-risk.md",
+      "name": "FP 贝塔",
+      "formula": "ts_corr(close / delay(close, 3) - 1, 市场三日收益, 1260) * ts_std(close / delay(close, 3) - 1, 1260) / ts_std(市场三日收益, 1260)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "字段 市场三日收益"
+    },
+    {
+      "id": "C40",
+      "family": "四、波动与风险",
+      "family_file": "04-volatility-risk.md",
+      "name": "尾部风险贝塔",
+      "formula": "ts_beta(returns, 尾部冲击序列, 252)",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses returns"
+      ],
+      "status": "excluded",
+      "reason": "字段 尾部冲击序列"
+    },
+    {
+      "id": "C41",
+      "family": "四、波动与风险",
+      "family_file": "04-volatility-risk.md",
+      "name": "特质波动·1 年 CAPM",
+      "formula": "neg(过去 1 年日收益对市场收益回归的残差标准差)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "语法错误：invalid syntax. Perhaps you forgot a comma?"
+    },
+    {
+      "id": "C42",
+      "family": "四、波动与风险",
+      "family_file": "04-volatility-risk.md",
+      "name": "已实现波动·1 月",
+      "formula": "neg(ts_std(close / delay(close, 1) - 1, 21))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C43",
+      "family": "四、波动与风险",
+      "family_file": "04-volatility-risk.md",
+      "name": "协偏度·月频",
+      "formula": "ts_mean((r - ts_mean(r, 60)) * power(mktret - ts_mean(mktret, 60), 2), 60) / (ts_std(r, 60) * power(ts_std(mktret, 60), 2))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "字段 r"
+    },
+    {
+      "id": "C44",
+      "family": "四、波动与风险",
+      "family_file": "04-volatility-risk.md",
+      "name": "协偏度·日频",
+      "formula": "ts_mean((r - ts_mean(r, 252)) * power(mktret - ts_mean(mktret, 252), 2), 252) / (ts_std(r, 252) * power(ts_std(mktret, 252), 2))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "字段 r"
+    },
+    {
+      "id": "C45",
+      "family": "四、波动与风险",
+      "family_file": "04-volatility-risk.md",
+      "name": "收益偏度",
+      "formula": "neg(ts_skew(close / delay(close, 1) - 1, 21))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C46",
+      "family": "四、波动与风险",
+      "family_file": "04-volatility-risk.md",
+      "name": "特质偏度·CAPM",
+      "formula": "neg(过去 1 个月 CAPM 残差的偏度)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "语法错误：invalid syntax. Perhaps you forgot a comma?"
+    },
+    {
+      "id": "C47",
+      "family": "五、流动性与换手",
+      "family_file": "05-liquidity-turnover.md",
+      "name": "成交额水平",
+      "formula": "neg(log(ts_mean(delay(close * volume, 42), 21)))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C48",
+      "family": "五、流动性与换手",
+      "family_file": "05-liquidity-turnover.md",
+      "name": "换手率门槛",
+      "formula": "gt(ts_mean(volume / (mktcap / close), 63), 0.1)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C49",
+      "family": "五、流动性与换手",
+      "family_file": "05-liquidity-turnover.md",
+      "name": "量市值比",
+      "formula": "neg(ts_sum(volume / (mktcap / close), 252))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C50",
+      "family": "五、流动性与换手",
+      "family_file": "05-liquidity-turnover.md",
+      "name": "成交量趋势",
+      "formula": "ts_slope(月成交量, 60) / ts_mean(月成交量, 60)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "算子 ts_slope；字段 月成交量"
+    },
+    {
+      "id": "C51",
+      "family": "五、流动性与换手",
+      "family_file": "05-liquidity-turnover.md",
+      "name": "成交量波动",
+      "formula": "neg(过去 36 个月月成交量的标准差)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "语法错误：invalid syntax. Perhaps you forgot a comma?"
+    },
+    {
+      "id": "C52",
+      "family": "五、流动性与换手",
+      "family_file": "05-liquidity-turnover.md",
+      "name": "换手率波动",
+      "formula": "neg(过去 36 个月换手率的标准差)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "语法错误：invalid syntax. Perhaps you forgot a comma?"
+    },
+    {
+      "id": "C53",
+      "family": "五、流动性与换手",
+      "family_file": "05-liquidity-turnover.md",
+      "name": "换手率变异系数",
+      "formula": "neg(过去 36 个月换手率标准差 / 均值)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "语法错误：invalid syntax. Perhaps you forgot a comma?"
+    },
+    {
+      "id": "C54",
+      "family": "五、流动性与换手",
+      "family_file": "05-liquidity-turnover.md",
+      "name": "买卖价差（高低价估计）",
+      "formula": "2 * (exp(α) - 1) / (1 + exp(α))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "算子 exp；字段 α"
+    },
+    {
+      "id": "C55",
+      "family": "五、流动性与换手",
+      "family_file": "05-liquidity-turnover.md",
+      "name": "零成交天数·1 月",
+      "formula": "ts_sum(where(gt(volume, 0), 0, 1), 21)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C56",
+      "family": "五、流动性与换手",
+      "family_file": "05-liquidity-turnover.md",
+      "name": "零成交天数·6 月",
+      "formula": "ts_mean(where(gt(volume, 0), 0, 1), 126)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C57",
+      "family": "五、流动性与换手",
+      "family_file": "05-liquidity-turnover.md",
+      "name": "零成交天数·12 月",
+      "formula": "ts_mean(where(gt(volume, 0), 0, 1), 252)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C58",
+      "family": "六、规模与价格水平",
+      "family_file": "06-size-price.md",
+      "name": "价格水平",
+      "formula": "neg(log(close))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C59",
+      "family": "六、规模与价格水平",
+      "family_file": "06-size-price.md",
+      "name": "上市时长",
+      "formula": "neg(个股在面板中首次出现以来的月数)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "字段 个股在面板中首次出现以来的月数"
+    },
+    {
+      "id": "C60",
+      "family": "八、信息扩散与行业领先滞后",
+      "family_file": "08-information-diffusion.md",
+      "name": "价格延迟·R²版",
+      "formula": "1 - R²(受限模型) / R²(完整模型)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "语法错误：invalid character '²' (U+00B2)"
+    },
+    {
+      "id": "C61",
+      "family": "八、信息扩散与行业领先滞后",
+      "family_file": "08-information-diffusion.md",
+      "name": "价格延迟·系数版",
+      "formula": "(1*|β1| + 2*|β2| + 3*|β3| + 4*|β4|) / (|β0| + |β1| + |β2| + |β3| + |β4|)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "语法错误：invalid syntax"
+    },
+    {
+      "id": "C62",
+      "family": "八、信息扩散与行业领先滞后",
+      "family_file": "08-information-diffusion.md",
+      "name": "价格延迟·显著性版",
+      "formula": "(1*|t1| + 2*|t2| + 3*|t3| + 4*|t4|) / (|t0| + |t1| + |t2| + |t3| + |t4|)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "语法错误：invalid syntax"
+    },
+    {
+      "id": "C63",
+      "family": "八、信息扩散与行业领先滞后",
+      "family_file": "08-information-diffusion.md",
+      "name": "行业大票收益",
+      "formula": "赋给行业内其余股票的同业市值前 30% 股票上期平均收益 = sector_big_mean(delay(returns, 1))",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses returns"
+      ],
+      "status": "excluded",
+      "reason": "语法错误：invalid syntax"
+    },
+    {
+      "id": "C64",
+      "family": "九、公司行为",
+      "family_file": "09-corporate-actions.md",
+      "name": "一年净增发",
+      "formula": "neg(winsorize(delta(log(mktcap / close), 250)))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C65",
+      "family": "九、公司行为",
+      "family_file": "09-corporate-actions.md",
+      "name": "五年净增发",
+      "formula": "neg(delta(log(mktcap / close), 1260))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C66",
+      "family": "九、公司行为",
+      "family_file": "09-corporate-actions.md",
+      "name": "综合权益发行",
+      "formula": "neg(delta(log(mktcap), 1260) - delta(log(close), 1260))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C67",
+      "family": "二、反转",
+      "family_file": "02-reversal.md",
+      "name": "WQ#1 条件波动峰值时点",
+      "formula": "rank(ts_argmax(signed_power(where(returns < 0, ts_std(returns, 20), close), 2), 5)) - 0.5",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses returns"
+      ],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C68",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#2 量价背离",
+      "formula": "-1 * ts_corr(rank(delta(log(volume), 2)), rank((close - open) / open), 6)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C69",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#3 开盘价量相关",
+      "formula": "-1 * ts_corr(rank(open), rank(volume), 10)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C70",
+      "family": "二、反转",
+      "family_file": "02-reversal.md",
+      "name": "WQ#4 低价时序秩",
+      "formula": "-1 * ts_rank(rank(low), 9)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C71",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#6 开盘价量相关（原值）",
+      "formula": "-1 * ts_corr(open, volume, 10)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C72",
+      "family": "二、反转",
+      "family_file": "02-reversal.md",
+      "name": "WQ#7 放量急跌反转",
+      "formula": "where(adv20 < volume, -1 * ts_rank(abs(delta(close, 7)), 60) * sign(delta(close, 7)), -1)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "字段 adv20"
+    },
+    {
+      "id": "C73",
+      "family": "一、动量",
+      "family_file": "01-momentum.md",
+      "name": "WQ#8 开盘收益乘积动量",
+      "formula": "-1 * rank((ts_sum(open, 5) * ts_sum(returns, 5)) - delay(ts_sum(open, 5) * ts_sum(returns, 5), 10))",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses returns"
+      ],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C74",
+      "family": "二、反转",
+      "family_file": "02-reversal.md",
+      "name": "WQ#9 趋势顺势",
+      "formula": "where(0 < ts_min(delta(close, 1), 5), delta(close, 1), where(ts_max(delta(close, 1), 5) < 0, delta(close, 1), -1 * delta(close, 1)))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C75",
+      "family": "二、反转",
+      "family_file": "02-reversal.md",
+      "name": "WQ#12 量变价反",
+      "formula": "sign(delta(volume, 1)) * (-1 * delta(close, 1))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C76",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#13 价量秩协方差",
+      "formula": "-1 * rank(ts_cov(rank(close), rank(volume), 5))",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses ts_cov"
+      ],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C77",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#14 跌幅与价量相关",
+      "formula": "(-1 * rank(delta(returns, 3))) * ts_corr(open, volume, 10)",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses returns"
+      ],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C78",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#15 高价量秩相关累积",
+      "formula": "-1 * ts_sum(rank(ts_corr(rank(high), rank(volume), 3)), 3)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C79",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#16 高价量协方差",
+      "formula": "-1 * rank(ts_cov(rank(high), rank(volume), 5))",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses ts_cov"
+      ],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C80",
+      "family": "二、反转",
+      "family_file": "02-reversal.md",
+      "name": "WQ#17 价格秩×加速度×量比",
+      "formula": "(-1 * rank(ts_rank(close, 10))) * rank(delta(delta(close, 1), 1)) * rank(ts_rank(volume / adv20, 5))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "字段 adv20"
+    },
+    {
+      "id": "C81",
+      "family": "十二、K线与日内形态",
+      "family_file": "12-candlestick-intraday.md",
+      "name": "WQ#18 价差与开收相关",
+      "formula": "-1 * rank(ts_std(abs(close - open), 5) + (close - open) + ts_corr(close, open, 10))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C82",
+      "family": "二、反转",
+      "family_file": "02-reversal.md",
+      "name": "WQ#19 周反转×年动量",
+      "formula": "(-1 * sign((close - delay(close, 7)) + delta(close, 7))) * (1 + rank(1 + ts_sum(returns, 250)))",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses returns"
+      ],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C83",
+      "family": "七、隔夜与日内",
+      "family_file": "07-overnight-intraday.md",
+      "name": "WQ#20 开盘对前日三价差",
+      "formula": "(-1 * rank(open - delay(high, 1))) * rank(open - delay(close, 1)) * rank(open - delay(low, 1))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C84",
+      "family": "二、反转",
+      "family_file": "02-reversal.md",
+      "name": "WQ#21 均线带状态",
+      "formula": "where(ts_mean(close, 8) + ts_std(close, 8) < ts_mean(close, 2), -1, where(ts_mean(close, 2) < ts_mean(close, 8) - ts_std(close, 8), 1, where(volume / adv20 >= 1, 1, -1)))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "字段 adv20"
+    },
+    {
+      "id": "C85",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#22 高价量相关变化",
+      "formula": "-1 * (delta(ts_corr(high, volume, 5), 5) * rank(ts_std(close, 20)))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C86",
+      "family": "二、反转",
+      "family_file": "02-reversal.md",
+      "name": "WQ#23 高位回落",
+      "formula": "where(ts_mean(high, 20) < high, -1 * delta(high, 2), 0)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C87",
+      "family": "二、反转",
+      "family_file": "02-reversal.md",
+      "name": "WQ#24 长趋势未动则反转",
+      "formula": "where(delta(ts_mean(close, 100), 100) / delay(close, 100) <= 0.05, -(close - ts_min(close, 100)), -delta(close, 3))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C88",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#26 量价时序秩相关峰值",
+      "formula": "-1 * ts_max(ts_corr(ts_rank(volume, 5), ts_rank(high, 5), 5), 3)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C89",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#28 量价低点校准",
+      "formula": "scale(ts_corr(adv20, low, 5) + ((high + low) / 2) - close)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "算子 scale；字段 adv20"
+    },
+    {
+      "id": "C90",
+      "family": "五、流动性与换手",
+      "family_file": "05-liquidity-turnover.md",
+      "name": "WQ#30 涨跌符号和×量比",
+      "formula": "(1 - rank(sign(close - delay(close, 1)) + sign(delay(close, 1) - delay(close, 2)) + sign(delay(close, 2) - delay(close, 3)))) * ts_sum(volume, 5) / ts_sum(volume, 20)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C91",
+      "family": "二、反转",
+      "family_file": "02-reversal.md",
+      "name": "WQ#31 衰减反转组合",
+      "formula": "rank(rank(rank(decay_linear(-1 * rank(rank(delta(close, 10))), 10)))) + rank(-1 * delta(close, 3)) + sign(scale(ts_corr(adv20, low, 12)))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "算子 scale；字段 adv20；算子 decay_linear"
+    },
+    {
+      "id": "C92",
+      "family": "二、反转",
+      "family_file": "02-reversal.md",
+      "name": "WQ#33 开收倒数差",
+      "formula": "rank(-1 * (1 - open / close))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C93",
+      "family": "四、波动与风险",
+      "family_file": "04-volatility-risk.md",
+      "name": "WQ#34 波动比×日跌",
+      "formula": "rank((1 - rank(ts_std(returns, 2) / ts_std(returns, 5))) + (1 - rank(delta(close, 1))))",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses returns"
+      ],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C94",
+      "family": "五、流动性与换手",
+      "family_file": "05-liquidity-turnover.md",
+      "name": "WQ#35 量秩×区间秩×收益秩",
+      "formula": "ts_rank(volume, 32) * (1 - ts_rank(close + high - low, 16)) * (1 - ts_rank(returns, 32))",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses returns"
+      ],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C95",
+      "family": "八、信息扩散与行业领先滞后",
+      "family_file": "08-information-diffusion.md",
+      "name": "WQ#37 隔夜日内相关＋日内",
+      "formula": "rank(ts_corr(delay(open - close, 1), close, 200)) + rank(open - close)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C96",
+      "family": "二、反转",
+      "family_file": "02-reversal.md",
+      "name": "WQ#38 价格秩×开收比",
+      "formula": "(-1 * rank(ts_rank(close, 10))) * rank(close / open)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C97",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#40 高价波动×量价相关",
+      "formula": "(-1 * rank(ts_std(high, 10))) * ts_corr(high, volume, 10)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C98",
+      "family": "二、反转",
+      "family_file": "02-reversal.md",
+      "name": "WQ#43 量比秩×周跌秩",
+      "formula": "ts_rank(volume / adv20, 20) * ts_rank(-1 * delta(close, 7), 8)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "字段 adv20"
+    },
+    {
+      "id": "C99",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#44 高价量秩相关",
+      "formula": "-1 * ts_corr(high, rank(volume), 5)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C100",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#45 均价×价量相关衰减",
+      "formula": "-1 * (rank(ts_mean(delay(close, 5), 20)) * ts_corr(close, volume, 2) * rank(ts_corr(ts_sum(close, 5), ts_sum(close, 20), 2)))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C101",
+      "family": "二、反转",
+      "family_file": "02-reversal.md",
+      "name": "WQ#46 价格路径曲率",
+      "formula": "where(s > 0.25, -1, where(s < 0, 1, -delta(close, 1)))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "字段 s"
+    },
+    {
+      "id": "C102",
+      "family": "二、反转",
+      "family_file": "02-reversal.md",
+      "name": "WQ#49 路径曲率·严阈值",
+      "formula": "where(s < -0.1, 1, -delta(close, 1))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "字段 s"
+    },
+    {
+      "id": "C103",
+      "family": "一、动量",
+      "family_file": "01-momentum.md",
+      "name": "WQ#52 低点抬升×长动量×量秩",
+      "formula": "((-1 * ts_min(low, 5)) + delay(ts_min(low, 5), 5)) * rank((ts_sum(returns, 240) - ts_sum(returns, 20)) / 220) * ts_rank(volume, 5)",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses returns"
+      ],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C104",
+      "family": "二、反转",
+      "family_file": "02-reversal.md",
+      "name": "WQ#53 收盘位置变化",
+      "formula": "-1 * delta(((close - low) - (high - close)) / (close - low), 9)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C105",
+      "family": "十二、K线与日内形态",
+      "family_file": "12-candlestick-intraday.md",
+      "name": "WQ#54 日内力量比",
+      "formula": "(-1 * ((low - close) * open^5)) / ((low - high) * close^5)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C106",
+      "family": "十三、摆动与超买超卖",
+      "family_file": "13-oscillators.md",
+      "name": "WQ#55 随机位置与量相关",
+      "formula": "-1 * ts_corr(rank((close - ts_min(low, 12)) / (ts_max(high, 12) - ts_min(low, 12))), rank(volume), 6)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C107",
+      "family": "二、反转",
+      "family_file": "02-reversal.md",
+      "name": "WQ#57 距峰值衰减",
+      "formula": "-1 * ((close - vw) / decay_linear(rank(ts_argmax(close, 30)), 2))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "算子 decay_linear；字段 vw"
+    },
+    {
+      "id": "C108",
+      "family": "二、反转",
+      "family_file": "02-reversal.md",
+      "name": "WQ#60 区间位置量加权×峰值时点",
+      "formula": "-(2 * scale(rank(((close - low) - (high - close)) / (high - low) * volume)) - scale(rank(ts_argmax(close, 10))))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "算子 scale"
+    },
+    {
+      "id": "C109",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#61 典型价距低点 vs 量相关",
+      "formula": "(rank(vw - ts_min(vw, 16)) < rank(ts_corr(vw, adv180, 18))) ? 1 : 0",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "语法错误：invalid syntax"
+    },
+    {
+      "id": "C110",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#65 开盘混合价 vs 开盘距低点",
+      "formula": "(rank(ts_corr(open * 0.008 + vw * 0.992, ts_sum(adv60, 9), 6)) < rank(open - ts_min(open, 14))) ? -1 : 0",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "语法错误：invalid syntax"
+    },
+    {
+      "id": "C111",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#71 量价秩相关衰减",
+      "formula": "max(ts_rank(decay_linear(ts_corr(ts_rank(close, 3), ts_rank(adv180, 12), 18), 4), 16), ts_rank(decay_linear(rank((low + open) - 2 * vw)^2, 16), 4))",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses max"
+      ],
+      "status": "excluded",
+      "reason": "算子 decay_linear；字段 adv180；字段 vw"
+    },
+    {
+      "id": "C112",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#72 中价量相关比率",
+      "formula": "rank(decay_linear(ts_corr((high + low) / 2, adv40, 9), 10)) / rank(decay_linear(ts_corr(ts_rank(vw, 4), ts_rank(volume, 19), 7), 3))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "算子 decay_linear；字段 adv40；字段 vw"
+    },
+    {
+      "id": "C113",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#74 收盘量相关 vs 混合价量秩相关",
+      "formula": "(rank(ts_corr(close, ts_sum(adv30, 37), 15)) < rank(ts_corr(rank(high * 0.026 + vw * 0.974), rank(volume), 11))) ? -1 : 0",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "语法错误：invalid syntax"
+    },
+    {
+      "id": "C114",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#75 典型价量相关 vs 低价量相关",
+      "formula": "(rank(ts_corr(vw, volume, 4)) < rank(ts_corr(rank(low), rank(adv50), 12))) ? 1 : 0",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "语法错误：invalid syntax"
+    },
+    {
+      "id": "C115",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#77 中价偏离与中价量相关取小",
+      "formula": "min(rank(decay_linear(((high + low) / 2 + high) - (vw + high), 20)), rank(decay_linear(ts_corr((high + low) / 2, adv40, 3), 6)))",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses min"
+      ],
+      "status": "excluded",
+      "reason": "算子 decay_linear；字段 adv40；字段 vw"
+    },
+    {
+      "id": "C116",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#78 低价混合量相关幂",
+      "formula": "rank(ts_corr(ts_sum(low * 0.352 + vw * 0.648, 20), ts_sum(adv40, 20), 7))^rank(ts_corr(rank(vw), rank(volume), 6))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "字段 adv40；字段 vw"
+    },
+    {
+      "id": "C117",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#81 典型价量相关乘积",
+      "formula": "(rank(log(product(rank(rank(ts_corr(vw, ts_sum(adv10, 50), 8))^4), 15))) < rank(ts_corr(rank(vw), rank(volume), 5))) ? -1 : 0",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "语法错误：invalid syntax"
+    },
+    {
+      "id": "C118",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#83 区间相对强弱×量",
+      "formula": "(rank(delay((high - low) / ts_mean(close, 5), 2)) * rank(rank(volume))) / (((high - low) / ts_mean(close, 5)) / (vw - close))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "字段 vw"
+    },
+    {
+      "id": "C119",
+      "family": "二、反转",
+      "family_file": "02-reversal.md",
+      "name": "WQ#84 典型价距高点幂变换",
+      "formula": "signed_power(ts_rank(vw - ts_max(vw, 15), 21), delta(close, 5))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "字段 vw"
+    },
+    {
+      "id": "C120",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#85 混合收盘量相关幂",
+      "formula": "rank(ts_corr(high * 0.877 + close * 0.123, adv30, 10))^rank(ts_corr(ts_rank((high + low) / 2, 4), ts_rank(volume, 10), 7))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "字段 adv30"
+    },
+    {
+      "id": "C121",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#86 收盘量相关 vs 典型价偏离",
+      "formula": "(ts_rank(ts_corr(close, ts_sum(adv20, 15), 6), 20) < rank((open + close) - (vw + open))) ? -1 : 0",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "语法错误：invalid syntax"
+    },
+    {
+      "id": "C122",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#88 四价秩差与量相关取小",
+      "formula": "min(rank(decay_linear((rank(open) + rank(low)) - (rank(high) + rank(close)), 8)), ts_rank(decay_linear(ts_corr(ts_rank(close, 8), ts_rank(adv60, 21), 8), 7), 3))",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses min"
+      ],
+      "status": "excluded",
+      "reason": "算子 decay_linear；字段 adv60"
+    },
+    {
+      "id": "C123",
+      "family": "二、反转",
+      "family_file": "02-reversal.md",
+      "name": "WQ#90 距高点×行业量低相关",
+      "formula": "(rank(close - ts_max(close, 5))^ts_rank(ts_corr(IndNeutralize(adv40, subindustry), low, 5), 3)) * -1",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "算子 IndNeutralize；字段 adv40；字段 subindustry"
+    },
+    {
+      "id": "C124",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#92 均线形态与低价量相关取小",
+      "formula": "min(ts_rank(decay_linear(where((high + low) / 2 + close < low + open, 1, 0), 15), 19), ts_rank(decay_linear(ts_corr(rank(low), rank(adv30), 8), 7), 7))",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses min"
+      ],
+      "status": "excluded",
+      "reason": "算子 decay_linear；字段 adv30"
+    },
+    {
+      "id": "C125",
+      "family": "二、反转",
+      "family_file": "02-reversal.md",
+      "name": "WQ#94 典型价距低点幂",
+      "formula": "(rank(vw - ts_min(vw, 12))^ts_rank(ts_corr(ts_rank(vw, 20), ts_rank(adv60, 4), 18), 3)) * -1",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "字段 vw；字段 adv60"
+    },
+    {
+      "id": "C126",
+      "family": "二、反转",
+      "family_file": "02-reversal.md",
+      "name": "WQ#95 开盘距低点 vs 中价量相关幂",
+      "formula": "(rank(open - ts_min(open, 12)) < ts_rank(rank(ts_corr(ts_sum((high + low) / 2, 19), ts_sum(adv40, 19), 13))^5, 12)) ? 1 : 0",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "语法错误：invalid syntax"
+    },
+    {
+      "id": "C127",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#96 量价秩相关与收盘量峰值相关取大",
+      "formula": "max(ts_rank(decay_linear(ts_corr(rank(vw), rank(volume), 4), 4), 8), ts_rank(decay_linear(ts_argmax(ts_corr(ts_rank(close, 7), ts_rank(adv60, 4), 4), 13), 14), 13)) * -1",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses max"
+      ],
+      "status": "excluded",
+      "reason": "算子 decay_linear；字段 vw；字段 adv60"
+    },
+    {
+      "id": "C128",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#98 典型价量相关衰减差",
+      "formula": "rank(decay_linear(ts_corr(vw, ts_sum(adv5, 26), 5), 7)) - rank(decay_linear(ts_rank(ts_argmin(ts_corr(rank(open), rank(adv15), 21), 9), 7), 8))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "算子 decay_linear；字段 vw；字段 adv5；字段 adv15"
+    },
+    {
+      "id": "C129",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#99 中价量和相关 vs 低价量相关",
+      "formula": "(rank(ts_corr(ts_sum((high + low) / 2, 20), ts_sum(adv60, 20), 9)) < rank(ts_corr(low, volume, 6))) ? -1 : 0",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "语法错误：invalid syntax"
+    },
+    {
+      "id": "C130",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "WQ#100 区间位置行业中性×量比",
+      "formula": "-(1.5 * scale(IndNeutralize(IndNeutralize(rank((((close - low) - (high - close)) / (high - low)) * volume), 子行业), 子行业)) - scale(IndNeutralize(ts_corr(close, rank(adv20), 5) - rank(ts_argmin(close, 30)), 子行业))) * (volume / adv20)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "字段 adv20；算子 scale；算子 IndNeutralize；字段 子行业"
+    },
+    {
+      "id": "C131",
+      "family": "七、隔夜与日内",
+      "family_file": "07-overnight-intraday.md",
+      "name": "WQ#101 日内收益归一",
+      "formula": "(close - open) / (high - low + 0.001)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C132",
+      "family": "十二、K线与日内形态",
+      "family_file": "12-candlestick-intraday.md",
+      "name": "实体涨幅 KMID",
+      "formula": "(close - open) / open",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C133",
+      "family": "十二、K线与日内形态",
+      "family_file": "12-candlestick-intraday.md",
+      "name": "振幅 KLEN",
+      "formula": "(high - low) / open",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C134",
+      "family": "十二、K线与日内形态",
+      "family_file": "12-candlestick-intraday.md",
+      "name": "实体占比 KMID2",
+      "formula": "(close - open) / (high - low)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C135",
+      "family": "十二、K线与日内形态",
+      "family_file": "12-candlestick-intraday.md",
+      "name": "上影 KUP",
+      "formula": "(high - max(open, close)) / open",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses max"
+      ],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C136",
+      "family": "十二、K线与日内形态",
+      "family_file": "12-candlestick-intraday.md",
+      "name": "上影占比 KUP2",
+      "formula": "(high - max(open, close)) / (high - low)",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses max"
+      ],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C137",
+      "family": "十二、K线与日内形态",
+      "family_file": "12-candlestick-intraday.md",
+      "name": "下影 KLOW",
+      "formula": "(min(open, close) - low) / open",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses min"
+      ],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C138",
+      "family": "十二、K线与日内形态",
+      "family_file": "12-candlestick-intraday.md",
+      "name": "下影占比 KLOW2",
+      "formula": "(min(open, close) - low) / (high - low)",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses min"
+      ],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C139",
+      "family": "十二、K线与日内形态",
+      "family_file": "12-candlestick-intraday.md",
+      "name": "收盘偏移 KSFT",
+      "formula": "(2 * close - high - low) / open",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C140",
+      "family": "十二、K线与日内形态",
+      "family_file": "12-candlestick-intraday.md",
+      "name": "收盘偏移占比 KSFT2",
+      "formula": "(2 * close - high - low) / (high - low)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C141",
+      "family": "十二、K线与日内形态",
+      "family_file": "12-candlestick-intraday.md",
+      "name": "开盘比 OPEN0",
+      "formula": "open / close",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C142",
+      "family": "十二、K线与日内形态",
+      "family_file": "12-candlestick-intraday.md",
+      "name": "最高比 HIGH0",
+      "formula": "high / close",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C143",
+      "family": "十二、K线与日内形态",
+      "family_file": "12-candlestick-intraday.md",
+      "name": "最低比 LOW0",
+      "formula": "low / close",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C144",
+      "family": "一、动量",
+      "family_file": "01-momentum.md",
+      "name": "变化率 ROC",
+      "formula": "delay(close, 20) / close",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C145",
+      "family": "十一、趋势与均线",
+      "family_file": "11-trend.md",
+      "name": "均线比 MA",
+      "formula": "ts_mean(close, 20) / close",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C146",
+      "family": "四、波动与风险",
+      "family_file": "04-volatility-risk.md",
+      "name": "价格离散 STD",
+      "formula": "ts_std(close, 20) / close",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C147",
+      "family": "十一、趋势与均线",
+      "family_file": "11-trend.md",
+      "name": "趋势斜率 BETA",
+      "formula": "ts_slope(close, 20) / close",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "算子 ts_slope"
+    },
+    {
+      "id": "C148",
+      "family": "十一、趋势与均线",
+      "family_file": "11-trend.md",
+      "name": "趋势拟合 RSQR",
+      "formula": "power(ts_corr(close, 时间序号, 20), 2)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "字段 时间序号"
+    },
+    {
+      "id": "C149",
+      "family": "十一、趋势与均线",
+      "family_file": "11-trend.md",
+      "name": "趋势残差 RESI",
+      "formula": "(close - ts_fitted(close, 时间序号, 20)) / close",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "算子 ts_fitted；字段 时间序号"
+    },
+    {
+      "id": "C150",
+      "family": "一、动量",
+      "family_file": "01-momentum.md",
+      "name": "最高比 MAX",
+      "formula": "ts_max(high, 20) / close",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C151",
+      "family": "一、动量",
+      "family_file": "01-momentum.md",
+      "name": "最低比 MIN",
+      "formula": "ts_min(low, 20) / close",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C152",
+      "family": "一、动量",
+      "family_file": "01-momentum.md",
+      "name": "上分位 QTLU",
+      "formula": "ts_quantile(close, 20, 0.8) / close",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses ts_quantile"
+      ],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C153",
+      "family": "一、动量",
+      "family_file": "01-momentum.md",
+      "name": "下分位 QTLD",
+      "formula": "ts_quantile(close, 20, 0.2) / close",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses ts_quantile"
+      ],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C154",
+      "family": "一、动量",
+      "family_file": "01-momentum.md",
+      "name": "时序分位 RANK",
+      "formula": "ts_rank(close, 20)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C155",
+      "family": "十三、摆动与超买超卖",
+      "family_file": "13-oscillators.md",
+      "name": "随机值 RSV",
+      "formula": "(close - ts_min(low, 20)) / (ts_max(high, 20) - ts_min(low, 20))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C156",
+      "family": "十一、趋势与均线",
+      "family_file": "11-trend.md",
+      "name": "距高点天数 IMAX",
+      "formula": "ts_argmax(high, 20) / 20",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C157",
+      "family": "十一、趋势与均线",
+      "family_file": "11-trend.md",
+      "name": "距低点天数 IMIN",
+      "formula": "ts_argmin(low, 20) / 20",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C158",
+      "family": "十一、趋势与均线",
+      "family_file": "11-trend.md",
+      "name": "高低点时差 IMXD",
+      "formula": "(ts_argmax(high, 20) - ts_argmin(low, 20)) / 20",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C159",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "价量相关 CORR",
+      "formula": "ts_corr(close, log(volume + 1), 20)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C160",
+      "family": "十、量价相关",
+      "family_file": "10-price-volume-correlation.md",
+      "name": "价量变化相关 CORD",
+      "formula": "ts_corr(close / delay(close, 1), log(volume / delay(volume, 1) + 1), 20)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C161",
+      "family": "一、动量",
+      "family_file": "01-momentum.md",
+      "name": "上涨日占比 CNTP",
+      "formula": "ts_mean(gt(close, delay(close, 1)), 20)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C162",
+      "family": "一、动量",
+      "family_file": "01-momentum.md",
+      "name": "下跌日占比 CNTN",
+      "formula": "ts_mean(gt(delay(close, 1), close), 20)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C163",
+      "family": "一、动量",
+      "family_file": "01-momentum.md",
+      "name": "涨跌日差 CNTD",
+      "formula": "ts_mean(gt(close, delay(close, 1)), 20) - ts_mean(gt(delay(close, 1), close), 20)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C164",
+      "family": "十三、摆动与超买超卖",
+      "family_file": "13-oscillators.md",
+      "name": "上涨幅度占比 SUMP",
+      "formula": "ts_sum(max(delta(close, 1), 0), 20) / ts_sum(abs(delta(close, 1)), 20)",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses max"
+      ],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C165",
+      "family": "十三、摆动与超买超卖",
+      "family_file": "13-oscillators.md",
+      "name": "下跌幅度占比 SUMN",
+      "formula": "ts_sum(max(-delta(close, 1), 0), 20) / ts_sum(abs(delta(close, 1)), 20)",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses max"
+      ],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C166",
+      "family": "十三、摆动与超买超卖",
+      "family_file": "13-oscillators.md",
+      "name": "净变动占比 SUMD",
+      "formula": "(ts_sum(max(delta(close, 1), 0), 20) - ts_sum(max(-delta(close, 1), 0), 20)) / ts_sum(abs(delta(close, 1)), 20)",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses max"
+      ],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C167",
+      "family": "五、流动性与换手",
+      "family_file": "05-liquidity-turnover.md",
+      "name": "量均线比 VMA",
+      "formula": "ts_mean(volume, 20) / volume",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C168",
+      "family": "五、流动性与换手",
+      "family_file": "05-liquidity-turnover.md",
+      "name": "量离散 VSTD",
+      "formula": "ts_std(volume, 20) / volume",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C169",
+      "family": "四、波动与风险",
+      "family_file": "04-volatility-risk.md",
+      "name": "量加权波动比 WVMA",
+      "formula": "ts_std(abs(returns) * volume, 20) / ts_mean(abs(returns) * volume, 20)",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses returns"
+      ],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C170",
+      "family": "五、流动性与换手",
+      "family_file": "05-liquidity-turnover.md",
+      "name": "放量占比 VSUMP",
+      "formula": "ts_sum(max(delta(volume, 1), 0), 20) / ts_sum(abs(delta(volume, 1)), 20)",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses max"
+      ],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C171",
+      "family": "五、流动性与换手",
+      "family_file": "05-liquidity-turnover.md",
+      "name": "缩量占比 VSUMN",
+      "formula": "ts_sum(max(-delta(volume, 1), 0), 20) / ts_sum(abs(delta(volume, 1)), 20)",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses max"
+      ],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C172",
+      "family": "五、流动性与换手",
+      "family_file": "05-liquidity-turnover.md",
+      "name": "净量变占比 VSUMD",
+      "formula": "(ts_sum(max(delta(volume, 1), 0), 20) - ts_sum(max(-delta(volume, 1), 0), 20)) / ts_sum(abs(delta(volume, 1)), 20)",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses max"
+      ],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C173",
+      "family": "十三、摆动与超买超卖",
+      "family_file": "13-oscillators.md",
+      "name": "相对强弱 RSI",
+      "formula": "100 - 100 / (1 + ts_mean(上涨日涨幅, 14) / ts_mean(下跌日跌幅, 14))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "字段 上涨日涨幅；字段 下跌日跌幅"
+    },
+    {
+      "id": "C174",
+      "family": "十一、趋势与均线",
+      "family_file": "11-trend.md",
+      "name": "MACD 柱",
+      "formula": "(EMA(close, 12) - EMA(close, 26)) - EMA(EMA(close, 12) - EMA(close, 26), 9)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "算子 EMA"
+    },
+    {
+      "id": "C175",
+      "family": "十三、摆动与超买超卖",
+      "family_file": "13-oscillators.md",
+      "name": "布林位置 %B",
+      "formula": "(close - (ts_mean(close, 20) - 2 * ts_std(close, 20))) / (4 * ts_std(close, 20))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C176",
+      "family": "十三、摆动与超买超卖",
+      "family_file": "13-oscillators.md",
+      "name": "商品通道 CCI",
+      "formula": "((high + low + close) / 3 - ts_mean(典型价, 20)) / (0.015 * ts_mean(abs(典型价 - ts_mean(典型价, 20)), 20))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "字段 典型价"
+    },
+    {
+      "id": "C177",
+      "family": "十三、摆动与超买超卖",
+      "family_file": "13-oscillators.md",
+      "name": "资金流量 MFI",
+      "formula": "100 - 100 / (1 + ts_sum(典型价上涨日资金流, 14) / ts_sum(典型价下跌日资金流, 14))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "字段 典型价上涨日资金流；字段 典型价下跌日资金流"
+    },
+    {
+      "id": "C178",
+      "family": "五、流动性与换手",
+      "family_file": "05-liquidity-turnover.md",
+      "name": "能量潮斜率 OBV",
+      "formula": "(OBV - delay(OBV, 20)) / ts_sum(volume, 20)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "字段 OBV"
+    },
+    {
+      "id": "C179",
+      "family": "四、波动与风险",
+      "family_file": "04-volatility-risk.md",
+      "name": "平均真实波幅比 ATR",
+      "formula": "ts_mean(max(high - low, abs(high - delay(close, 1)), abs(low - delay(close, 1))), 14) / close",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses max"
+      ],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C180",
+      "family": "十一、趋势与均线",
+      "family_file": "11-trend.md",
+      "name": "趋势强度 ADX",
+      "formula": "EMA(DX, 14)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "算子 EMA；字段 DX"
+    },
+    {
+      "id": "C181",
+      "family": "十三、摆动与超买超卖",
+      "family_file": "13-oscillators.md",
+      "name": "质量指数",
+      "formula": "(ts_sum(EMA(振幅, 9) / EMA(EMA(振幅, 9), 9), 25))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "算子 EMA；字段 振幅"
+    },
+    {
+      "id": "C182",
+      "family": "十一、趋势与均线",
+      "family_file": "11-trend.md",
+      "name": "Aroon 振荡器",
+      "formula": "(25 - 距 25 日最高的天数) / 25 * 100 - (25 - 距 25 日最低的天数) / 25 * 100",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "语法错误：invalid syntax. Perhaps you forgot a comma?"
+    },
+    {
+      "id": "C183",
+      "family": "十一、趋势与均线",
+      "family_file": "11-trend.md",
+      "name": "去趋势价格 DPO",
+      "formula": "close - delay(ts_mean(close, 20), 11)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C184",
+      "family": "五、流动性与换手",
+      "family_file": "05-liquidity-turnover.md",
+      "name": "蔡金资金流",
+      "formula": "ts_sum(((close - low) - (high - close)) / (high - low) * volume, 20) / ts_sum(volume, 20)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C185",
+      "family": "十二、K线与日内形态",
+      "family_file": "12-candlestick-intraday.md",
+      "name": "移动便利 EMV",
+      "formula": "((high + low) / 2 - delay((high + low) / 2, 1)) / (volume / (high - low))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C186",
+      "family": "五、流动性与换手",
+      "family_file": "05-liquidity-turnover.md",
+      "name": "强力指数",
+      "formula": "(close - delay(close, 1)) * volume",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C187",
+      "family": "十二、K线与日内形态",
+      "family_file": "12-candlestick-intraday.md",
+      "name": "多头力量",
+      "formula": "high - EMA(close, 13)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "算子 EMA"
+    },
+    {
+      "id": "C188",
+      "family": "十三、摆动与超买超卖",
+      "family_file": "13-oscillators.md",
+      "name": "终极振荡器",
+      "formula": "100 * (4 * A7 + 2 * A14 + A28) / 7",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "字段 A28；字段 A7；字段 A14"
+    },
+    {
+      "id": "C189",
+      "family": "十三、摆动与超买超卖",
+      "family_file": "13-oscillators.md",
+      "name": "钱德动量 CMO",
+      "formula": "(ts_sum(上涨幅, 14) - ts_sum(下跌幅, 14)) / (ts_sum(上涨幅, 14) + ts_sum(下跌幅, 14)) * 100",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "字段 上涨幅；字段 下跌幅"
+    },
+    {
+      "id": "C190",
+      "family": "十一、趋势与均线",
+      "family_file": "11-trend.md",
+      "name": "三重平滑变化率 TRIX",
+      "formula": "EMA(EMA(EMA(close, 15), 15), 15) / delay(EMA(EMA(EMA(close, 15), 15), 15), 1) - 1",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "算子 EMA"
+    },
+    {
+      "id": "C191",
+      "family": "十一、趋势与均线",
+      "family_file": "11-trend.md",
+      "name": "涡旋差",
+      "formula": "ts_sum(high - delay(low, 1), 14) / ts_sum(真实波幅, 14) - ts_sum(delay(high, 1) - low, 14) / ts_sum(真实波幅, 14)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "字段 真实波幅"
+    },
+    {
+      "id": "C192",
+      "family": "十一、趋势与均线",
+      "family_file": "11-trend.md",
+      "name": "趋势效率比",
+      "formula": "(close - delay(close, 10)) / ts_sum(abs(delta(close, 1)), 10)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C193",
+      "family": "四、波动与风险",
+      "family_file": "04-volatility-risk.md",
+      "name": "Parkinson 波动",
+      "formula": "sqrt(ts_mean(power(log(high / low), 2), 20) / (4 * log(2)))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C194",
+      "family": "四、波动与风险",
+      "family_file": "04-volatility-risk.md",
+      "name": "Garman-Klass 波动",
+      "formula": "sqrt(ts_mean(0.5 * power(log(high / low), 2) - (2 * log(2) - 1) * power(log(close / open), 2), 20))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C195",
+      "family": "四、波动与风险",
+      "family_file": "04-volatility-risk.md",
+      "name": "Rogers-Satchell 波动",
+      "formula": "sqrt(ts_mean(log(high / close) * log(high / open) + log(low / close) * log(low / open), 20))",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C196",
+      "family": "四、波动与风险",
+      "family_file": "04-volatility-risk.md",
+      "name": "Yang-Zhang 波动",
+      "formula": "sqrt(σ²_隔夜 + k * σ²_开收 + (1 - k) * σ²_RS)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "语法错误：invalid character '²' (U+00B2)"
+    },
+    {
+      "id": "C197",
+      "family": "四、波动与风险",
+      "family_file": "04-volatility-risk.md",
+      "name": "Roll 隐含价差",
+      "formula": "2 * sqrt(max(-ts_cov(returns, delay(returns, 1), 60), 0))",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses returns",
+        "uses ts_cov",
+        "uses max"
+      ],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C198",
+      "family": "四、波动与风险",
+      "family_file": "04-volatility-risk.md",
+      "name": "下行半方差占比",
+      "formula": "ts_sum(power(min(returns, 0), 2), 20) / ts_sum(power(returns, 2), 20)",
+      "needs_engine_fix": true,
+      "engine_fix_tags": [
+        "uses returns",
+        "uses min"
+      ],
+      "status": "runnable",
+      "reason": ""
+    },
+    {
+      "id": "C199",
+      "family": "四、波动与风险",
+      "family_file": "04-volatility-risk.md",
+      "name": "跳跃方差占比",
+      "formula": "(已实现方差 - 双幂变差) / 已实现方差",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "excluded",
+      "reason": "字段 已实现方差；字段 双幂变差"
+    },
+    {
+      "id": "C200",
+      "family": "四、波动与风险",
+      "family_file": "04-volatility-risk.md",
+      "name": "隔夜方差占比",
+      "formula": "ts_sum(power(open / delay(close, 1) - 1, 2), 20) / ts_sum(power(close / delay(close, 1) - 1, 2), 20)",
+      "needs_engine_fix": false,
+      "engine_fix_tags": [],
+      "status": "runnable",
+      "reason": ""
+    }
+  ]
+}

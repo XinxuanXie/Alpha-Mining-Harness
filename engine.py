@@ -20,7 +20,7 @@ PRECOMP_PATH = os.path.join(BASE, "data", "precomp_fields.parquet")
 LOAD_END = "2016-12-31"   # 数据加载截止日（回测脚本按数据段改这个值）
 ID_COL = "permno"          # 股票标识列
 FIELDS = ["open", "high", "low", "close", "volume", "mktcap", "mktret",
-          "ivol20", "resid_ret"]  # 公式可用字段（mktret 为市场收益；ivol20、resid_ret 为程序预计算的市场模型残差类字段，窗口固定 20 日）
+          "ivol20", "resid_ret", "returns"]  # 公式可用字段（mktret 为市场收益；ivol20、resid_ret 为程序预计算的市场模型残差类字段，窗口固定 20 日；returns 为日收益率 close/delay(close,1)-1，程序派生）
 MIN_STOCKS = 10            # 当日参与 IC 计算的股票少于此数，当日 IC 记缺失
 SECTOR_OF = {}             # permno（int）→ GICS 行业名；load_wide 时填充
 
@@ -49,6 +49,8 @@ def load_wide():
         mask[col] = inside
     for f in ("open", "high", "low", "close", "volume", "mktcap"):
         wide[f] = wide[f].where(mask)
+    # 派生字段：日收益率（以前一日收盘为基准；成分区间外的前一日记缺失，收益随之缺失）
+    wide["returns"] = wide["close"] / wide["close"].shift(1) - 1
     bench = pd.read_parquet(BENCH_PATH, filters=[("date", "<=", pd.Timestamp(LOAD_END))])
     mkt = bench.set_index("date")["vwretd"].reindex(close.index)
     wide["mktret"] = pd.DataFrame(
@@ -99,7 +101,7 @@ def _precomp_fields(close, mktret):
     return ivol, resid
 
 # ============================================================
-# 算公式：表达式只能用算子清单中的算子与九个字段
+# 算公式：表达式只能用算子清单中的算子与十个字段
 # 缺失规则：任一算子所需位置输入缺失，输出缺失；时序窗口缺一日，输出缺失
 # ============================================================
 def _rank_cs(x):
@@ -231,6 +233,16 @@ def _ts_beta(a, b, d):
     valid = (a.notna() & b.notna()).rolling(d, min_periods=d).sum() == d
     return out.where(valid & (var > 0))
 
+def _ts_quantile(x, d, q):
+    # 过去 d 日（含当日）的 q 分位（q 在 [0, 1] 内）；窗口须满 d 日
+    return x.rolling(d, min_periods=d).quantile(q)
+
+def _ts_cov(x, y, d):
+    # 过去 d 日两序列的协方差；两序列须 d 日全不缺
+    out = x.rolling(d, min_periods=d).cov(y)
+    valid = (x.notna() & y.notna()).rolling(d, min_periods=d).sum() == d
+    return out.where(valid)
+
 OPS = {
     "neg": lambda a: -a,
     "abs": lambda a: a.abs() if hasattr(a, "abs") else abs(a),
@@ -265,9 +277,14 @@ OPS = {
     "ts_argmax": lambda a, d: _ts_arg_extreme(a, d, True),
     "ts_argmin": lambda a, d: _ts_arg_extreme(a, d, False),
     "ts_beta": _ts_beta,
+    "ts_quantile": _ts_quantile,
+    "ts_cov": _ts_cov,
+    "min": lambda a, b: np.minimum(a, b),
+    "max": lambda a, b: np.maximum(a, b),
 }
 WINDOW_OPS = {"delay", "delta", "ts_mean", "ts_sum", "ts_std", "ts_min", "ts_max", "ts_rank", "ts_corr",
-              "ts_median", "ts_skew", "ts_kurt", "ts_decay", "ts_count", "ts_argmax", "ts_argmin", "ts_beta"}
+              "ts_median", "ts_skew", "ts_kurt", "ts_decay", "ts_count", "ts_argmax", "ts_argmin", "ts_beta",
+              "ts_quantile", "ts_cov"}
 
 def _eval(node, wide):
     if isinstance(node, ast.Expression):
@@ -302,15 +319,26 @@ def _eval(node, wide):
             raise ValueError(f"不允许的算子：{ast.dump(node.func)[:40]}")
         name = node.func.id
         arity = {"neg": 1, "abs": 1, "log": 1, "rank": 1, "rank_sector": 1, "sector_mean": 1, "ts_corr": 3,
-                 "sign": 1, "sqrt": 1, "inverse": 1, "zscore": 1, "winsorize": 1, "where": 3, "ts_beta": 3}.get(name, 2)
+                 "sign": 1, "sqrt": 1, "inverse": 1, "zscore": 1, "winsorize": 1, "where": 3, "ts_beta": 3,
+                 "ts_quantile": 3, "ts_cov": 3}.get(name, 2)
         if len(node.args) != arity:
             raise ValueError(f"算子 {name} 需要 {arity} 个参数，给了 {len(node.args)} 个")
         args = [_eval(a, wide) for a in node.args]
         if name in WINDOW_OPS:
-            d = args[-1]
-            if not isinstance(d, float) or d < 1 or d != int(d):
-                raise ValueError(f"算子 {name} 的窗口 d 必须是正整数")
-            args[-1] = int(d)
+            if name == "ts_quantile":
+                # ts_quantile(x, d, q)：窗口是第 2 个参数，分位是第 3 个参数
+                d = args[1]
+                if not isinstance(d, float) or d < 1 or d != int(d):
+                    raise ValueError("算子 ts_quantile 的窗口 d 必须是正整数")
+                args[1] = int(d)
+                q = args[2]
+                if not isinstance(q, float) or not 0 <= q <= 1:
+                    raise ValueError("算子 ts_quantile 的分位 q 必须在 [0, 1] 内")
+            else:
+                d = args[-1]
+                if not isinstance(d, float) or d < 1 or d != int(d):
+                    raise ValueError(f"算子 {name} 的窗口 d 必须是正整数")
+                args[-1] = int(d)
         return OPS[name](*args)
     raise ValueError(f"不支持的表达式结构：{type(node).__name__}")
 

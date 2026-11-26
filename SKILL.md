@@ -24,7 +24,7 @@ subagent 由你临时创建，在独立上下文中执行，只交回结论；su
 - `research/debate/<编号>.md`：辩论记录，一对一文件，生成与质疑两个 agent 追加。
 - `classic_library.md` 与 `classic_library/`：经典库，200 条、13 个家族。
 - `tools/search/`：文献检索脚本（openalex.py、core.py、arxiv.py），key 从环境变量或根目录 .env 读。
-- `tools/backtest/` 与 `report.py`：回测脚本与报告工具，本版暂不接入流程（见纪律）。
+- `tools/backtest/` 与 `report.py`：回测统一入口 `backtest.py`（成绩单 v2、基线对照、登记 `research/registry.jsonl`）、等权合成 `combine.py`、零分布批量跑 `run_null.py`、登记视图 `render_registry.py`；回测是正式阶段（见「一轮怎么跑」第 6 步与纪律）。
 
 ## 一轮怎么跑
 
@@ -33,7 +33,7 @@ subagent 由你临时创建，在独立上下文中执行，只交回结论；su
 3. 派生成：每条线派一个生成 agent，任务书只写本线与分配到的文献、不提其他线；各线独立产出，互不知道对方的内容。各线交回后，你把各线的笔记统一记入 literature_notes.md，结论冲突的并列记录、标注未裁决。
 4. 初筛与入池：派审查 agent 汇总全部候选初筛（标准见「初筛」一节），最多选 10 对。你按入选名单逐条入池建档，编号 H001 起，状态记为待辩论；审查的淘汰理由由你转交 Meta-review，并在本轮交付时汇总报告。
 5. 逐条派辩论：生成方先立论（把机制链写入辩论记录；生成时已有的机制链直接沿用，不重写），质疑按攻击方向攻击并逐条编号，生成方逐条回应（接受并给出改法，或不接受并给出理由）。生成方按双方一致的结论逐处修改，每处修改对应一个攻击编号，产出修改清单（对应攻击、改前、改后），每个版本留档；改完重写机制—公式合同并重跑校验。质疑复核只查两件事：已接受的攻击是否都已回应、修改是否引入新问题；已解决的攻击不重提，新攻击只限修改引入的。以上为一轮，最多 2 轮。首轮复核后分类早退：复核把未闭合的攻击分为锚点级（锚点错配、识别缺口、样本不匹配，不可修）与可修类（公式实现、参数、口径）；致命攻击全是锚点级的，不进第二轮，直接收口仲裁；只有可修类才进第二轮。生成方判应弃的，只交三样（致命攻击编号、不可修论证、建议的探索性版本/无），不再做完整修改。辩论结束，你看辩论记录，在这条对子的全部版本中选最合适的一版定稿（双方已一致选定的，你确认即可），定稿后不再修改。辩论只产出定稿版本，不淘汰对子；生成方判应弃且你同意的，记为已淘汰留档。修改的目标是纠正：删无依据的成分、改实现错的成分。
-6. 定稿与收尾：定稿版本替换池中正文，版本链与选版结论追加进档案，状态记为待验证。本轮 0 对入池也是合法收口：留档三项（致命攻击编号与不可修论证、重启条件、可行性判断是否改变），不凑数。连续两轮 0 对的，复盘须把「换方向」列为标准选项。本批对子全部定稿，一轮结束：派 Meta-review 复盘，更新试验登记与运行统计，把本轮结果交付研究者。
+6. 定稿与收尾：定稿版本替换池中正文，版本链与选版结论追加进档案，状态记为待验证。定稿后进回测：你用统一入口（`python tools/backtest/backtest.py --segment is --formula "…" --hypothesis Hxxx --version vx`）跑 IS，成绩单 v2、基线对照与全库百分位自动写进 `research/registry.jsonl`（`research/experiment_registry.md` 为生成视图，不手工改）；状态按结果记为 IS 已验证。IS→OOS 须研究者确认后才跑；holdout 须研究者明确授权并记录日期与原因（入口以 `--allow-holdout` 与 `--holdout-reason` 强制执行）。回测结果不回流给生成 agent；IS 结果（尤其已证伪的机制）记入共享记忆的已证伪机制区，供下一轮避开。本轮 0 对入池也是合法收口：留档三项（致命攻击编号与不可修论证、重启条件、可行性判断是否改变），不凑数。连续两轮 0 对的，复盘须把「换方向」列为标准选项。本批对子全部定稿，一轮结束：派 Meta-review 复盘，更新试验登记与运行统计，把本轮结果交付研究者。
 
 盘点优先于固定顺序：每派一活前先看池子缺口——多少条待辩论、多少条未收口——缺什么派什么。
 
@@ -57,7 +57,7 @@ subagent 由你临时创建，在独立上下文中执行，只交回结论；su
 
 `待辩论` → `待验证` → `IS 已验证` → `OOS 已验证` → `已通过` 是验证路径；`已淘汰` 可在任一质量门退出。进入待验证只代表研究质量达标，不代表预测有效。
 
-首次进入 IS 前，在 `research/experiment_registry.md` 登记不可变版本：编号、公式哈希、方向、持有期、评价指标、参数、IS 截止日和预定 OOS 规则。改动机制、公式、方向、参数或持有期即创建新版本和新登记，不复用旧版本的验证资格。holdout 只允许在 OOS 通过且经研究者明确指令后访问一次。
+首次进入 IS 前，用回测入口登记不可变版本（`research/registry.jsonl`；`research/experiment_registry.md` 为生成视图，不手工改表）：编号、公式哈希、方向、持有期、评价指标、参数、IS 截止日和预定 OOS 规则。改动机制、公式、方向、参数或持有期即创建新版本和新登记，不复用旧版本的验证资格。holdout 只允许在 OOS 通过且经研究者明确指令后访问一次。
 
 ## 数据纪律
 
@@ -84,9 +84,9 @@ subagent 由你临时创建，在独立上下文中执行，只交回结论；su
 - 股票档案 `data/securities.parquet`：每只股票的 GICS 行业分类，供行业内排名与行业均值使用。
 - 成分区间 `data/membership_intervals.parquet`：每只股票进出标普 500 的起止日期。加载时按它过滤，股票只在成分期内有值。
 - 市场基准 `data/spy_benchmark.parquet`：每日市场收益，公式中的 mktret 来自这里。
-- 程序自算字段：ivol20（20 日特质波动）、resid_ret（当日残差收益），加载时由 engine.py 算出。
+- 程序自算字段：ivol20（20 日特质波动）、resid_ret（当日残差收益），加载时由 engine.py 算出；returns（日收益率 close/delay(close,1)−1）由 engine.py 在加载时派生，只在成分期内有值。
 
-公式可用字段共 9 个：open、high、low、close、volume、mktcap、mktret、ivol20、resid_ret。
+公式可用字段共 10 个：open、high、low、close、volume、mktcap、mktret、ivol20、resid_ret、returns。
 
 字段口径（开工前闭合，见第 1 轮复盘 F7）：价格为拆股调整后价格；volume 按 panel 原值使用，engine 内不做复权处理；mktcap ÷ close = 隐含股数（拆股调整后口径），volume ÷ (mktcap ÷ close) = 换手率；mktret 取自 spy_benchmark.parquet 的 vwretd（市值加权市场收益），每日全股相同；ivol20 是 20 日滚动回归（个股日收益对市场收益）的残差标准差，日频、未年化，窗口须满 20 日、用当日及以前数据；resid_ret 是当日残差收益（个股日收益减同一 20 日窗口的拟合值）；全部字段只在标普 500 成分期内有值（membership_intervals.parquet 过滤）。
 
@@ -94,11 +94,11 @@ subagent 由你临时创建，在独立上下文中执行，只交回结论；su
 
 ### 算子
 
-共 33 个，另有四则运算（只允许 + − * /，除法遇无穷记缺失）。公式只能用下面列出的算子与上面的 9 个字段，窗口参数必须是正整数。
+共 37 个，另有四则运算（只允许 + − * /，除法遇无穷记缺失）。公式只能用下面列出的算子与上面的 10 个字段，窗口参数必须是正整数。
 
 通用口径：时序算子窗口内缺一日，输出缺失（必须满窗）；任一算子所需输入缺失，输出缺失。
 
-时序（17），窗口记为 d：
+时序（19），窗口记为 d：
 
 - delay(x, d)：x 在 d 日前的值。delta(x, d)：x − delay(x, d)。
 - ts_mean、ts_sum、ts_std、ts_min、ts_max、ts_median、ts_skew、ts_kurt(x, d)：过去 d 日（含当日）的均值、总和、标准差、最小值、最大值、中位数、偏度、峰度。
@@ -108,6 +108,8 @@ subagent 由你临时创建，在独立上下文中执行，只交回结论；su
 - ts_decay(x, d)：指数加权均值，d 是半衰期（天），不是普通窗口；须满 d 日才有值。
 - ts_count(x, d)：过去 d 日 x 的总和；对 0/1 条件即满足的天数，对一般数值是求和，不是计非空个数。
 - ts_argmax、ts_argmin(x, d)：窗口内最大值、最小值距今的天数，0 表示就在当日；窗口含缺失则缺失。
+- ts_quantile(x, d, q)：过去 d 日（含当日）的 q 分位，q 在 [0, 1] 内；窗口须满 d 日。
+- ts_cov(x, y, d)：过去 d 日两序列的协方差，两序列须 d 日全不缺。
 
 截面（6），逐日横截面计算：
 
@@ -118,11 +120,12 @@ subagent 由你临时创建，在独立上下文中执行，只交回结论；su
 - winsorize(x)：按当日截面 1% 与 99% 分位截断。
 - resid(a, b)：逐日截面回归 a ~ b 的残差；当日有效股票少于 10 只或 b 无方差时记缺失。
 
-变换（8）：
+变换（10）：
 
 - neg(x)：−x。abs(x)：绝对值。sign(x)：正取 1、零取 0、负取 −1。
 - log(x)：自然对数，x ≤ 0 记缺失。sqrt(x)：平方根，x < 0 记缺失。inverse(x)：1 / x，x = 0 记缺失。
 - power(x, p)：x 的 p 次幂。signed_power(x, p)：sign(x) × |x| 的 p 次幂。
+- min(a, b)、max(a, b)：逐格取小、取大；任一输入缺失则缺失。
 
 条件（2）：
 
@@ -140,11 +143,11 @@ subagent 由你临时创建，在独立上下文中执行，只交回结论；su
 | 脚本 | 用途 |
 |---|---|
 | `python tools/check_formula.py "<公式>"` | 公式校验：结构、字段、算子合法性与算子计数，不接触数据 |
-| `python tools/backtest/backtest_is.py "<公式>"` | IS 段回测，输出 15 项指标并存档 |
-| `python tools/backtest/backtest_oos.py "<公式>"` | OOS 段回测，同上 |
-| `python tools/backtest/backtest_holdout.py "<公式>"` | holdout 段回测，同上（见纪律） |
+| `python tools/backtest/backtest.py --segment is\|oos\|holdout --formula "<公式>" [--hypothesis Hxxx --version vx]` | 回测统一入口：成绩单 v2、基线对照、全库百分位，并登记进 `research/registry.jsonl` |
+| `python tools/backtest/combine.py --segment is --formulas "<公式1>" "<公式2>"` | 等权多因子合成（rank 平均，不拟合）+ 合成成绩单与增量 |
+| `python tools/backtest/run_null.py` | 零分布批量跑：全库白名单通过条目逐条试算 IS，写 `benchmarks/is_null.json` |
 | `python report.py "<公式>" --segment is` | 生成 HTML 报告：多空累计收益图、成绩单表、分年表 |
 
-- 本版流程止于待验证，不自动调用回测；回测衔接方式后续再定。
+- 回测是正式阶段（见「一轮怎么跑」第 6 步）：定稿版本进回测，成绩单、基线对照与全库百分位写进登记；回测结果不回流给生成 agent，IS 结果进共享记忆的已证伪机制区。
 - 判定参考线：20 日 IC ≥ 0.02、ICIR ≥ 0.2。
-- 日常研究只跑 IS 段。OOS 段须经人确认后才跑。holdout 段封存，未经明确指令不运行 `tools/backtest/backtest_holdout.py`。
+- 日常研究只跑 IS 段。OOS 段须经人确认后才跑。holdout 段封存，未经研究者明确指令不运行；入口强制要求 `--allow-holdout` 并写明原因，原因与日期写进登记。
